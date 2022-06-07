@@ -2,33 +2,36 @@ import numpy as np
 import gym
 from gym import spaces
 
-
-
-
-class Assistant(gym.env):
-
-    def __init__():
-        self.n_targets = n_targets
-        self.goal = None  # index of preferred target, assigned during reset()
-
-    def step(self, action):
-
-        return observation, reward, done, info
-    def reset(self):
-
-        return observation  # reward, done, info can't be included
-    def render(self, mode='human'):
-
-    def close (self):
-
-
-
+from agents.users import User
+from agents.assistants import Assistant
 
 
 def main():
-    pass
+
+    n_episode = 2
+    max_n_step = 100
+
+    n_targets = 10
+    debug = True
+
+    assistant = Assistant(n_targets=n_targets)
+    user = User(n_targets=n_targets, debug=debug)
+
+    for ep in range(n_episode):
+
+        _ = user.reset()
+        assistant_output = assistant.reset()
+
+        for step in range(max_n_step):
+
+            user_output, _, user_done, _ = user.step(assistant_output)
+            if user_done:
+                break
+
+            assistant_output, _, assistant_done, _ = assistant.step(user_output)
+            if assistant_done:
+                break
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()
