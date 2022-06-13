@@ -19,13 +19,16 @@ class User(gym.Env):
 
     def step(self, action: np.ndarray):
 
+        # Position is the action from the assistant
+        position = action
+
         alpha = 1 / self.t
 
-        a = action[self.goal]
+        p_star = position[self.goal]
 
-        self.mu_hat = self.mu_hat * (1 - alpha) + a * alpha
+        self.mu_hat = self.mu_hat * (1 - alpha) + p_star * alpha
 
-        user_action = self.beta * (self.mu_hat - a)
+        user_action = self.beta * (self.mu_hat - p_star)
 
         self.t += 1
 
