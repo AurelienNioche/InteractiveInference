@@ -1,9 +1,5 @@
-import numpy as np
-import gym
-from gym import spaces
-
-from agents.users import User
-from agents.assistants.assistants_act_inf import AiAssistant
+from scenario1.agents import User
+from scenario1.agents import Assistant
 
 
 def main():
@@ -14,10 +10,8 @@ def main():
     n_targets = 10
     debug = True
 
-    beta = 1.0
-
-    assistant = AiAssistant(n_targets=n_targets, beta=beta)
-    user = User(n_targets=n_targets, beta=beta, debug=debug)
+    assistant = Assistant(n_targets=n_targets)
+    user = User(n_targets=n_targets, debug=debug)
 
     for ep in range(n_episode):
 

@@ -1,21 +1,20 @@
-import numpy as np
-import gym
-from gym import spaces
-
-from agents.users import User
-from agents.assistants.assistants import Assistant
-
+from assistants.ai_assistant import AiAssistant
+from users.user import User
 
 def main():
 
-    n_episode = 2
+    learning_rate = 0.01
+
+    n_episode = 1
     max_n_step = 100
 
-    n_targets = 10
+    n_targets = 5
     debug = True
 
-    assistant = Assistant(n_targets=n_targets)
-    user = User(n_targets=n_targets, debug=debug)
+    beta = 1.0
+
+    assistant = AiAssistant(n_targets=n_targets, beta=beta, learning_rate=learning_rate)
+    user = User(n_targets=n_targets, beta=beta, debug=debug)
 
     for ep in range(n_episode):
 
