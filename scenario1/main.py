@@ -1,5 +1,5 @@
-from scenario1.agents import User
-from scenario1.agents import Assistant
+from users.users import User
+from assistants.assistants import Assistant
 
 
 def main():
