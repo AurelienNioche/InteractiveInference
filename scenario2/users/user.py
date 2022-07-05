@@ -22,9 +22,13 @@ class User(gym.Env):
         position = action
 
         # User action is 1 ("complain") or 0 ("accept")
-        user_action = np.random.random() < np.tanh(position[self.goal]*self.beta)
+        p_complain = np.tanh(position[self.goal]*self.beta)
+        user_action = np.random.random() < p_complain
 
         self.t += 1
+
+        print("x target", position[self.goal])
+        print("p complain", p_complain)
 
         obs = user_action
         reward, done, info = None, None, None
