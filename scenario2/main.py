@@ -3,6 +3,10 @@ from users.user import User
 
 def main():
 
+    goal = 3
+
+    step_size = 0.01
+
     learning_rate = 0.01
 
     n_episode = 1
@@ -13,12 +17,14 @@ def main():
 
     beta = 1.0
 
-    assistant = AiAssistant(n_targets=n_targets, beta=beta, learning_rate=learning_rate)
+    assistant = AiAssistant(
+        step_size=step_size, n_targets=n_targets, beta=beta, learning_rate=learning_rate)
     user = User(n_targets=n_targets, beta=beta, debug=debug)
 
     for ep in range(n_episode):
 
         _ = user.reset()
+        user.goal = goal
         assistant_output = assistant.reset()
 
         for step in range(max_n_step):

@@ -68,14 +68,12 @@ class AiAssistant(gym.Env):
         a = self.actions[i]
 
         # Update my internal state.
-        # Start by creating a new belief b_prime, from my belief for my previous belief b
-        b_prime = self.b.clone()
+        # Start by creating a new belief b_prime, from my belief for the previous belief b
+        b_prime = torch.nn.Parameter(self.b.clone())
 
         self.b.requires_grad = True
 
-        parameters = torch.nn.Parameter(b_prime)
-
-        opt = torch.optim.Adam([parameters, ], lr=self.learning_rate)
+        opt = torch.optim.Adam([b_prime, ], lr=self.learning_rate)
         # Now minimise free energy
         for step in range(self.n_epochs):
             opt.zero_grad()
@@ -121,14 +119,11 @@ class AiAssistant(gym.Env):
         x_temp[x_temp > self.max_x] = self.max_x
         x_temp[x_temp < self.min_x] = self.min_x
 
-        prior = self.variational_density(b)
+        prior = 1 - self.variational_density(b)
         like = torch.tanh(x_temp[torch.arange(self.n_targets)] * self.beta)
         like /= torch.sum(like)
-        print("prior", prior)
-        print("like", like)
         p = like * prior
         p /= torch.sum(p)
-        print("p", p)
         if s:
             return p
         else:
