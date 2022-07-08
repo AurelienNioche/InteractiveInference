@@ -18,6 +18,7 @@ class AiAssistant(gym.Env):
                  min_x=0.0,
                  max_x=1.0,
                  n_epochs=500,
+                 debug=False,
                  *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -26,29 +27,31 @@ class AiAssistant(gym.Env):
 
         self.step_size = step_size
 
-        self.beta = beta
+        self.beta = beta  # User decision-making rule parameter
 
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
 
         self.actions = torch.arange(n_targets)  # With target to move
 
-        self.dist_space = torch.linspace(0, 1, int(1/step_size)+1)
-
         self.min_x = min_x
         self.max_x = max_x
 
         self.starting_x = starting_x
 
-        self.b = None
-        self.t = None
-        self.x = None
+        self.debug = debug
+
+        self.a = None  # Current action
+        self.b = None  # Beliefs over user preferences
+        self.t = None  # Iteration counter
+        self.x = None  # Positions of the targets
 
     def reset(self):
 
+        self.a = None
         self.b = torch.ones(self.n_targets)
         self.x = torch.ones(self.n_targets) * self.starting_x
-        observation = self.x  # np.random.choice(self.actions)
+        observation = self.x.detach().numpy().copy()  # np.random.choice(self.actions)
         return observation  # reward, done, info can't be included
 
     @property
@@ -69,7 +72,8 @@ class AiAssistant(gym.Env):
 
     def step(self, action: np.ndarray):
 
-        print("Initial belief", self.variational_density(self.b))
+        if self.debug:
+            print("Initial belief", self.variational_density(self.b))
 
         y = action  # sensory state is action of other user
 
@@ -90,7 +94,8 @@ class AiAssistant(gym.Env):
         # Update internal state
         self.b = b_prime.detach()
 
-        print("Belief after revision", self.variational_density(self.b))
+        if self.debug:
+            print("Belief after revision", self.variational_density(self.b))
 
         # Pick an action
         # Calculate the free energy given my target (intent) distribution, current state distribution, & sensory input
@@ -98,16 +103,18 @@ class AiAssistant(gym.Env):
         kl_div = [self.free_energy_action(
             b_star=self.b_star, b=self.b, x=self.x, a=a) for a in self.actions]
 
-        print("kl_div", kl_div)
+        if self.debug:
+            print("kl_div", kl_div)
 
         i = np.argmin(kl_div)
-        a = self.actions[i]
+        self.a = self.actions[i]
 
-        self.x = self.take_action(x=self.x, a=a)
+        self.x = self.take_action(x=self.x, a=self.a)
 
-        print("action", a)
+        if self.debug:
+            print("action", self.a)
 
-        observation = self.x.numpy()
+        observation = self.x.detach().numpy().copy()
         done = False
 
         reward, info = None, None
@@ -210,11 +217,14 @@ class AiAssistant(gym.Env):
 
         gd = torch.tensor([1 - marginalized, marginalized])
         kl = torch.nn.functional.kl_div(target=b_star,
-                                        input=gd)
-        print("could be x", x)
-        print("b_star", b_star)
-        print("gd", gd)
-        print("kl", kl)
+                                        input=gd,
+                                        reduction='batchmean')
+
+        if self.debug:
+            print("could be x", x)
+            print("b_star", b_star)
+            print("gd", gd)
+            print("kl", kl)
         return kl
 
     def free_energy_beliefs(self, b_prime, b, y, x):
@@ -224,4 +234,5 @@ class AiAssistant(gym.Env):
         """
         return torch.nn.functional.kl_div(
             target=self.variational_density(b_prime),
-            input=self.generative_density(b=b, y=y, x=x))
+            input=self.generative_density(b=b, y=y, x=x),
+            reduction='batchmean')

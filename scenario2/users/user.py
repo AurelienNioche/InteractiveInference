@@ -27,8 +27,9 @@ class User(gym.Env):
 
         self.t += 1
 
-        print("x target", position[self.goal])
-        print("p complain", p_complain)
+        if self.debug:
+            print("x target", position[self.goal])
+            print("p complain", p_complain)
 
         obs = user_action
         reward, done, info = None, None, None
