@@ -136,7 +136,8 @@ class AiAssistant(gym.Env):
 
     def generative_density(self, b, y, x):
         """
-        Q(s | o)
+        .. math::
+           - \mathbb {E} _{\m
         """
 
         p_preferred = self.variational_density(b)
@@ -231,6 +232,9 @@ class AiAssistant(gym.Env):
         """
         KL divergence between variational density and generative density for a fixed
         sensory state s.
+        .. math::
+           - \mathbb {E} _{\mathbf {Z} \sim Q}\left[\log {\frac {P(\mathbf {X} ,\mathbf {Z} )}{Q(\mathbf {Z} )}}\right],\end{aligned}}}
+            = D_{\mathrm {KL} }(Q(\mathbf {Z}  \parallel Q(\mathbf {P(X, Z}))
         """
         return torch.nn.functional.kl_div(
             target=self.variational_density(b_prime),
