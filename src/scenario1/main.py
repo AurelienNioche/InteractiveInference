@@ -1,5 +1,5 @@
-from users.users import User
-from assistants.assistants import Assistant
+from . users.users import User
+from . assistants.assistants import Assistant
 
 
 def main():
