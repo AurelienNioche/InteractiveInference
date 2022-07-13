@@ -24,6 +24,7 @@ class AiAssistant(gym.Env, ABC):
                  max_n_epochs=500,
                  debug=False,
                  decision_rule='active_inference',
+                 decision_rule_parameters=None,
                  *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -48,6 +49,9 @@ class AiAssistant(gym.Env, ABC):
         self.starting_x = starting_x
 
         self.decision_rule = decision_rule
+        if decision_rule_parameters is None:
+            decision_rule_parameters = {}
+        self.decision_rule_parameters = decision_rule_parameters
 
         self.debug = debug
 
@@ -74,7 +78,7 @@ class AiAssistant(gym.Env, ABC):
         """
         The target distribution ("preferences") is to be certain that the user would not complain
         """
-        return torch.tensor([1, 0])
+        return torch.tensor([1, 0]) + 1e-8
 
     def revise_belief(self, y, b, x):
 
@@ -113,24 +117,24 @@ class AiAssistant(gym.Env, ABC):
 
     def act(self):
 
-        i = getattr(self, f'_act_{self.decision_rule}')()
+        i = getattr(self, f'_act_{self.decision_rule}')(**self.decision_rule_parameters)
         self.a = self.actions[i]
         self.update_target_positions(x=self.x, a=self.a)
 
         if self.debug:
             print("action is ", self.a)
 
-    def _act_epsilon_rule(self):
+    def _act_epsilon_rule(self, epsilon=0.1):
         rd = np.random.random()
-        if rd < 0.1:
+        if rd < epsilon:
             i = np.random.randint(self.n_targets)
         else:
             i = np.random.choice(np.nonzero(self.b == torch.max(self.b))[0])
 
         return i
 
-    def _act_softmax(self):
-        p = torch.nn.functional.softmax(100.0*self.b, dim=0).numpy()
+    def _act_softmax(self, temperature=100):
+        p = torch.nn.functional.softmax(temperature*self.b, dim=0).numpy()
         i = np.random.choice(np.arange(self.n_targets), p=p)
         return i
 
@@ -240,14 +244,15 @@ class AiAssistant(gym.Env, ABC):
 
                 gd = torch.tensor([1 - marginalized_complains, marginalized_complains])
 
-                kl = torch.nn.functional.kl_div(target=self.target_dist,
-                                                input=gd,
-                                                reduction='batchmean')
+                kl = self.KL(a=self.target_dist,
+                             b=gd)
 
                 kl_rollout.append(df**step * kl)
 
-                y = np.random.random() < marginalized_complains.item()
-                b = self.revise_belief(y=y, b=self.b, x=self.x)
+                if step < (n_step_rollout - 1):
+
+                    y = np.random.random() < marginalized_complains.item()
+                    b = self.revise_belief(y=y, b=self.b, x=self.x)
 
         return np.sum(kl_rollout)
 
@@ -264,10 +269,10 @@ class AiAssistant(gym.Env, ABC):
 
         Used to update `b`
         """
-        return torch.nn.functional.kl_div(
-            target=self.variational_density(b_prime),
-            input=self.generative_density(y=y, x=x, b=b),
-            reduction='batchmean')
+        # KL(target, input)
+        return self.KL(
+            a=self.variational_density(b_prime),
+            b=self.generative_density(y=y, x=x, b=b))
 
     # def b_star(self, x, scale=0.05):
     #     """
@@ -277,16 +282,16 @@ class AiAssistant(gym.Env, ABC):
     #     """
     #     return torch.distributions.HalfNormal(scale).log_prob(x+0.00001)
 
-    # @staticmethod
-    # def KL(a, b):
-    #     """
-    #     Kullback-Leibler divergence between densities a and b.
-    #     """
-    #     # If access to distributions "registered" for KL div, then:
-    #     # torch.distributions.kl.kl_divergence(p, q)
-    #     # Otherwise:
-    #     # torch.nn.functional.kl_div(a, b)
-    #     return torch.sum(a * (torch.log(a) - torch.log(b)))
+    @staticmethod
+    def KL(a, b):
+        """
+        Kullback-Leibler divergence between densities a and b.
+        """
+        # If access to distributions "registered" for KL div, then:
+        # torch.distributions.kl.kl_divergence(p, q)
+        # Otherwise:
+        # torch.nn.functional.kl_div(a, b)
+        return torch.sum(a * (torch.log(a) - torch.log(b)))
 
     # def free_energy_action(self, b_star, b, x, a):
     #     """

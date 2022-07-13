@@ -46,6 +46,8 @@ def plot_traces(trace, show=False):
     # idx = a==0
     # ax.scatter(epochs[idx], psi[idx], c = c[idx], marker = 'o')
     ax.invert_yaxis()
+    ax.yaxis.get_major_locator().set_params(integer=True)
+
     ax.set_xlim([0, n_epochs])
 
     ax.set_xlabel("Time")
@@ -149,10 +151,10 @@ def main():
     trace = run(debug=False,
                 seed=1,
                 user_parameters=(8.0, 0.5),
-                max_n_step=100,
-                n_targets=4,
-                step_size=0.1,
-                step_size_other=0.05,
+                max_n_step=200,
+                n_targets=10,
+                step_size=0.01,
+                step_size_other=None,
                 decision_rule='active_inference',
                 )
     plot_traces(trace, show=True)
