@@ -22,7 +22,9 @@ class AiAssistant(gym.Env, ABC):
                  min_x=0.0,
                  max_x=1.0,
                  max_n_epochs=500,
-                 debug=False,
+                 decay_factor=0.9,
+                 n_rollout=5,
+                 n_step_per_rollout=2,
                  decision_rule='active_inference',
                  decision_rule_parameters=None,
                  *args, **kwargs):
@@ -32,12 +34,14 @@ class AiAssistant(gym.Env, ABC):
         self.n_targets = n_targets
 
         self.step_size = step_size
+
+        if step_size_other is None:
+            step_size_other = step_size / (n_targets - 1)
         self.step_size_other = step_size_other
-        if self.step_size_other is None:
-            self.step_size_other = step_size / (self.n_targets - 1)
 
         self.user_model = user_model
 
+        # Used for updating beliefs
         self.max_n_epochs = max_n_epochs
         self.learning_rate = learning_rate
 
@@ -53,7 +57,10 @@ class AiAssistant(gym.Env, ABC):
             decision_rule_parameters = {}
         self.decision_rule_parameters = decision_rule_parameters
 
-        self.debug = debug
+        self.decay_factor = decay_factor
+
+        self.n_rollout = n_rollout
+        self.n_step_per_rollout = n_step_per_rollout
 
         self.a = None  # Current action
         self.b = None  # Beliefs over user preferences
@@ -62,7 +69,6 @@ class AiAssistant(gym.Env, ABC):
 
     @property
     def belief(self):
-
         return self.variational_density(self.b).detach().numpy()
 
     def reset(self):
@@ -81,11 +87,6 @@ class AiAssistant(gym.Env, ABC):
         return torch.tensor([1, 0]) + 1e-8
 
     def revise_belief(self, y, b, x):
-
-        if self.debug:
-            print("Initial belief", self.variational_density(b))
-            print("Observation", y)
-            print("Position", x)
 
         # Update my internal state.
         # Start by creating a new belief b_prime, from my belief for the previous belief b
@@ -109,10 +110,6 @@ class AiAssistant(gym.Env, ABC):
 
         # Update internal state
         b = b_prime.detach()
-
-        if self.debug:
-            print("Belief after revision", self.variational_density(b))
-
         return b
 
     def act(self):
@@ -120,9 +117,6 @@ class AiAssistant(gym.Env, ABC):
         i = getattr(self, f'_act_{self.decision_rule}')(**self.decision_rule_parameters)
         self.a = self.actions[i]
         self.update_target_positions(x=self.x, a=self.a)
-
-        if self.debug:
-            print("action is ", self.a)
 
     def _act_epsilon_rule(self, epsilon=0.1):
         rd = np.random.random()
@@ -144,12 +138,7 @@ class AiAssistant(gym.Env, ABC):
         # Calculate the free energy given my target (intent) distribution, current state distribution, & sensory input
         # Do this for all actions and select the action with minimum free energy.
         kl_div = np.asarray([self.expected_free_energy_action(a=a).item() for a in self.actions])
-
-        if self.debug:
-            print("kl_div", kl_div)
-
         i = np.random.choice(np.nonzero(kl_div == np.min(kl_div))[0])
-
         return i
 
     def step(self, action: np.ndarray):
@@ -220,17 +209,12 @@ class AiAssistant(gym.Env, ABC):
 
         kl_rollout = []
 
-        df = 0.9
-
-        n_rollout = 5
-        n_step_rollout = 10
-
-        for _ in range(n_rollout):
+        for _ in range(self.n_rollout):
 
             x = self.x.clone()
             b = self.b.clone()
 
-            for step in range(n_step_rollout):
+            for step in range(self.n_step_per_rollout):
                 if step == 0:
                     action = a
                 else:
@@ -244,12 +228,12 @@ class AiAssistant(gym.Env, ABC):
 
                 gd = torch.tensor([1 - marginalized_complains, marginalized_complains])
 
-                kl = self.KL(a=self.target_dist,
-                             b=gd)
+                kl = self.kl_div(a=self.target_dist,
+                                 b=gd)
 
-                kl_rollout.append(df**step * kl)
+                kl_rollout.append(self.decay_factor**step * kl)
 
-                if step < (n_step_rollout - 1):
+                if step < (self.n_step_per_rollout - 1):
 
                     y = np.random.random() < marginalized_complains.item()
                     b = self.revise_belief(y=y, b=self.b, x=self.x)
@@ -270,9 +254,22 @@ class AiAssistant(gym.Env, ABC):
         Used to update `b`
         """
         # KL(target, input)
-        return self.KL(
+        return self.kl_div(
             a=self.variational_density(b_prime),
             b=self.generative_density(y=y, x=x, b=b))
+
+    @staticmethod
+    def kl_div(a, b):
+        """
+        Kullback-Leibler divergence between densities a and b.
+        """
+        # If access to distributions "registered" for KL div, then:
+        # torch.distributions.kl.kl_divergence(p, q)
+        # Otherwise:
+        # torch.nn.functional.kl_div(input=torch.log(b), target=a)
+        # Note the inversion between the arguments order,
+        # and the fact that you need to give the first in the log-space
+        return torch.sum(a * (torch.log(a) - torch.log(b)))
 
     # def b_star(self, x, scale=0.05):
     #     """
@@ -281,17 +278,6 @@ class AiAssistant(gym.Env, ABC):
     #     :return:
     #     """
     #     return torch.distributions.HalfNormal(scale).log_prob(x+0.00001)
-
-    @staticmethod
-    def KL(a, b):
-        """
-        Kullback-Leibler divergence between densities a and b.
-        """
-        # If access to distributions "registered" for KL div, then:
-        # torch.distributions.kl.kl_divergence(p, q)
-        # Otherwise:
-        # torch.nn.functional.kl_div(a, b)
-        return torch.sum(a * (torch.log(a) - torch.log(b)))
 
     # def free_energy_action(self, b_star, b, x, a):
     #     """

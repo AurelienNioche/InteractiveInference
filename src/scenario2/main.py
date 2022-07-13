@@ -151,7 +151,7 @@ def main():
     trace = run(debug=False,
                 seed=1,
                 user_parameters=(8.0, 0.5),
-                max_n_step=200,
+                max_n_step=500,
                 n_targets=10,
                 step_size=0.01,
                 step_size_other=None,
