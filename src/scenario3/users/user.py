@@ -1,37 +1,36 @@
 import gym
 import numpy as np
-import torch
 
 
 class User(gym.Env):
 
-    def __init__(self, n_targets, goal, parameters=None):
+    def __init__(self, goal, parameters=None):
         super().__init__()
 
-        assert goal < n_targets, "Revise your logic!"
-
-        self.n_targets = n_targets
+        self.n_targets = len(goal)
 
         if parameters is None:
             parameters = (8.0, 0.5)
         self.parameters = parameters
 
-        self.goal = goal  # index of preferred target
+        self.goal = goal  # Desired positions of targets
 
         self.t = None
 
-    def conditional_probability_action(self, x):
+    def conditional_probability_action(self, mean_dist):
 
         prm = self.parameters
-        return 1 / (1 + torch.exp(-prm[0]*(- prm[1] + x)))
+        return 1 / (1 + np.exp(-prm[0]*(- prm[1] + mean_dist)))
 
     def step(self, action: np.ndarray):
 
         # Targets position is the output from the assistant
         position = action
 
+        mean_dist = np.mean(np.abs(position - self.goal))
+
         # User action is 1 ("complain") or 0 ("accept")
-        p_complain = self.conditional_probability_action(position[self.goal])
+        p_complain = self.conditional_probability_action(mean_dist)
         user_action = np.random.random() < p_complain
 
         self.t += 1

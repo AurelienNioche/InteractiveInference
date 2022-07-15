@@ -1,5 +1,5 @@
 try:
-    from assistants.ai_assistant_pref_on_latent import AiAssistantPrefOnLatent
+    from assistants.ai_assistant import AiAssistant
     from users.user import User
     from run.run import run
     from plot.plot import plot_traces
@@ -38,17 +38,16 @@ def main():
             epsilon=0.1)
     )
 
-    run_name = f"pref_on_latent_{decision_rule_kwargs['decision_rule']}"
+    run_name = f"{decision_rule_kwargs['decision_rule']}"
 
     trace = run(
         user_model=User,
-        assistant_model=AiAssistantPrefOnLatent,
+        user_goal=[0.4, 0.8],
+        assistant_model=AiAssistant,
         seed=1,
         user_parameters=(8.0, 0.5),
-        n_step=2000,
-        n_targets=10,
-        target_closer_step_size=0.01,
-        target_further_step_size=None,
+        inference_learning_rate=1e-3,
+        n_step=200,
         **decision_rule_kwargs)
 
     plot_traces(trace, show=True,
