@@ -24,19 +24,18 @@ def main():
     #         temperature=100.0)
     # )
 
-    # decision_rule_kwargs = dict(
-    #     decision_rule='active_inference',
-    #     decision_rule_parameters=dict(
-    #         decay_factor=0.9,
-    #         n_rollout=5,
-    #         n_step_per_rollout=2)
-    # )
-
     decision_rule_kwargs = dict(
-        decision_rule='epsilon_rule',
+        decision_rule='active_inference',
         decision_rule_parameters=dict(
-            epsilon=0.1)
+            decay_factor=0.9,
+            n_rollout=5,
+            n_step_per_rollout=2)
     )
+
+    # decision_rule_kwargs = dict(
+    #     decision_rule='epsilon_rule',
+    #     decision_rule_parameters=dict(
+    #         epsilon=0.1))
 
     run_name = f"{decision_rule_kwargs['decision_rule']}"
 

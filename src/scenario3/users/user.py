@@ -1,5 +1,5 @@
 import gym
-import numpy as np
+import torch
 
 
 class User(gym.Env):
@@ -13,26 +13,29 @@ class User(gym.Env):
             parameters = (8.0, 0.5)
         self.parameters = parameters
 
-        self.goal = goal  # Desired positions of targets
+        self._goal = goal  # Desired positions of targets
 
         self.t = None
+
+    @property
+    def goal(self):
+        return self._goal.numpy()
 
     def conditional_probability_action(self, mean_dist):
 
         prm = self.parameters
-        return 1 / (1 + np.exp(-prm[0]*(- prm[1] + mean_dist)))
+        return torch.sigmoid(prm[0]*(- prm[1] + mean_dist))
 
-    def step(self, action: np.ndarray):
+    def step(self, action: torch.Tensor):
 
         # Targets position is the output from the assistant
         position = action
 
-        mean_dist = np.mean(np.abs(position - self.goal))
+        mean_dist = torch.abs(position - self._goal).mean()
 
         # User action is 1 ("complain") or 0 ("accept")
         p_complain = self.conditional_probability_action(mean_dist)
-        user_action = np.random.random() < p_complain
-
+        user_action = torch.rand(1) < p_complain
         self.t += 1
 
         obs = user_action

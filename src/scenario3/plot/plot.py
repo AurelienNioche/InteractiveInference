@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import torch
 from matplotlib import pyplot as plt
 
 
@@ -7,60 +8,69 @@ def plot_traces(trace,
                 show=False,
                 run_name=""):
 
-    # Extract data
     user_goal = trace["user_goal"]
-    belief_trace = trace["assistant_belief"]
-    user_action_trace = np.asarray(trace["user_action"])
-    assistant_action_trace = np.asarray(trace["assistant_action"])
-    targets_position = np.asarray(trace["targets_position"]).T
-    n_epochs = len(belief_trace)
+    belief = np.asarray(trace["assistant_belief"])
+    assistant_action = np.asarray(trace["assistant_action"])
+    n_targets = len(user_goal)
+    n_steps = len(belief)
 
     # Create figure
-    fig, axes = plt.subplots(
-        nrows=2, figsize=(15, 8),
-        constrained_layout=True)
+    fig, axes = plt.subplots(figsize=(15, 8), nrows=n_targets + 1,
+                             sharex='row',
+                             constrained_layout=True)
 
-    ax = axes[0]
-    im = ax.imshow(
-        np.transpose(belief_trace),
-        interpolation="nearest",
-        aspect="auto",
-        cmap="viridis",
-        # vmin=0, vmax=1,
-    )
+    for target in range(n_targets):
 
-    epochs = np.arange(n_epochs)
+        ax = axes[target]
 
-    a = np.asarray(user_action_trace)
-    idx = a == 0
-    ax.scatter(epochs[idx], assistant_action_trace[idx], c="none", marker='^', edgecolor="C1")
-    idx = a == 1
-    ax.scatter(epochs[idx], assistant_action_trace[idx], c='red', marker='v')
+        x = torch.linspace(0., 0.999, 100)
 
-    ax.invert_yaxis()
-    ax.yaxis.get_major_locator().set_params(integer=True)
+        belief_target = []
 
-    ax.set_xlim([0, n_epochs])
+        for step in range(n_steps):
+            mu, log_var = torch.from_numpy(belief[step, target, :])
+            std = torch.exp(0.5 * log_var)
+            x_scaled = torch.logit(x)
+            belief_step = torch.distributions.Normal(mu, std).log_prob(x_scaled).exp().numpy()
+            belief_target.append(belief_step)
 
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Target")
+        x_min, x_max = 0, n_steps
+        y_min, y_max = 1.0, 0.0  # Note the inversion
+        im = ax.imshow(
+            np.transpose(belief_target),
+            extent=[x_min, x_max, y_min, y_max],
+            interpolation="nearest",
+            aspect="auto",
+            cmap="viridis",
+            # vmin=0, vmax=20.0,
+        )
 
-    cb = fig.colorbar(im, ax=ax)
-    cb.set_label("Assistant belief")
+        ax.axhline(user_goal[target], ls="--", color="red")
 
-    ax = axes[1]
-    for i, x in enumerate(targets_position):
-        if i == preferred_target:
-            lw = 2
-        else:
-            lw = 1
+        ax.invert_yaxis()
+        ax.yaxis.get_major_locator().set_params(integer=True)
 
-        ax.plot(x, label=f"Target {i}", lw=lw)
+        ax.set_xlim((0, n_steps))
 
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Distance to the user")
+        ax.set_ylabel("Position")
 
-    ax.set_xlim([0, n_epochs])
+        ax.set_title(f"target {target}")
+
+        cb = fig.colorbar(im, ax=ax)
+        cb.set_label("Assistant belief")
+
+    ax = axes[n_targets]
+
+    ax.plot(assistant_action)
+    for target in range(n_targets):
+        ax.axhline(user_goal[target], ls=":", color=f"C{target}", label=f"target {target}")
+
+    ax.set_xlim((0, n_steps))
+    ax.set_yticks([0, 1])
+
+    ax.set_ylabel("Position")
+
+    axes[-1].set_xlabel("Time")
 
     ax.legend()
 

@@ -37,6 +37,8 @@ def run(
     trace = {k: [] for k in ("assistant_belief", "user_action",
                              "targets_position", "assistant_action")}
 
+    user_goal = torch.tensor(user_goal)
+
     user = user_model(
         goal=user_goal,
         parameters=user_parameters)
@@ -53,7 +55,7 @@ def run(
 
     for _ in tqdm(range(n_step)):
 
-        trace["assistant_action"].append(assistant_output)
+        trace["assistant_action"].append(assistant.action)
         trace["assistant_belief"].append(assistant.belief)
 
         user_output, _, user_done, _ = user.step(assistant_output)

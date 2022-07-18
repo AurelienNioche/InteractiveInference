@@ -77,17 +77,17 @@ class AiAssistant(gym.Env, ABC):
 
     @property
     def belief(self):
-        return self.b.numpy()  # self.variational_density(self.b).detach().numpy()
+        return self.b.numpy()
 
     @property
     def action(self):
-        return self.a
+        return self.a.numpy()
 
     def reset(self):
 
         self.b = torch.ones((self.n_targets, 2)) * self.starting_belief
         self.a = torch.ones(self.n_targets) * self.starting_target_positions
-        observation = self.a.detach().numpy().copy()
+        observation = self.a
         return observation  # reward, done, info can't be included
 
     def step(self, action: np.ndarray):
@@ -97,24 +97,11 @@ class AiAssistant(gym.Env, ABC):
         self.b = self.revise_belief(y=y, b=self.b, a=self.a)
         self.a = getattr(self, f'_act_{self.decision_rule}')(**self.decision_rule_parameters)
 
-        observation = self.a.detach().numpy().copy()
+        observation = self.a
         done = False
 
         reward, info = None, None
         return observation, reward, done, info
-
-    # @staticmethod
-    # def kl_div(a, b):
-    #     """
-    #     Kullback-Leibler divergence between densities a and b.
-    #     """
-    #     # If access to distributions "registered" for KL div, then:
-    #     # torch.distributions.kl.kl_divergence(p, q)
-    #     # Otherwise:
-    #     # torch.nn.functional.kl_div(input=torch.log(b), target=a)
-    #     # Note the inversion between the arguments order,
-    #     # and the fact that you need to give the first in the log-space
-    #     return torch.sum(a * (torch.log(a) - torch.log(b)))
 
     def revise_belief(self, y, b, a):
         """
@@ -134,7 +121,7 @@ class AiAssistant(gym.Env, ABC):
 
             opt.zero_grad()
 
-            torch.autograd.set_detect_anomaly(True)
+            # torch.autograd.set_detect_anomaly(True)
 
             loss = self.free_energy_belief(b_prime=b_prime, y=y, a=a, b=b)
             loss.backward()
@@ -146,23 +133,6 @@ class AiAssistant(gym.Env, ABC):
         # Update internal state
         b = b_prime.detach()
         return b
-
-    # def generative_density_belief(self, y, x, b):
-    #     r"""
-    #     Compute the generative density.
-    #
-    #     .. math::
-    #        P(\mathbf{X}, \mathbf{Z}) = P(\mathbf{X} \mid \mathbf{Z}) P(\mathbf{Z})
-    #     """
-    #
-    #     p_preferred = self.variational_density(b)
-    #     cond_p = self.user_model.conditional_probability_action(x)
-    #
-    #     if not y:
-    #         cond_p = 1 - cond_p
-    #
-    #     joint_p = cond_p * p_preferred
-    #     return joint_p
 
     def free_energy_belief(self, b_prime, y, a, b, n_sample=100):
         r"""
@@ -191,36 +161,33 @@ class AiAssistant(gym.Env, ABC):
         distance_t = 0
 
         for t in range(self.n_targets):
-            log_c0, log_c1 = b_prime[t]
-            concentration0 = log_c0.exp()
-            concentration1 = log_c1.exp()
-            dist_b_prime = torch.distributions.Beta(
-                concentration1=concentration1,  # beta
-                concentration0=concentration0   # alpha
-            )
-            z = dist_b_prime.sample((n_sample, ))
+
+            mu, log_var = b_prime[t]
+            std = torch.exp(0.5 * log_var)
+
+            eps = torch.randn(n_sample)
+            z = eps * std + mu
+
+            dist_b_prime = torch.distributions.Normal(mu, std)
 
             log_q += dist_b_prime.log_prob(z).sum()
 
-            log_c0, log_c1 = b[t]
-            concentration0 = log_c0.exp()
-            concentration1 = log_c1.exp()
-            dist_b = torch.distributions.Beta(
-                concentration1=concentration1,  # beta
-                concentration0=concentration0  # alpha
-            )
+            mu, log_var = b[t]
+            std = torch.exp(0.5 * log_var)
+            dist_b = torch.distributions.Normal(mu, std)
 
             log_p += dist_b.log_prob(z).sum()
-
-            distance_t += torch.absolute(a[t] - z)
+            z_scaled = torch.sigmoid(z)
+            dist = torch.absolute(a[t] - z_scaled)
+            distance_t += dist
 
         distance_t /= self.n_targets
         p_y = self.user_model.conditional_probability_action(distance_t)
-        if not y:
+        if not y[0]:
             p_y = 1 - p_y
         log_p += torch.log(p_y+1e-8).sum()
 
-        kl_est = log_q - log_p
+        kl_est = (log_q - log_p) / n_sample
         return kl_est
 
     def _act_epsilon_rule(self, epsilon):
@@ -229,44 +196,108 @@ class AiAssistant(gym.Env, ABC):
         :param epsilon:
         :return:
         """
-        rd = np.random.random()
-        if rd < epsilon:
-            pos = torch.from_numpy(np.random.random(self.n_targets))
+        rd = torch.rand(1)
+        if rd[0] < epsilon:
+            pos = torch.rand(self.n_targets)
         else:
             pos = torch.zeros(self.n_targets)
             for t in range(self.n_targets):
-                log_c0, log_c1 = self.b[t]
-                concentration0 = log_c0.exp()
-                concentration1 = log_c1.exp()
-                dist = torch.distributions.Beta(
-                    concentration1=concentration1,  # beta
-                    concentration0=concentration0  # alpha
-                )
-                pos[t] = dist.mean
-
+                mu, _ = self.b[t]
+                mu_scaled = torch.sigmoid(mu)
+                pos[t] = mu_scaled
         return pos
+
+    def _act_random(self):
+
+        return torch.rand(self.n_targets)
+
+    def _act_active_inference(self, *args, **kwargs):
+
+        a = torch.nn.Parameter(self.a.clone())
+        # b.requires_grad = True
+
+        opt = torch.optim.Adam([a, ], lr=self.inference_learning_rate)
+
+        # Minimise free energy
+        for step in range(self.inference_max_epochs):
+
+            old_a = a.clone()
+
+            opt.zero_grad()
+
+            # torch.autograd.set_detect_anomaly(True)
+
+            loss = self.expected_free_energy_action(a=a, *args, **kwargs)
+            loss.backward()
+            opt.step()
+
+            if torch.isclose(old_a, a).all():
+                break
+
+        return a.data
+
+    def expected_free_energy_action(self, a,
+                                    decay_factor,
+                                    n_rollout,
+                                    n_step_per_rollout):
+        r"""
+        KL divergence between the density function that implements preferences (:math:`Q(\mathbf{Z^*})`)
+        and generative density of the same object (:math:`P(\mathbf{X}, \mathbf{Z})`)
+
+        .. math::
+            \begin{align}
+                &-\mathbb {E} _{\mathbf {Z} \sim Q} \left[\log \frac {P(\mathbf {X} ,\mathbf {Z} )}{Q(\mathbf {Z} )} \right] \\
+                =& D_{\mathrm {KL} }(Q(\mathbf {Z})  \parallel P(\mathbf{X}, \mathbf{Z}))
+            \end{align}
+        """
+
+        initial_action = a
+
+        kl_rollout = 0
+
+        for _ in range(n_rollout):
+
+            b = self.b.clone()
+
+            for step in range(n_step_per_rollout):
+                if step == 0:
+                    a = initial_action
+                else:
+                    # Choose randomly a new action
+                    a = self._act_random()
+
+                mu = b[:, 0]
+                mean_dist = torch.abs(torch.sigmoid(mu) - a).mean()
+                expected_p_y = self.user_model.conditional_probability_action(mean_dist)
+                expected_kl = - torch.log(expected_p_y)   # Proportional to
+
+                kl_rollout += decay_factor**step * expected_kl
+
+                if step < (n_step_per_rollout - 1):
+
+                    y = torch.rand(1) < expected_p_y
+                    b = self.revise_belief(y=y, b=self.b, a=a)
+
+        return kl_rollout
+
+    # @staticmethod
+    # def kl_div(a, b):
+    #     """
+    #     Kullback-Leibler divergence between densities a and b.
+    #     """
+    #     # If access to distributions "registered" for KL div, then:
+    #     # torch.distributions.kl.kl_divergence(p, q)
+    #     # Otherwise:
+    #     # torch.nn.functional.kl_div(input=torch.log(b), target=a)
+    #     # Note the inversion between the arguments order,
+    #     # and the fact that you need to give the first in the log-space
+    #     return torch.sum(a * (torch.log(a) - torch.log(b)))
 
     # def _act_softmax(self, temperature):
     #     p = torch.nn.functional.softmax(temperature * self.b, dim=0).numpy()
     #     i = np.random.choice(np.arange(self.n_targets), p=p)
     #     return i
     #
-    # def _act_active_inference(self,
-    #                           decay_factor,
-    #                           n_rollout,
-    #                           n_step_per_rollout):
-    #
-    #     # Pick an action
-    #     # Calculate the free energy given my target (intent) distribution, current state distribution, & sensory input
-    #     # Do this for all actions and select the action with minimum free energy.
-    #     kl_div = np.asarray([self.expected_free_energy_action(
-    #         a=a,
-    #         decay_factor=decay_factor,
-    #         n_rollout=n_rollout,
-    #         n_step_per_rollout=n_step_per_rollout,
-    #     ).item() for a in self.actions])
-    #     i = np.random.choice(np.nonzero(kl_div == np.min(kl_div))[0])
-    #     return i
     #
     # @property
     # def target_dist(self):
@@ -282,45 +313,3 @@ class AiAssistant(gym.Env, ABC):
     #
     #     return torch.tensor([1 - marginalized_complains, marginalized_complains])
     #
-    # def expected_free_energy_action(self, a,
-    #                                 decay_factor,
-    #                                 n_rollout,
-    #                                 n_step_per_rollout):
-    #     r"""
-    #     KL divergence between the density function that implements preferences (:math:`Q(\mathbf{Z^*})`)
-    #     and generative density of the same object (:math:`P(\mathbf{X}, \mathbf{Z})`)
-    #
-    #     .. math::
-    #         \begin{align}
-    #             &-\mathbb {E} _{\mathbf {Z} \sim Q} \left[\log \frac {P(\mathbf {X} ,\mathbf {Z} )}{Q(\mathbf {Z} )} \right] \\
-    #             =& D_{\mathrm {KL} }(Q(\mathbf {Z})  \parallel P(\mathbf{X}, \mathbf{Z}))
-    #         \end{align}
-    #     """
-    #
-    #     kl_rollout = []
-    #
-    #     for _ in range(n_rollout):
-    #
-    #         x = self.x.clone()
-    #         b = self.b.clone()
-    #
-    #         for step in range(n_step_per_rollout):
-    #             if step == 0:
-    #                 action = a
-    #             else:
-    #                 # Choose randomly a new action
-    #                 action = np.random.choice(self.actions)
-    #
-    #             self.update_target_positions(x=x, a=action)
-    #             gd = self.generative_density_action(x=x, b=b)
-    #             kl = self.kl_div(a=self.target_dist,
-    #                              b=gd)
-    #
-    #             kl_rollout.append(decay_factor**step * kl)
-    #
-    #             if step < (n_step_per_rollout - 1):
-    #
-    #                 y = np.random.random() < gd[1]
-    #                 b = self.revise_belief(y=y, b=self.b, x=self.x)
-    #
-    #     return np.sum(kl_rollout)
