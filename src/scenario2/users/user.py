@@ -23,7 +23,7 @@ class User(gym.Env):
     def conditional_probability_action(self, x):
 
         prm = self.parameters
-        return 1 / (1 + torch.exp(-prm[0]*(- prm[1] + x)))
+        return torch.sigmoid(prm[0]*(- prm[1] + x))
 
     def step(self, action: np.ndarray):
 

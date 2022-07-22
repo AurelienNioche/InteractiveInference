@@ -27,6 +27,8 @@ def main():
     decision_rule_kwargs = dict(
         decision_rule='active_inference',
         decision_rule_parameters=dict(
+            action_max_epochs=50,
+            action_learning_rate=0.01,
             decay_factor=0.9,
             n_rollout=5,
             n_step_per_rollout=2)
@@ -35,7 +37,7 @@ def main():
     # decision_rule_kwargs = dict(
     #     decision_rule='epsilon_rule',
     #     decision_rule_parameters=dict(
-    #         epsilon=0.1))
+    #         epsilon=0.2))
 
     run_name = f"{decision_rule_kwargs['decision_rule']}"
 
@@ -43,10 +45,11 @@ def main():
         user_model=User,
         user_goal=[0.4, 0.8],
         assistant_model=AiAssistant,
-        seed=1,
-        user_parameters=(8.0, 0.5),
-        inference_learning_rate=1e-3,
-        n_step=200,
+        seed=2,
+        inference_max_epochs=50,
+        user_parameters=(100.0, 0.1),
+        inference_learning_rate=0.1,
+        n_step=300,
         **decision_rule_kwargs)
 
     plot_traces(trace, show=True,

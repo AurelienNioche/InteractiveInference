@@ -62,7 +62,7 @@ def run(
         if user_done:
             break
 
-        trace["user_action"].append(user_output)
+        trace["user_action"].append(user.action)
 
         assistant_output, _, assistant_done, _ = assistant.step(user_output)
         if assistant_done:

@@ -11,6 +11,7 @@ def plot_traces(trace,
     user_goal = trace["user_goal"]
     belief = np.asarray(trace["assistant_belief"])
     assistant_action = np.asarray(trace["assistant_action"])
+    user_action = np.asarray(trace["user_action"], dtype=int)
     n_targets = len(user_goal)
     n_steps = len(belief)
 
@@ -71,6 +72,13 @@ def plot_traces(trace,
     ax.set_ylabel("Position")
 
     axes[-1].set_xlabel("Time")
+
+    a = user_action
+    idx = a == 0
+    all_idx = np.arange(n_steps)
+    ax.scatter(all_idx[idx], a[idx], c="green", marker='^', s=100)
+    idx = a == 1
+    ax.scatter(all_idx[idx], a[idx], c='red', marker='o', s=100)
 
     ax.legend()
 

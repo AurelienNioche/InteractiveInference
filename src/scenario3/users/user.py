@@ -15,16 +15,25 @@ class User(gym.Env):
 
         self._goal = goal  # Desired positions of targets
 
+        self._action = None
         self.t = None
 
     @property
     def goal(self):
         return self._goal.numpy()
 
-    def conditional_probability_action(self, mean_dist):
+    @property
+    def action(self):
+        return self._action.item()
+
+    def conditional_probability_action(self, mean_dist, log=False):
 
         prm = self.parameters
-        return torch.sigmoid(prm[0]*(- prm[1] + mean_dist))
+        x = prm[0]*(- prm[1] + mean_dist)
+        if log:
+            return torch.nn.functional.logsigmoid(x)
+        else:
+            return torch.sigmoid(x)
 
     def step(self, action: torch.Tensor):
 
@@ -35,15 +44,16 @@ class User(gym.Env):
 
         # User action is 1 ("complain") or 0 ("accept")
         p_complain = self.conditional_probability_action(mean_dist)
-        user_action = torch.rand(1) < p_complain
+        self._action = torch.rand(1) < p_complain
         self.t += 1
 
-        obs = user_action
+        obs = self._action
         reward, done, info = None, None, None
         return obs, reward, done, info
 
     def reset(self):
 
+        self._action = None
         self.t = 1
 
         # We don't consume observation after the reset

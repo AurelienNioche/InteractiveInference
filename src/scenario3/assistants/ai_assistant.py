@@ -3,6 +3,7 @@ from abc import ABC
 import numpy as np
 import torch
 import gym
+from tqdm import tqdm
 
 
 class AiAssistant(gym.Env, ABC):
@@ -77,11 +78,11 @@ class AiAssistant(gym.Env, ABC):
 
     @property
     def belief(self):
-        return self.b.numpy()
+        return self.b.detach().numpy()
 
     @property
     def action(self):
-        return self.a.numpy()
+        return self.a.detach().numpy()
 
     def reset(self):
 
@@ -211,15 +212,16 @@ class AiAssistant(gym.Env, ABC):
 
         return torch.rand(self.n_targets)
 
-    def _act_active_inference(self, *args, **kwargs):
+    def _act_active_inference(self, action_max_epochs,
+                              action_learning_rate, *args, **kwargs):
 
         a = torch.nn.Parameter(self.a.clone())
         # b.requires_grad = True
 
-        opt = torch.optim.Adam([a, ], lr=self.inference_learning_rate)
+        opt = torch.optim.Adam([a, ], lr=action_learning_rate)
 
         # Minimise free energy
-        for step in range(self.inference_max_epochs):
+        for _ in tqdm(range(action_max_epochs), leave=False):
 
             old_a = a.clone()
 
@@ -257,7 +259,7 @@ class AiAssistant(gym.Env, ABC):
 
         for _ in range(n_rollout):
 
-            b = self.b.clone()
+            b = self.b.detach().clone()
 
             for step in range(n_step_per_rollout):
                 if step == 0:
@@ -268,14 +270,15 @@ class AiAssistant(gym.Env, ABC):
 
                 mu = b[:, 0]
                 mean_dist = torch.abs(torch.sigmoid(mu) - a).mean()
-                expected_p_y = self.user_model.conditional_probability_action(mean_dist)
-                expected_kl = - torch.log(expected_p_y)   # Proportional to
+                expected_log_p_y = self.user_model.conditional_probability_action(
+                    mean_dist, log=True)
+                expected_kl = expected_log_p_y   # Proportional to
 
                 kl_rollout += decay_factor**step * expected_kl
 
                 if step < (n_step_per_rollout - 1):
 
-                    y = torch.rand(1) < expected_p_y
+                    y = torch.log(torch.rand(1)+1e-8) < expected_log_p_y
                     b = self.revise_belief(y=y, b=self.b, a=a)
 
         return kl_rollout
