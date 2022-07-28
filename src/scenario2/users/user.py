@@ -18,12 +18,22 @@ class User(gym.Env):
 
         self.goal = goal  # index of preferred target
 
+        self.a = None
         self.t = None
 
-    def conditional_probability_action(self, x):
+    @property
+    def action(self):
+        return self.a.item()
 
+    def _logit_p(self, x):
         prm = self.parameters
-        return torch.sigmoid(prm[0]*(- prm[1] + x))
+        return prm[0]*(- prm[1] + x)
+
+    def complain_prob(self, x):
+        return torch.sigmoid(self._logit_p(x))
+
+    def complain_log_prob(self, x):
+        return torch.nn.functional.logsigmoid(self._logit_p(x))
 
     def step(self, action: np.ndarray):
 
@@ -31,17 +41,18 @@ class User(gym.Env):
         position = action
 
         # User action is 1 ("complain") or 0 ("accept")
-        p_complain = self.conditional_probability_action(position[self.goal])
-        user_action = np.random.random() < p_complain
+        p_complain = self.complain_prob(position[self.goal])
+        self.a = (torch.rand(1) < p_complain).long()
 
         self.t += 1
 
-        obs = user_action
+        obs = self.a
         reward, done, info = None, None, None
         return obs, reward, done, info
 
     def reset(self):
 
+        self.a = None
         self.t = 1
 
         # We don't consume observation after the reset

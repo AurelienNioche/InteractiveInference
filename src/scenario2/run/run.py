@@ -61,7 +61,7 @@ def run(
 
     for _ in tqdm(range(n_step)):
 
-        trace["targets_position"].append(assistant_output)
+        trace["targets_position"].append(assistant.targets_position)
         trace["assistant_belief"].append(assistant.belief)
 
         user_output, _, user_done, _ = user.step(assistant_output)
@@ -72,7 +72,7 @@ def run(
         if assistant_done:
             break
 
-        trace["user_action"].append(user_output)
+        trace["user_action"].append(user.action)
         trace["assistant_action"].append(assistant.action)
 
     trace["preferred_target"] = user.goal

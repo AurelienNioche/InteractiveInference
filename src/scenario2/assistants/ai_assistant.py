@@ -3,6 +3,7 @@ from abc import ABC
 import numpy as np
 import torch
 import gym
+from itertools import product
 
 
 class AiAssistant(gym.Env, ABC):
@@ -64,6 +65,8 @@ class AiAssistant(gym.Env, ABC):
                 decision_rule_parameters = dict(
                     temperature=100
                 )
+            elif decision_rule == "random":
+                decision_rule_parameters = dict()
             else:
                 raise ValueError("Decision rule not recognized")
 
@@ -76,7 +79,11 @@ class AiAssistant(gym.Env, ABC):
 
     @property
     def belief(self):
-        return self.variational_density(self.b).detach().numpy()
+        return torch.softmax(self.b, dim=0).detach().numpy().copy()
+
+    @property
+    def targets_position(self):
+        return self.x.detach().numpy().copy()
 
     @property
     def action(self):
@@ -87,44 +94,46 @@ class AiAssistant(gym.Env, ABC):
         self.a = None
         self.b = torch.ones(self.n_targets)
         self.x = torch.ones(self.n_targets) * self.starting_x
-        observation = self.x.detach().numpy().copy()  # np.random.choice(self.actions)
+        observation = self.x  # np.random.choice(self.actions)
         return observation  # reward, done, info can't be included
 
     def step(self, action: np.ndarray):
 
         y = action  # sensory state is action of other user
-        self.b = self.revise_belief(y=y, b=self.b, x=self.x)
+        self.b, _ = self.revise_belief(y=y, b=self.b, x=self.x)
         self.act()
 
-        # print(self.a)
-
-        observation = self.x.detach().numpy().copy()
+        observation = self.x
         done = False
 
         reward, info = None, None
         return observation, reward, done, info
 
-    @staticmethod
-    def kl_div(a, b):
-        """
-        Kullback-Leibler divergence between densities a and b.
-        """
-        # If access to distributions "registered" for KL div, then:
-        # torch.distributions.kl.kl_divergence(p, q)
-        # Otherwise:
-        # torch.nn.functional.kl_div(input=torch.log(b), target=a)
-        # Note the inversion between the arguments order,
-        # and the fact that you need to give the first in the log-space
-        return torch.sum(a * (torch.log(a) - torch.log(b)))
-
     def revise_belief(self, y, b, x):
         """
         Update the belief based on a new observation
         """
+        # Alternative solution but less efficient computationally
+        # p = self.user_model.complain_prob(x)
+        # p_y = p ** y * (1 - p) ** (1 - y)
+        # log_p_y_under_q = (p_y.log() * q_prime).sum()
+        #
+        # log_q = torch.log_softmax(b - b.max(), dim=0)
+        #
+        # kl_div_q_p = torch.sum(q_prime * (q_prime.log() - log_q))
+        # fe = - log_p_y_under_q + kl_div_q_p
+
+        p = self.user_model.complain_prob(x)
+        p_y = p ** y * (1 - p) ** (1 - y)
+
+        q = torch.softmax(b - b.max(), dim=0)
+        logp_yq = (p_y * q).log()
+        logp_yq.requires_grad = True
+
         # Start by creating a new belief `b_prime` the previous belief `b`
         b_prime = torch.nn.Parameter(b.clone())
 
-        b.requires_grad = True
+        loss = None
 
         opt = torch.optim.Adam([b_prime, ], lr=self.inference_learning_rate)
 
@@ -134,16 +143,18 @@ class AiAssistant(gym.Env, ABC):
             old_b_prime = b_prime.clone()
 
             opt.zero_grad()
-            loss = self.free_energy_belief(b_prime=b_prime, y=y, x=x, b=b)
+
+            q_prime = torch.softmax(b_prime - b_prime.max(), dim=0)
+            loss = torch.sum(q_prime * (q_prime.log() - logp_yq))
+
             loss.backward()
             opt.step()
 
             if torch.isclose(old_b_prime, b_prime).all():
+                # print(f"converged at step {step}")
                 break
 
-        # Update internal state
-        b = b_prime.detach()
-        return b
+        return b_prime.detach(), loss.item()
 
     def update_target_positions(self, x, a):
 
@@ -157,57 +168,14 @@ class AiAssistant(gym.Env, ABC):
 
         return x
 
-    def generative_density_belief(self, y, x, b):
-        r"""
-        Compute the generative density.
-
-        .. math::
-           P(\mathbf{X}, \mathbf{Z}) = P(\mathbf{X} \mid \mathbf{Z}) P(\mathbf{Z})
-        """
-
-        p_preferred = self.variational_density(b)
-        cond_p = self.user_model.conditional_probability_action(x)
-
-        if not y:
-            cond_p = 1 - cond_p
-
-        joint_p = cond_p * p_preferred
-        return joint_p
-
-    def free_energy_belief(self, b_prime, y, x, b):
-        r"""
-        KL divergence between variational density (:math:`Q(\mathbf{Z})`)
-        and generative density (:math:`P(\mathbf{X}, \mathbf{Z})`)
-
-        .. math::
-            \begin{align}
-                &-\mathbb {E} _{\mathbf {Z} \sim Q} \left[\log \frac {P(\mathbf {X} ,\mathbf {Z} )}{Q(\mathbf {Z} )} \right] \\
-                =& D_{\mathrm {KL} }(Q(\mathbf {Z})  \parallel P(\mathbf{X}, \mathbf{Z}))
-            \end{align}
-
-        Used to update `b`
-        """
-        # KL(target, input)
-        return self.kl_div(
-            a=self.variational_density(b_prime),
-            b=self.generative_density_belief(y=y, x=x, b=b))
-
-    @staticmethod
-    def variational_density(b):
-        r"""
-        :math:`Q(\mathbf{Z})`
-
-        Agent's beliefs.
-        """
-        # Softmax function. The shift by b.max() is for numerical stability
-        b_scaled = b - b.max()
-        return torch.nn.functional.softmax(b_scaled, dim=0)
-
     def act(self):
 
         i = getattr(self, f'_act_{self.decision_rule}')(**self.decision_rule_parameters)
         self.a = self.actions[i]
         self.update_target_positions(x=self.x, a=self.a)
+
+    def _act_random(self):
+        return np.random.choice(np.arange(self.n_targets))
 
     def _act_epsilon_rule(self, epsilon):
         rd = np.random.random()
@@ -226,73 +194,94 @@ class AiAssistant(gym.Env, ABC):
     def _act_active_inference(self,
                               decay_factor,
                               n_rollout,
-                              n_step_per_rollout):
+                              n_step_per_rollout, efe='efe_on_obs'):
 
-        # Pick an action
-        # Calculate the free energy given my target (intent) distribution, current state distribution, & sensory input
-        # Do this for all actions and select the action with minimum free energy.
-        kl_div = np.asarray([self.expected_free_energy_action(
-            a=a,
-            decay_factor=decay_factor,
+        efe = getattr(self, efe)
+
+        kl_div = np.asarray([self.rollout(
+            action=a,
             n_rollout=n_rollout,
             n_step_per_rollout=n_step_per_rollout,
-        ).item() for a in self.actions])
+            decay_factor=decay_factor,
+            efe=efe,
+        ) for a in self.actions])
         i = np.random.choice(np.nonzero(kl_div == np.min(kl_div))[0])
+
+        # i = np.random.choice(np.arange(len(self.actions)),
+        #                      p=torch.softmax(kl_div, dim=0).numpy())
         return i
 
-    @property
-    def target_dist(self):
-        """
-        The target distribution ("preferences") is to be certain that the user would not complain
-        """
-        return torch.tensor([1, 0]) + 1e-8
+    def rollout(self, action, n_rollout, n_step_per_rollout, decay_factor, efe):
 
-    def generative_density_action(self, x, b):
-
-        joint_complains = self.generative_density_belief(y=1, x=x, b=b)
-        marginalized_complains = joint_complains.sum()
-
-        return torch.tensor([1 - marginalized_complains, marginalized_complains])
-
-    def expected_free_energy_action(self, a,
-                                    decay_factor,
-                                    n_rollout,
-                                    n_step_per_rollout):
-        r"""
-        KL divergence between the density function that implements preferences (:math:`Q(\mathbf{Z^*})`)
-        and generative density of the same object (:math:`P(\mathbf{X}, \mathbf{Z})`)
-
-        .. math::
-            \begin{align}
-                &-\mathbb {E} _{\mathbf {Z} \sim Q} \left[\log \frac {P(\mathbf {X} ,\mathbf {Z} )}{Q(\mathbf {Z} )} \right] \\
-                =& D_{\mathrm {KL} }(Q(\mathbf {Z})  \parallel P(\mathbf{X}, \mathbf{Z}))
-            \end{align}
-        """
-
-        kl_rollout = []
-
+        total_efe = 0
         for _ in range(n_rollout):
+            efe_rollout = 0
 
             x = self.x.clone()
             b = self.b.clone()
 
-            for step in range(n_step_per_rollout):
-                if step == 0:
-                    action = a
-                else:
-                    # Choose randomly a new action
-                    action = np.random.choice(self.actions)
+            action_plan = np.zeros(n_step_per_rollout, dtype=int)
+            action_plan[0] = action
+            if n_step_per_rollout > 1:
+                action_plan[1:] = np.random.choice(self.actions, size=n_step_per_rollout-1)
+
+            for step, action in enumerate(action_plan):
 
                 self.update_target_positions(x=x, a=action)
-                gd = self.generative_density_action(x=x, b=b)
-                kl = self.kl_div(a=self.target_dist,
-                                 b=gd)
 
-                kl_rollout.append(decay_factor**step * kl)
+                efe_step, p_y_under_q, b_new = efe(x=x, b=b)
 
-                if step < (n_step_per_rollout - 1):
+                efe_rollout += decay_factor**step * efe_step
 
-                    y = np.random.random() < gd[1]
-                    b = self.revise_belief(y=y, b=self.b, x=self.x)
+                if n_step_per_rollout > 1:
+                    y = torch.bernoulli(p_y_under_q[1]).long()
+                    b = b_new[y]
 
-        return np.sum(kl_rollout)
+            total_efe += efe_rollout.item()
+
+        total_efe /= n_rollout
+        return total_efe
+
+    def efe_on_obs(self, x, b):
+
+        epistemic_value, p_y_under_q, b_new = self.epistemic_value(b, x)
+
+        extrinsic_value = p_y_under_q[1] * torch.tensor([1e-8]).log()
+
+        efe_step = - extrinsic_value - epistemic_value
+
+        return efe_step, p_y_under_q, b_new
+
+    def efe_on_latent(self, x, b,
+                      scale_objective=0.05):
+
+        # --- Compute epistemic value
+        epistemic_value, p_y_under_q, b_new = self.epistemic_value(b, x)
+
+        # --- Compute extrinsic value
+        objective_dist = torch.distributions.HalfNormal(scale_objective)
+        log_p = (objective_dist.log_prob(x) * b).sum()
+        extrinsic_value = log_p
+
+        efe_step = - extrinsic_value - epistemic_value
+
+        return efe_step, p_y_under_q, b_new
+
+    def epistemic_value(self, b, x):
+
+        ep_value = torch.zeros(2)
+        b_new = torch.zeros((2, len(self.b)))
+
+        y = torch.arange(2)
+        p = self.user_model.complain_prob(x)
+        q = torch.softmax(b - b.max(), dim=0)
+        p_y = p ** y.unsqueeze(dim=1) * (1 - p) ** (1 - y.unsqueeze(dim=1))
+        p_y_under_q = (p_y * q).sum(1)
+
+        for i in y:
+            b_new_i, kl_div_i = self.revise_belief(y=i, b=b, x=x)
+            b_new[i] = b_new_i
+            ep_value[i] = kl_div_i
+
+        epistemic_value = (p_y_under_q * ep_value).sum()
+        return epistemic_value, p_y_under_q, b_new
