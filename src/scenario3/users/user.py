@@ -44,7 +44,7 @@ class User(gym.Env):
 
         # User action is 1 ("complain") or 0 ("accept")
         p_complain = self.conditional_probability_action(mean_dist)
-        self._action = torch.rand(1) < p_complain
+        self._action = torch.bernoulli(p_complain)
         self.t += 1
 
         obs = self._action
