@@ -31,6 +31,6 @@ log(Q(z)) - log(P(x, z))
 For action, 
 
 ```math
-E_Q(z) [ln T(x | z)] + KL(Q(x) || P(z))  
+E_Q(z) [ln T(x | z)] + KL(Q(z | x) || P(z))  
 ```
-with `T` the target distribution, and 
+with `T` the target distribution 

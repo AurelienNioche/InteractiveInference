@@ -175,12 +175,15 @@ class AiAssistant(gym.Env, ABC):
         return torch.rand(self.n_targets)
 
     def _act_active_inference(self, action_max_epochs,
-                              action_learning_rate, *args, **kwargs):
+                              action_learning_rate,
+                              n_sample):
 
         a = torch.nn.Parameter(self.a.clone())
         # b.requires_grad = True
 
         opt = torch.optim.Adam([a, ], lr=action_learning_rate)
+
+        # saving_b = self.b.clone()
 
         # Minimise free energy
         for _ in tqdm(range(action_max_epochs), leave=False):
@@ -191,30 +194,58 @@ class AiAssistant(gym.Env, ABC):
 
             # torch.autograd.set_detect_anomaly(True)
 
-            loss = self.expected_free_energy_action(a=a, *args, **kwargs)
+            loss = self.efe_on_obs(b=self.b, a=a,
+                                   n_sample=n_sample)
+
+            # loss = self.expected_free_energy_action(a=a, *args, **kwargs)
             loss.backward()
             opt.step()
 
             if torch.isclose(old_a, a).all():
                 break
 
+        # assert (saving_b == self.b.clone()).all()
+
         return a.detach()
 
-    def epistemic_value(self, b, x):
+    def efe_on_obs(self, b, a, n_sample):
 
-        ep_value = torch.zeros(2)
-        b_new = torch.zeros((2, len(self.b)))
+        cond_p = self.user_model.conditional_probability_action
 
         y = torch.arange(2)
-        p = self.user_model.complain_prob(x)
-        q = torch.softmax(b - b.max(), dim=0)
-        p_y = p ** y.unsqueeze(dim=1) * (1 - p) ** (1 - y.unsqueeze(dim=1))
-        p_y_under_q = (p_y * q).sum(1)
+
+        ep_value = torch.zeros((len(y), len(self.b)))
+        b_new = torch.zeros((len(y), len(self.b)))
+
+        mu, log_var = b.T
+        std = (0.5 * log_var).exp()
+        eps = torch.randn((n_sample, self.n_targets))
+
+        z = eps * std + mu
+        z_scaled = torch.sigmoid(z)
+
+        distance = torch.absolute(z_scaled - a)
+        average_distance = distance.mean(axis=-1)
+
+        p = cond_p(average_distance)
+        y_ = y.unsqueeze(dim=1)
+
+        p_y = p ** y_ * (1 - p) ** (1 - y_)
+
+        p_y_under_q = p_y.mean(axis=1)
 
         for i in y:
-            b_new_i, kl_div_i = self.revise_belief(y=i, b=b, x=x)
+            b_new_i, kl_div_i = self.revise_belief(
+                y=i, b=b, a=a,
+                conditional_probability_action=cond_p,
+                lr=self.inference_learning_rate,
+                max_n_epochs=self.inference_max_epochs)
+
             b_new[i] = b_new_i
             ep_value[i] = kl_div_i
 
         epistemic_value = (p_y_under_q * ep_value).sum()
-        return epistemic_value, p_y_under_q, b_new
+
+        extrinsic_value = p_y_under_q[1] * torch.tensor([1e-8]).log()
+
+        return - extrinsic_value - epistemic_value

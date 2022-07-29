@@ -24,24 +24,22 @@ def main():
     #         temperature=100.0)
     # )
 
-    # decision_rule_kwargs = dict(
-    #     decision_rule='active_inference',
-    #     decision_rule_parameters=dict(
-    #         action_max_epochs=50,
-    #         action_learning_rate=0.01,
-    #         decay_factor=0.9,
-    #         n_rollout=5,
-    #         n_step_per_rollout=2)
-    # )
+    decision_rule_kwargs = dict(
+        decision_rule='active_inference',
+        decision_rule_parameters=dict(
+            action_max_epochs=50,
+            action_learning_rate=0.1,
+            n_sample=10)
+    )
 
     # decision_rule_kwargs = dict(
     #     decision_rule='epsilon_rule',
     #     decision_rule_parameters=dict(
     #         epsilon=0.2))
 
-    decision_rule_kwargs = dict(
-        decision_rule='random',
-    )
+    # decision_rule_kwargs = dict(
+    #     decision_rule='random',
+    # )
 
     run_name = f"{decision_rule_kwargs['decision_rule']}"
 
@@ -51,7 +49,7 @@ def main():
         assistant_model=AiAssistant,
         seed=2,
         inference_max_epochs=50,
-        user_parameters=(100.0, 0.1),
+        user_parameters=(100.0, 0.05),
         inference_learning_rate=0.1,
         n_step=300,
         **decision_rule_kwargs)
