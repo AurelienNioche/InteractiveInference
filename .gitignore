@@ -129,10 +129,10 @@ dmypy.json
 .pyre/
 
 .idea/
-/src/scenario2/fig/
-
 
 */.DS_Store
 */*/.DS_Store
+
 /src/scenario3/fig/
 /src/scenario2/fig/
+
