@@ -1,8 +1,8 @@
 import pygame
 import sys
 import numpy as np
-from scipy.special import expit
-from scipy.signal import butter, sosfiltfilt
+from scipy.special import expit, softmax
+from scipy.signal import butter, sosfilt
 
 
 class Window:
@@ -21,7 +21,6 @@ class Window:
         pygame.mouse.set_visible(False)
 
     def clear(self):
-
         self.surface.fill(self.background)
 
     def update(self):
@@ -31,16 +30,27 @@ class Window:
                 pygame.quit()
                 sys.exit()
 
-        self.keep_cursor_inside_window()
+        # self.keep_cursor_inside_window()
         pygame.display.update()
         self.fps_clock.tick(self.fps)
 
-    @staticmethod
-    def keep_cursor_inside_window():
-        x, y = pygame.mouse.get_pos()
-        if not pygame.mouse.get_focused():
-            pygame.event.set_grab(True)
-            pygame.mouse.set_pos(x, y)
+    # @staticmethod
+    # def keep_cursor_inside_window():
+    #     x, y = pygame.mouse.get_pos()
+    #     if not pygame.mouse.get_focused():
+    #         pygame.event.set_grab(True)
+    #         pygame.mouse.set_pos(x, y)
+    def move_back_cursor_to_the_middle(self):
+
+        pygame.event.set_grab(True)
+        x, y = 0.5, 0.5
+        x_max, y_max = self.surface.get_size()
+        x_scaled = x*x_max
+        y_scaled = y*y_max
+
+        # print("set", x_scaled, y_scaled)
+        pygame.mouse.set_pos(x_scaled, y_scaled)
+        # print("read", pygame.mouse.get_pos())
 
     @property
     def mouse_position(self):
@@ -50,7 +60,7 @@ class Window:
         x = x_scaled/x_max
         y = y_scaled/y_max
 
-        return x, y
+        return np.array([x, y])
 
 
 class Visual:
@@ -64,14 +74,21 @@ class Visual:
 
         x, y = self.position
         x_max, y_max = self.window.surface.get_size()
-        print(x_max, y_max)
         x_scaled = x*x_max
         y_scaled = y*y_max
 
         return x_scaled, y_scaled
 
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        self.draw()
 
-class TextLine(Visual):
+    def draw(self):
+        pass
+
+
+class Text(Visual):
 
     def __init__(self, window,
                  text="Hello world!",
@@ -92,11 +109,6 @@ class TextLine(Visual):
 
         self.window.surface.fill(pygame.Color("white"))
 
-    def update(self, text):
-
-        self.text = text
-        self.draw()
-
     def draw(self):
 
         text_list = self.text.split("\n")
@@ -116,162 +128,255 @@ class TextLine(Visual):
 
 class Circle(Visual):
 
-    def __init__(self, window, position=(0.5, 0.5), color="black", radius=10):
+    def __init__(self, window, position=(0.5, 0.5), color="black", radius=10, width=0):
 
         super().__init__(window=window, position=position)
         self.color = color
         self.radius = radius
+        self.width = width
 
     def draw(self):
         pygame.draw.circle(self.window.surface,
                            color=pygame.Color(self.color),
                            center=self.coordinates, radius=self.radius,
-                           width=0)
+                           width=self.width)
+
+
+class Line:
+
+    def __init__(self, window,
+                 start_position=(-0.2, -0.2),
+                 stop_position=(+0.2, +0.2),
+                 color="black",
+                 width=2):
+
+        self.window = window
+        self.color = color
+        self.start_position = start_position
+        self.stop_position = stop_position
+        self.width = width
+
+    def draw(self):
+        pygame.draw.line(self.window.surface,
+                         pygame.Color(self.color),
+                         self.coordinates(self.start_position),
+                         self.coordinates(self.stop_position),
+                         width=self.width)
+
+    def coordinates(self, position):
+
+        x, y = position
+        x_max, y_max = self.window.surface.get_size()
+        x_scaled = x*x_max
+        y_scaled = y*y_max
+
+        return x_scaled, y_scaled
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
         self.draw()
 
-def low_pass_filtered_white_noise(rng,
-                                  n_sample_noise,
-                                  sd_noise,
-                                  cutoff, fs, order, ):
 
-    def butter_lowpass_filter(data):
-        nyq = 0.5 * fs  # Nyquist Frequency
-        normal_cutoff = cutoff / nyq
-        # Get the filter coefficients
-        flt = butter(order, normal_cutoff, btype='low', analog=False, output='sos')
-        y = sosfiltfilt(flt, data)
-        return y
+class SinusoidalNoise:
 
-    smp = rng.normal(scale=sd_noise, size=(2, n_sample_noise))
-    x_noise = butter_lowpass_filter(smp[0])
-    y_noise = butter_lowpass_filter(smp[1])
-    return x_noise, y_noise
+    def __init__(
+            self, fps, rng,
+            num_f,
+            f_min,
+            f_max):
+
+        self.fps = fps
+        self.t = 0
+
+        self.f = rng.uniform(size=(2, num_f)) * (f_max - f_min) + f_min
+        self.p = rng.uniform(size=(2, num_f)) * 2 * np.pi
+
+    def new(self):
+
+        x = self.oscillate(self.t, self.f[0], self.p[0])
+        y = self.oscillate(self.t, self.f[1], self.p[1])
+
+        self.t += 1 / self.fps
+        pos = np.asarray([x, y])
+        return pos
+
+    @staticmethod
+    def oscillate(t, freq, phase):
+        return np.sin(2 * np.pi * freq * t + phase).sum()
 
 
 def main():
 
-    init_x, init_y = 0.5, 0.5
+    center_positions = np.array([(0.3, 0.3), (0.7, 0.7)])
+
+    line_scale = 4.0
 
     base_radius = 5
-    var_radius = 40
+    var_radius = 50
 
-    # max_radius = base_radius + var_radius
+    max_radius = base_radius + var_radius
 
-    alpha, beta = 0.3, 0.1
+    alpha, beta = 0.5, 0.01
 
-    v = 0.8  # Threshold
+    time_stay_selected = 1.0
 
-    time_window_sec = 0.5
-    samples_noise_sec = 6.0
+    min_gamma = 0.0
+    max_gamma = 6.0
 
-    sd_noise = 0.01
+    v_threshold = 0.9
 
-    mvt_size_noise = 1.0
-    mvt_size_mouse = 0.8
+    time_window_sec = 4.0
 
-    cutoff = 0.5  # desired cutoff frequency of the filter, Hz
-    order = 3 # sin wave can be approx represented as quadratic
+    seed = 123
+
+    scale_noise = 0.03
+    scale_mouse = 0.4   # Golden value: 0.2?
+
+    color_still = "chartreuse1"
+    color_selected = "red"
+
+    num_f = 40
+    f_min = 0.05
+    f_max = 0.2
+
+    init_frames = 5
+
+    # ---------------------------------------- #
+
+    n_target = len(center_positions)
+
+    gamma = np.zeros(n_target)
 
     window = Window()
 
+    rng = np.random.default_rng(seed=seed)
+
     time_window = int(time_window_sec * window.fps)
-    n_sample_noise = int(samples_noise_sec * window.fps)
+    hist_pos = np.zeros((n_target, 2,  time_window))
+    hist_f = np.zeros((n_target, 2,  time_window))
 
-    rng = np.random.default_rng()
+    noise_maker = \
+        [SinusoidalNoise(
+            fps=window.fps, rng=rng,
+            num_f=num_f,
+            f_min=f_min,
+            f_max=f_max)
+         for _ in range(n_target)]
 
-    x_noise, y_noise = None, None
+    # To be sure that the mouse can be captured correctly...
+    for i in range(init_frames):
+        window.clear()
+        window.update()
 
-    gamma = 0
+    window.move_back_cursor_to_the_middle()
 
-    hist = {k: np.random.uniform(0, 1, size=time_window) for k in ('x', 'y', 'fx', 'fy')}
+    old_mouse_pos = window.mouse_position - 0.5
 
-    circle = Circle(window)
-    text = TextLine(window)
-    label_position_mouse = TextLine(window, position=(0.5, 0.4))
+    old_noise = np.zeros((n_target, 2))
 
-    fx, fy = init_x, init_y
+    selected = False
+    time_since_selected = 0
 
-    i = 0
+    color = [color_still for _ in range(n_target)]
+    radius = [base_radius for _ in range(n_target)]
 
     while True:
 
         window.clear()
 
-        if i == 0:
+        noise = np.zeros((n_target, 2))
+        f = np.zeros((n_target, 2))
+        pos = np.zeros((n_target, 2))
 
-            x_noise, y_noise = low_pass_filtered_white_noise(
-                rng=rng,
-                n_sample_noise=n_sample_noise,
-                cutoff=cutoff,
-                fs=window.fps,
-                order=order,
-                sd_noise=sd_noise)
+        mouse_pos = window.mouse_position - 0.5
+        mouse_pos *= scale_mouse
 
-            # x_noise = np.ones(n_sample_noise)
-            # x_noise[:] = 0.01  # 0.0001
-            # x_noise[int(len(x_noise) / 2):] = - 0.01  # -0.0001
-            # y_noise = np.zeros(n_sample_noise)
+        for i in range(n_target):
 
-        mouse_x, mouse_y = window.mouse_position
+            noise[i] = noise_maker[i].new()
 
-        fx = fx + x_noise[i] * mvt_size_noise
-        fy = fy + y_noise[i] * mvt_size_noise
+        noise[:] *= scale_noise
 
-        x = fx + (mouse_x - 0.5) * mvt_size_mouse
-        y = fy + (mouse_y - 0.5) * mvt_size_mouse
+        f[:] = center_positions[:] + noise[:]
 
-        x = min(max(x, 0), 1)
-        y = min(max(y, 0), 1)
+        pos[:] = f[:] + mouse_pos
 
-        values = {
-            'x': x,
-            'y': y,
-            'fx': fx,
-            'fy': fy
-        }
+        pos = np.clip(pos, 0.0, 1.0)
 
-        for k, val in hist.items():
-            hist[k] = np.roll(val, -1)
-            hist[k][-1] = values[k]
+        hist_pos = np.roll(hist_pos, -1)
+        hist_f = np.roll(hist_f, -1)
+        hist_pos[:, :, -1] = pos
+        hist_f[:, :, -1] = f
 
-        mean = {k: hist[k].mean() for k in hist.keys()}
-        rms_pos = np.sqrt(((x - mean['x']) ** 2 + (y - mean['y']) ** 2).mean())
-        rms_f = np.sqrt(((fx - mean['fx']) ** 2 + (fy - mean['fy']) ** 2).mean())
+        for i in range(n_target):
 
-        r = rms_pos / rms_f
+            mean_pos = hist_pos[i].mean(axis=-1)
+            mean_f = hist_f[i].mean(axis=-1)
 
-        need_increase = r < v
-        if need_increase:
-            gamma += alpha * r
+            rms_pos = np.sqrt(((pos - mean_pos) ** 2).sum())
+            rms_f = np.sqrt(((f - mean_f) ** 2).sum())
+
+            r = rms_pos / rms_f
+
+            increase = r < v_threshold
+
+            if increase:
+                gamma[i] += alpha * (1-r)
+            else:
+                gamma[i] *= (1-beta)
+
+        np.clip(gamma,min_gamma, max_gamma)
+
+        p = softmax(gamma)
+
+        delta_mouse = mouse_pos - old_mouse_pos
+
+        if not selected:
+
+            radius[:] = base_radius + var_radius * p[:]
+
+            for i in range(n_target):
+
+                selected_i = p[i] > 0.99
+
+                if selected_i:
+                    selected = True
+                    time_since_selected = 0
+                    color[i] = color_selected
+
         else:
-            gamma -= beta * r
+            time_since_selected += 1.0/window.fps
+            if time_since_selected >= time_stay_selected:
+                selected = False
+                color = [color_still for _ in range(n_target)]
+                gamma[:] = 0
+                hist_f[:] = 0
+                hist_pos[:] = 0
 
-        min_gamma = 0
-        max_gamma = 5.5
-        gamma = min(max_gamma, gamma)
-        gamma = max(min_gamma, gamma)
-        p = expit(gamma)
+        for i in range(n_target):
 
-        radius = base_radius + var_radius * (p - expit(min_gamma))
+            Circle(window=window, position=pos[i], color=color[i],
+                   radius=radius[i]).draw()
+            Circle(window=window, position=pos[i], color=color[i], radius=max_radius,
+                   width=2).draw()
 
-        if p > 0.99:
-            color = "red"
-        else:
-            color = "chartreuse1"
+            Line(window=window,
+                 color="black",
+                 start_position=pos[i],
+                 stop_position=pos[i] + delta_mouse*line_scale).draw()
 
-        circle.update(position=(x, y), color=color, radius=radius)
-        text.update(f"r={r:.2f}\ngamma={gamma}\np={p:.2f}")
+            delta_noise = noise[i] - old_noise[i]
 
-        label_position_mouse.update(f"mouse position = {mouse_x, mouse_y}")
+            Line(window=window,
+                 color="red",
+                 start_position=pos[i],
+                 stop_position=pos[i] + delta_noise*line_scale).draw()
 
         window.update()
 
-        i += 1
-        i %= n_sample_noise
+        old_mouse_pos[:] = mouse_pos
+        old_noise[:] = noise
 
 
 if __name__ == "__main__":
