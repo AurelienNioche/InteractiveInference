@@ -1,0 +1,2158 @@
+#Expyriment 0.10.0 (Python 3.9.13), .xpe-file, coding: UTF-8
+#date: Fri Sep 23 2022 13:11:50
+#sha1: 54087f
+#modules: 
+#display: size=(800, 600), window_mode=True, open_gl=2
+#os: uname_result(system='Darwin', node='nubara.dcs.gla.ac.uk', release='21.6.0', version='Darwin Kernel Version 21.6.0: Mon Aug 22 20:19:52 PDT 2022; root:xnu-8020.140.49~2/RELEASE_ARM64_T6000', machine='arm64')
+Time,Type,Event,Value,Detail,Detail2
+646,design,log,
+#design: #exp: Text Experiment
+#design: block_cnt,block_id,trial_cnt,trial_id
+646,design,logged,
+646,Experiment,started
+648,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+648,stdout,received,'fx 0.10500000000000001'
+648,stdout,received,''
+648,stdout,received,'[0.74968149 0.01783673 0.30247734 0.64650279 0.70576588 0.58516318\n 0.35926329 0.69478656 0.55810804 0.105     ]'
+648,stdout,received,'rms_f 0.44555473095016684'
+648,stdout,received,'r 1.3409753290305095'
+648,stdout,received,'False'
+649,stdout,received,'gamma = -0.01 p= 0.73'
+650,Stimulus,presented,0
+650,Stimulus,presented,1
+750,stdout,received,'window size (800, 600)'
+765,stdout,received,'fx 0.11000000000000001'
+765,stdout,received,''
+765,stdout,received,'[0.01783673 0.30247734 0.64650279 0.70576588 0.58516318 0.35926329\n 0.69478656 0.55810804 0.105      0.11      ]'
+766,stdout,received,'rms_f 0.37192570515278345'
+766,stdout,received,'r 1.4752051010081566'
+766,stdout,received,'False'
+766,stdout,received,'gamma = -0.03 p= 0.73'
+767,Stimulus,presented,0
+768,Stimulus,presented,1
+868,stdout,received,'window size (800, 600)'
+868,stdout,received,'fx 0.11500000000000002'
+868,stdout,received,''
+868,stdout,received,'[0.30247734 0.64650279 0.70576588 0.58516318 0.35926329 0.69478656\n 0.55810804 0.105      0.11       0.115     ]'
+868,stdout,received,'rms_f 0.3758340552584448'
+868,stdout,received,'r 1.2300913610088235'
+868,stdout,received,'False'
+868,stdout,received,'gamma = -0.04 p= 0.72'
+869,Stimulus,presented,0
+870,Stimulus,presented,1
+970,stdout,received,'window size (800, 600)'
+970,stdout,received,'fx 0.12000000000000002'
+970,stdout,received,''
+970,stdout,received,'[0.64650279 0.70576588 0.58516318 0.35926329 0.69478656 0.55810804\n 0.105      0.11       0.115      0.12      ]'
+970,stdout,received,'rms_f 0.33371367348977177'
+970,stdout,received,'r 1.128423546724956'
+970,stdout,received,'False'
+970,stdout,received,'gamma = -0.05 p= 0.72'
+971,Stimulus,presented,0
+975,Stimulus,presented,1
+1076,stdout,received,'window size (800, 600)'
+1076,stdout,received,'fx 0.12500000000000003'
+1076,stdout,received,''
+1076,stdout,received,'[0.70576588 0.58516318 0.35926329 0.69478656 0.55810804 0.105\n 0.11       0.115      0.12       0.125     ]'
+1076,stdout,received,'rms_f 0.24147658590277624'
+1076,stdout,received,'r 1.2186841811780442'
+1076,stdout,received,'False'
+1076,stdout,received,'gamma = -0.06 p= 0.72'
+1077,Stimulus,presented,0
+1077,Stimulus,presented,1
+1177,stdout,received,'window size (800, 600)'
+1177,stdout,received,'fx 0.13000000000000003'
+1177,stdout,received,''
+1177,stdout,received,'[0.58516318 0.35926329 0.69478656 0.55810804 0.105      0.11\n 0.115      0.12       0.125      0.13      ]'
+1177,stdout,received,'rms_f 0.16326953827220672'
+1177,stdout,received,'r 1.2742236168655967'
+1177,stdout,received,'False'
+1177,stdout,received,'gamma = -0.08 p= 0.72'
+1178,Stimulus,presented,0
+1179,Stimulus,presented,1
+1279,stdout,received,'window size (800, 600)'
+1279,stdout,received,'fx 0.13500000000000004'
+1279,stdout,received,''
+1279,stdout,received,'[0.35926329 0.69478656 0.55810804 0.105      0.11       0.115\n 0.12       0.125      0.13       0.135     ]'
+1279,stdout,received,'rms_f 0.11066169363478123'
+1279,stdout,received,'r 1.118317306034622'
+1279,stdout,received,'False'
+1279,stdout,received,'gamma = -0.09 p= 0.71'
+1282,Stimulus,presented,0
+1283,Stimulus,presented,1
+1383,stdout,received,'window size (800, 600)'
+1383,stdout,received,'fx 0.14000000000000004'
+1383,stdout,received,''
+1383,stdout,received,'[0.69478656 0.55810804 0.105      0.11       0.115      0.12\n 0.125      0.13       0.135      0.14      ]'
+1383,stdout,received,'rms_f 0.08354738220929524'
+1383,stdout,received,'r 1.487422193048992'
+1383,stdout,received,'False'
+1383,stdout,received,'gamma = -0.10 p= 0.71'
+1384,Stimulus,presented,0
+1385,Stimulus,presented,1
+1485,stdout,received,'window size (800, 600)'
+1485,stdout,received,'fx 0.14500000000000005'
+1485,stdout,received,''
+1485,stdout,received,'[0.55810804 0.105      0.11       0.115      0.12       0.125\n 0.13       0.135      0.14       0.145     ]'
+1485,stdout,received,'rms_f 0.023330705821857638'
+1485,stdout,received,'r 2.3679917092564073'
+1485,stdout,received,'False'
+1485,stdout,received,'gamma = -0.13 p= 0.71'
+1486,Stimulus,presented,0
+1486,Stimulus,presented,1
+1586,stdout,received,'window size (800, 600)'
+1586,stdout,received,'fx 0.15000000000000005'
+1586,stdout,received,''
+1586,stdout,received,'[0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15 ]'
+1586,stdout,received,'rms_f 0.02250000000000002'
+1586,stdout,received,'r 0.9531304461941595'
+1586,stdout,received,'True'
+1586,stdout,received,'gamma = -0.12 p= 0.71'
+1588,Stimulus,presented,0
+1591,Stimulus,presented,1
+1691,stdout,received,'window size (800, 600)'
+1691,stdout,received,'fx 0.15500000000000005'
+1691,stdout,received,''
+1691,stdout,received,'[0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155]'
+1691,stdout,received,'rms_f 0.02250000000000002'
+1691,stdout,received,'r 1.000171453065984'
+1691,stdout,received,'False'
+1691,stdout,received,'gamma = -0.13 p= 0.71'
+1692,Stimulus,presented,0
+1693,Stimulus,presented,1
+1793,stdout,received,'window size (800, 600)'
+1793,stdout,received,'fx 0.16000000000000006'
+1793,stdout,received,''
+1793,stdout,received,'[0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16 ]'
+1793,stdout,received,'rms_f 0.02250000000000002'
+1793,stdout,received,'r 1.000109733348294'
+1793,stdout,received,'False'
+1793,stdout,received,'gamma = -0.14 p= 0.70'
+1794,Stimulus,presented,0
+1794,Stimulus,presented,1
+1894,stdout,received,'window size (800, 600)'
+1894,stdout,received,'fx 0.16500000000000006'
+1894,stdout,received,''
+1894,stdout,received,'[0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165]'
+1894,stdout,received,'rms_f 0.02250000000000002'
+1894,stdout,received,'r 1.0000617264899825'
+1894,stdout,received,'False'
+1894,stdout,received,'gamma = -0.15 p= 0.70'
+1895,Stimulus,presented,0
+1895,Stimulus,presented,1
+1995,stdout,received,'window size (800, 600)'
+1995,stdout,received,'fx 0.17000000000000007'
+1995,stdout,received,''
+1995,stdout,received,'[0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17 ]'
+1995,stdout,received,'rms_f 0.02250000000000002'
+1995,stdout,received,'r 1.0000274344659248'
+1995,stdout,received,'False'
+1995,stdout,received,'gamma = -0.16 p= 0.70'
+1996,Stimulus,presented,0
+1999,Stimulus,presented,1
+2099,stdout,received,'window size (800, 600)'
+2099,stdout,received,'fx 0.17500000000000007'
+2099,stdout,received,''
+2099,stdout,received,'[0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175]'
+2099,stdout,received,'rms_f 0.02250000000000002'
+2099,stdout,received,'r 1.0000068586870416'
+2099,stdout,received,'False'
+2099,stdout,received,'gamma = -0.17 p= 0.70'
+2101,Stimulus,presented,0
+2101,Stimulus,presented,1
+2201,stdout,received,'window size (800, 600)'
+2201,stdout,received,'fx 0.17000000000000007'
+2201,stdout,received,''
+2201,stdout,received,'[0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17 ]'
+2201,stdout,received,'rms_f 0.013500000000000012'
+2201,stdout,received,'r 1.0'
+2201,stdout,received,'False'
+2201,stdout,received,'gamma = -0.18 p= 0.69'
+2202,Stimulus,presented,0
+2202,Stimulus,presented,1
+2302,stdout,received,'window size (800, 600)'
+2302,stdout,received,'fx 0.16500000000000006'
+2302,stdout,received,''
+2302,stdout,received,'[0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165]'
+2302,stdout,received,'rms_f 0.005500000000000005'
+2302,stdout,received,'r 1.0092546959624777'
+2302,stdout,received,'False'
+2302,stdout,received,'gamma = -0.19 p= 0.69'
+2303,Stimulus,presented,0
+2304,Stimulus,presented,1
+2404,stdout,received,'window size (800, 600)'
+2404,stdout,received,'fx 0.16000000000000006'
+2404,stdout,received,''
+2404,stdout,received,'[0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16 ]'
+2404,stdout,received,'rms_f 0.0015000000000000013'
+2404,stdout,received,'r 33.28094262450069'
+2404,stdout,received,'False'
+2404,stdout,received,'gamma = -0.52 p= 0.62'
+2408,Stimulus,presented,0
+2408,Stimulus,presented,1
+2508,stdout,received,'window size (800, 600)'
+2508,stdout,received,'fx 0.15500000000000005'
+2508,stdout,received,''
+2508,stdout,received,'[0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155]'
+2508,stdout,received,'rms_f 0.007500000000000007'
+2508,stdout,received,'r 19.557607215607923'
+2508,stdout,received,'False'
+2508,stdout,received,'gamma = -0.72 p= 0.57'
+2509,Stimulus,presented,0
+2510,Stimulus,presented,1
+2610,stdout,received,'window size (800, 600)'
+2610,stdout,received,'fx 0.15000000000000005'
+2610,stdout,received,''
+2610,stdout,received,'[0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15 ]'
+2610,stdout,received,'rms_f 0.012500000000000011'
+2610,stdout,received,'r 10.91486460953338'
+2610,stdout,received,'False'
+2610,stdout,received,'gamma = -0.82 p= 0.54'
+2611,Stimulus,presented,0
+2612,Stimulus,presented,1
+2712,stdout,received,'window size (800, 600)'
+2712,stdout,received,'fx 0.14500000000000005'
+2712,stdout,received,''
+2712,stdout,received,'[0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145]'
+2712,stdout,received,'rms_f 0.016500000000000015'
+2712,stdout,received,'r 7.393954918016484'
+2712,stdout,received,'False'
+2712,stdout,received,'gamma = -0.90 p= 0.53'
+2716,Stimulus,presented,0
+2717,Stimulus,presented,1
+2817,stdout,received,'window size (800, 600)'
+2817,stdout,received,'fx 0.14000000000000004'
+2817,stdout,received,''
+2817,stdout,received,'[0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14 ]'
+2817,stdout,received,'rms_f 0.019500000000000017'
+2817,stdout,received,'r 5.669678026351448'
+2817,stdout,received,'False'
+2817,stdout,received,'gamma = -0.96 p= 0.51'
+2818,Stimulus,presented,0
+2819,Stimulus,presented,1
+2919,stdout,received,'window size (800, 600)'
+2919,stdout,received,'fx 0.13500000000000004'
+2919,stdout,received,''
+2919,stdout,received,'[0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135]'
+2919,stdout,received,'rms_f 0.02150000000000002'
+2919,stdout,received,'r 5.607565758183114'
+2919,stdout,received,'False'
+2919,stdout,received,'gamma = -1.01 p= 0.50'
+2920,Stimulus,presented,0
+2921,Stimulus,presented,1
+3021,stdout,received,'window size (800, 600)'
+3021,stdout,received,'fx 0.13000000000000003'
+3021,stdout,received,''
+3021,stdout,received,'[0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13 ]'
+3021,stdout,received,'rms_f 0.02250000000000002'
+3021,stdout,received,'r 5.26219344662323'
+3021,stdout,received,'False'
+3021,stdout,received,'gamma = -1.06 p= 0.48'
+3024,Stimulus,presented,0
+3025,Stimulus,presented,1
+3125,stdout,received,'window size (800, 600)'
+3125,stdout,received,'fx 0.12500000000000003'
+3125,stdout,received,''
+3125,stdout,received,'[0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125]'
+3125,stdout,received,'rms_f 0.02250000000000002'
+3125,stdout,received,'r 4.620619751304512'
+3125,stdout,received,'False'
+3125,stdout,received,'gamma = -1.11 p= 0.47'
+3126,Stimulus,presented,0
+3127,Stimulus,presented,1
+3227,stdout,received,'window size (800, 600)'
+3227,stdout,received,'fx 0.12000000000000002'
+3227,stdout,received,''
+3227,stdout,received,'[0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12 ]'
+3227,stdout,received,'rms_f 0.02250000000000002'
+3227,stdout,received,'r 3.628752846670906'
+3227,stdout,received,'False'
+3227,stdout,received,'gamma = -1.15 p= 0.46'
+3228,Stimulus,presented,0
+3229,Stimulus,presented,1
+3329,stdout,received,'window size (800, 600)'
+3329,stdout,received,'fx 0.11500000000000002'
+3329,stdout,received,''
+3329,stdout,received,'[0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115]'
+3329,stdout,received,'rms_f 0.02250000000000002'
+3329,stdout,received,'r 2.9026382209940156'
+3329,stdout,received,'False'
+3329,stdout,received,'gamma = -1.18 p= 0.46'
+3331,Stimulus,presented,0
+3332,Stimulus,presented,1
+3432,stdout,received,'window size (800, 600)'
+3432,stdout,received,'fx 0.11000000000000001'
+3432,stdout,received,''
+3432,stdout,received,'[0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11 ]'
+3432,stdout,received,'rms_f 0.02250000000000002'
+3432,stdout,received,'r 1.9867930280608403'
+3432,stdout,received,'False'
+3432,stdout,received,'gamma = -1.20 p= 0.45'
+3433,Stimulus,presented,0
+3434,Stimulus,presented,1
+3534,stdout,received,'window size (800, 600)'
+3534,stdout,received,'fx 0.10500000000000001'
+3534,stdout,received,''
+3534,stdout,received,'[0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105]'
+3534,stdout,received,'rms_f 0.02250000000000002'
+3534,stdout,received,'r 2.558892748585882'
+3534,stdout,received,'False'
+3534,stdout,received,'gamma = -1.22 p= 0.45'
+3535,Stimulus,presented,0
+3536,Stimulus,presented,1
+3636,stdout,received,'window size (800, 600)'
+3636,stdout,received,'fx 0.1'
+3636,stdout,received,''
+3636,stdout,received,'[0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1  ]'
+3636,stdout,received,'rms_f 0.02250000000000002'
+3636,stdout,received,'r 2.8643263726874713'
+3636,stdout,received,'False'
+3636,stdout,received,'gamma = -1.25 p= 0.44'
+3637,Stimulus,presented,0
+3638,Stimulus,presented,1
+3738,stdout,received,'window size (800, 600)'
+3738,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+3738,stdout,received,'fx 0.10500000000000001'
+3738,stdout,received,''
+3738,stdout,received,'[0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105]'
+3738,stdout,received,'rms_f 0.013500000000000012'
+3738,stdout,received,'r 8.760955782990774'
+3738,stdout,received,'False'
+3738,stdout,received,'gamma = -1.34 p= 0.42'
+3740,Stimulus,presented,0
+3741,Stimulus,presented,1
+3841,stdout,received,'window size (800, 600)'
+3841,stdout,received,'fx 0.11000000000000001'
+3841,stdout,received,''
+3841,stdout,received,'[0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11 ]'
+3841,stdout,received,'rms_f 0.005500000000000005'
+3841,stdout,received,'r 23.64133864940612'
+3841,stdout,received,'False'
+3841,stdout,received,'gamma = -1.57 p= 0.36'
+3842,Stimulus,presented,0
+3843,Stimulus,presented,1
+3943,stdout,received,'window size (800, 600)'
+3943,stdout,received,'fx 0.11500000000000002'
+3943,stdout,received,''
+3943,stdout,received,'[0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115]'
+3943,stdout,received,'rms_f 0.0015000000000000013'
+3943,stdout,received,'r 111.83941861238162'
+3943,stdout,received,'False'
+3943,stdout,received,'gamma = -2.69 p= 0.16'
+3944,Stimulus,presented,0
+3945,Stimulus,presented,1
+4045,stdout,received,'window size (800, 600)'
+4045,stdout,received,'fx 0.12000000000000002'
+4045,stdout,received,''
+4045,stdout,received,'[0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12 ]'
+4045,stdout,received,'rms_f 0.007500000000000007'
+4045,stdout,received,'r 24.262469747979164'
+4045,stdout,received,'False'
+4045,stdout,received,'gamma = -2.93 p= 0.13'
+4046,Stimulus,presented,0
+4048,Stimulus,presented,1
+4148,stdout,received,'window size (800, 600)'
+4148,stdout,received,'fx 0.12500000000000003'
+4148,stdout,received,''
+4148,stdout,received,'[0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125]'
+4148,stdout,received,'rms_f 0.012500000000000011'
+4148,stdout,received,'r 14.100085204628286'
+4148,stdout,received,'False'
+4148,stdout,received,'gamma = -3.08 p= 0.11'
+4149,Stimulus,presented,0
+4150,Stimulus,presented,1
+4250,stdout,received,'window size (800, 600)'
+4250,stdout,received,'fx 0.13000000000000003'
+4250,stdout,received,''
+4250,stdout,received,'[0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13 ]'
+4250,stdout,received,'rms_f 0.016500000000000015'
+4250,stdout,received,'r 9.955612720103689'
+4250,stdout,received,'False'
+4250,stdout,received,'gamma = -3.18 p= 0.10'
+4251,Stimulus,presented,0
+4252,Stimulus,presented,1
+4352,stdout,received,'window size (800, 600)'
+4352,stdout,received,'fx 0.13500000000000004'
+4352,stdout,received,''
+4352,stdout,received,'[0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135]'
+4352,stdout,received,'rms_f 0.019500000000000017'
+4352,stdout,received,'r 7.496230287551023'
+4352,stdout,received,'False'
+4352,stdout,received,'gamma = -3.25 p= 0.10'
+4353,Stimulus,presented,0
+4354,Stimulus,presented,1
+4454,stdout,received,'window size (800, 600)'
+4454,stdout,received,'fx 0.14000000000000004'
+4454,stdout,received,''
+4454,stdout,received,'[0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14 ]'
+4454,stdout,received,'rms_f 0.02150000000000002'
+4454,stdout,received,'r 5.776613376463384'
+4454,stdout,received,'False'
+4454,stdout,received,'gamma = -3.31 p= 0.09'
+4456,Stimulus,presented,0
+4457,Stimulus,presented,1
+4557,stdout,received,'window size (800, 600)'
+4557,stdout,received,'fx 0.14500000000000005'
+4557,stdout,received,''
+4557,stdout,received,'[0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145]'
+4557,stdout,received,'rms_f 0.02250000000000002'
+4557,stdout,received,'r 4.254846345183901'
+4557,stdout,received,'False'
+4557,stdout,received,'gamma = -3.35 p= 0.09'
+4558,Stimulus,presented,0
+4559,Stimulus,presented,1
+4659,stdout,received,'window size (800, 600)'
+4659,stdout,received,'fx 0.15000000000000005'
+4659,stdout,received,''
+4659,stdout,received,'[0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15 ]'
+4659,stdout,received,'rms_f 0.02250000000000002'
+4659,stdout,received,'r 2.7935479810376234'
+4659,stdout,received,'False'
+4659,stdout,received,'gamma = -3.38 p= 0.08'
+4660,Stimulus,presented,0
+4661,Stimulus,presented,1
+4761,stdout,received,'window size (800, 600)'
+4761,stdout,received,'fx 0.15500000000000005'
+4761,stdout,received,''
+4761,stdout,received,'[0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155]'
+4761,stdout,received,'rms_f 0.02250000000000002'
+4761,stdout,received,'r 2.226053988119942'
+4761,stdout,received,'False'
+4761,stdout,received,'gamma = -3.40 p= 0.08'
+4762,Stimulus,presented,0
+4763,Stimulus,presented,1
+4863,stdout,received,'window size (800, 600)'
+4863,stdout,received,'fx 0.16000000000000006'
+4863,stdout,received,''
+4863,stdout,received,'[0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16 ]'
+4863,stdout,received,'rms_f 0.02250000000000002'
+4863,stdout,received,'r 1.6681683050061709'
+4863,stdout,received,'False'
+4863,stdout,received,'gamma = -3.42 p= 0.08'
+4866,Stimulus,presented,0
+4866,Stimulus,presented,1
+4966,stdout,received,'window size (800, 600)'
+4966,stdout,received,'fx 0.16500000000000006'
+4966,stdout,received,''
+4966,stdout,received,'[0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165]'
+4966,stdout,received,'rms_f 0.02250000000000002'
+4966,stdout,received,'r 1.2262615630952614'
+4966,stdout,received,'False'
+4966,stdout,received,'gamma = -3.43 p= 0.08'
+4967,Stimulus,presented,0
+4967,Stimulus,presented,1
+5067,stdout,received,'window size (800, 600)'
+5067,stdout,received,'fx 0.17000000000000007'
+5067,stdout,received,''
+5067,stdout,received,'[0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17 ]'
+5067,stdout,received,'rms_f 0.02250000000000002'
+5067,stdout,received,'r 0.8411898172481517'
+5067,stdout,received,'True'
+5067,stdout,received,'gamma = -3.42 p= 0.08'
+5068,Stimulus,presented,0
+5068,Stimulus,presented,1
+5168,stdout,received,'window size (800, 600)'
+5168,stdout,received,'fx 0.17500000000000007'
+5168,stdout,received,''
+5168,stdout,received,'[0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175]'
+5168,stdout,received,'rms_f 0.02250000000000002'
+5168,stdout,received,'r 0.6388707726900102'
+5168,stdout,received,'True'
+5168,stdout,received,'gamma = -3.41 p= 0.08'
+5168,Stimulus,presented,0
+5169,Stimulus,presented,1
+5269,stdout,received,'window size (800, 600)'
+5269,stdout,received,'fx 0.17000000000000007'
+5269,stdout,received,''
+5269,stdout,received,'[0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17 ]'
+5269,stdout,received,'rms_f 0.013500000000000012'
+5269,stdout,received,'r 0.48291374499902046'
+5269,stdout,received,'True'
+5269,stdout,received,'gamma = -3.41 p= 0.08'
+5270,Stimulus,presented,0
+5271,Stimulus,presented,1
+5371,stdout,received,'window size (800, 600)'
+5371,stdout,received,'fx 0.16500000000000006'
+5371,stdout,received,''
+5371,stdout,received,'[0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165]'
+5371,stdout,received,'rms_f 0.005500000000000005'
+5371,stdout,received,'r 0.35744813464662445'
+5371,stdout,received,'True'
+5371,stdout,received,'gamma = -3.41 p= 0.08'
+5376,Stimulus,presented,0
+5376,Stimulus,presented,1
+5476,stdout,received,'window size (800, 600)'
+5476,stdout,received,'fx 0.16000000000000006'
+5476,stdout,received,''
+5476,stdout,received,'[0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16 ]'
+5476,stdout,received,'rms_f 0.0015000000000000013'
+5476,stdout,received,'r 2.7550458758027485'
+5476,stdout,received,'False'
+5476,stdout,received,'gamma = -3.43 p= 0.08'
+5477,Stimulus,presented,0
+5478,Stimulus,presented,1
+5578,stdout,received,'window size (800, 600)'
+5578,stdout,received,'fx 0.15500000000000005'
+5578,stdout,received,''
+5578,stdout,received,'[0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155]'
+5578,stdout,received,'rms_f 0.007500000000000007'
+5578,stdout,received,'r 1.0335722543384565'
+5578,stdout,received,'False'
+5578,stdout,received,'gamma = -3.44 p= 0.08'
+5579,Stimulus,presented,0
+5579,Stimulus,presented,1
+5679,stdout,received,'window size (800, 600)'
+5679,stdout,received,'fx 0.15000000000000005'
+5679,stdout,received,''
+5679,stdout,received,'[0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15 ]'
+5679,stdout,received,'rms_f 0.012500000000000011'
+5679,stdout,received,'r 1.0000222219753097'
+5679,stdout,received,'False'
+5679,stdout,received,'gamma = -3.45 p= 0.08'
+5683,Stimulus,presented,0
+5684,Stimulus,presented,1
+5784,stdout,received,'window size (800, 600)'
+5784,stdout,received,'fx 0.14500000000000005'
+5784,stdout,received,''
+5784,stdout,received,'[0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145]'
+5784,stdout,received,'rms_f 0.016500000000000015'
+5784,stdout,received,'r 1.0'
+5784,stdout,received,'False'
+5784,stdout,received,'gamma = -3.46 p= 0.08'
+5785,Stimulus,presented,0
+5785,Stimulus,presented,1
+5885,stdout,received,'window size (800, 600)'
+5885,stdout,received,'fx 0.14000000000000004'
+5885,stdout,received,''
+5885,stdout,received,'[0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14 ]'
+5885,stdout,received,'rms_f 0.019500000000000017'
+5885,stdout,received,'r 1.0000000000000029'
+5885,stdout,received,'False'
+5885,stdout,received,'gamma = -3.47 p= 0.08'
+5885,Stimulus,presented,0
+5886,Stimulus,presented,1
+5986,stdout,received,'window size (800, 600)'
+5986,stdout,received,'fx 0.13500000000000004'
+5986,stdout,received,''
+5986,stdout,received,'[0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135]'
+5986,stdout,received,'rms_f 0.02150000000000002'
+5986,stdout,received,'r 1.0'
+5986,stdout,received,'False'
+5986,stdout,received,'gamma = -3.48 p= 0.08'
+5987,Stimulus,presented,0
+5988,Stimulus,presented,1
+6088,stdout,received,'window size (800, 600)'
+6088,stdout,received,'fx 0.13000000000000003'
+6088,stdout,received,''
+6088,stdout,received,'[0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13 ]'
+6088,stdout,received,'rms_f 0.02250000000000002'
+6088,stdout,received,'r 0.9999999999999976'
+6088,stdout,received,'False'
+6088,stdout,received,'gamma = -3.49 p= 0.08'
+6092,Stimulus,presented,0
+6092,Stimulus,presented,1
+6192,stdout,received,'window size (800, 600)'
+6192,stdout,received,'fx 0.12500000000000003'
+6192,stdout,received,''
+6192,stdout,received,'[0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125]'
+6192,stdout,received,'rms_f 0.02250000000000002'
+6192,stdout,received,'r 1.0'
+6192,stdout,received,'False'
+6192,stdout,received,'gamma = -3.50 p= 0.08'
+6193,Stimulus,presented,0
+6193,Stimulus,presented,1
+6293,stdout,received,'window size (800, 600)'
+6293,stdout,received,'fx 0.12000000000000002'
+6293,stdout,received,''
+6293,stdout,received,'[0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12 ]'
+6293,stdout,received,'rms_f 0.02250000000000002'
+6293,stdout,received,'r 1.0'
+6293,stdout,received,'False'
+6293,stdout,received,'gamma = -3.51 p= 0.07'
+6294,Stimulus,presented,0
+6295,Stimulus,presented,1
+6395,stdout,received,'window size (800, 600)'
+6395,stdout,received,'fx 0.11500000000000002'
+6395,stdout,received,''
+6395,stdout,received,'[0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115]'
+6395,stdout,received,'rms_f 0.02250000000000002'
+6395,stdout,received,'r 1.0'
+6395,stdout,received,'False'
+6395,stdout,received,'gamma = -3.52 p= 0.07'
+6396,Stimulus,presented,0
+6399,Stimulus,presented,1
+6499,stdout,received,'window size (800, 600)'
+6499,stdout,received,'fx 0.11000000000000001'
+6499,stdout,received,''
+6499,stdout,received,'[0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11 ]'
+6499,stdout,received,'rms_f 0.02250000000000002'
+6499,stdout,received,'r 1.0000000000000013'
+6499,stdout,received,'False'
+6499,stdout,received,'gamma = -3.53 p= 0.07'
+6500,Stimulus,presented,0
+6500,Stimulus,presented,1
+6600,stdout,received,'window size (800, 600)'
+6600,stdout,received,'fx 0.10500000000000001'
+6600,stdout,received,''
+6600,stdout,received,'[0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105]'
+6600,stdout,received,'rms_f 0.02250000000000002'
+6600,stdout,received,'r 1.0000000000000013'
+6600,stdout,received,'False'
+6600,stdout,received,'gamma = -3.54 p= 0.07'
+6601,Stimulus,presented,0
+6602,Stimulus,presented,1
+6702,stdout,received,'window size (800, 600)'
+6702,stdout,received,'fx 0.1'
+6702,stdout,received,''
+6702,stdout,received,'[0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1  ]'
+6702,stdout,received,'rms_f 0.02250000000000002'
+6702,stdout,received,'r 1.0000000000000013'
+6702,stdout,received,'False'
+6702,stdout,received,'gamma = -3.55 p= 0.07'
+6703,Stimulus,presented,0
+6703,Stimulus,presented,1
+6803,stdout,received,'window size (800, 600)'
+6803,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+6803,stdout,received,'fx 0.10500000000000001'
+6803,stdout,received,''
+6803,stdout,received,'[0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105]'
+6803,stdout,received,'rms_f 0.013500000000000012'
+6803,stdout,received,'r 1.000000000000002'
+6803,stdout,received,'False'
+6803,stdout,received,'gamma = -3.56 p= 0.07'
+6804,Stimulus,presented,0
+6807,Stimulus,presented,1
+6907,stdout,received,'window size (800, 600)'
+6907,stdout,received,'fx 0.11000000000000001'
+6907,stdout,received,''
+6907,stdout,received,'[0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11 ]'
+6907,stdout,received,'rms_f 0.005500000000000005'
+6907,stdout,received,'r 1.000000000000005'
+6907,stdout,received,'False'
+6907,stdout,received,'gamma = -3.57 p= 0.07'
+6909,Stimulus,presented,0
+6910,Stimulus,presented,1
+7010,stdout,received,'window size (800, 600)'
+7010,stdout,received,'fx 0.11500000000000002'
+7010,stdout,received,''
+7010,stdout,received,'[0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115]'
+7010,stdout,received,'rms_f 0.0015000000000000013'
+7010,stdout,received,'r 1.0'
+7010,stdout,received,'False'
+7010,stdout,received,'gamma = -3.58 p= 0.07'
+7011,Stimulus,presented,0
+7011,Stimulus,presented,1
+7111,stdout,received,'window size (800, 600)'
+7111,stdout,received,'fx 0.12000000000000002'
+7111,stdout,received,''
+7111,stdout,received,'[0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12 ]'
+7111,stdout,received,'rms_f 0.007500000000000007'
+7111,stdout,received,'r 1.0000000000000073'
+7111,stdout,received,'False'
+7111,stdout,received,'gamma = -3.59 p= 0.07'
+7112,Stimulus,presented,0
+7112,Stimulus,presented,1
+7212,stdout,received,'window size (800, 600)'
+7212,stdout,received,'fx 0.12500000000000003'
+7212,stdout,received,''
+7212,stdout,received,'[0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125]'
+7212,stdout,received,'rms_f 0.012500000000000011'
+7212,stdout,received,'r 1.0'
+7212,stdout,received,'False'
+7212,stdout,received,'gamma = -3.60 p= 0.07'
+7213,Stimulus,presented,0
+7216,Stimulus,presented,1
+7316,stdout,received,'window size (800, 600)'
+7316,stdout,received,'fx 0.13000000000000003'
+7316,stdout,received,''
+7316,stdout,received,'[0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13 ]'
+7316,stdout,received,'rms_f 0.016500000000000015'
+7316,stdout,received,'r 1.0'
+7316,stdout,received,'False'
+7316,stdout,received,'gamma = -3.61 p= 0.07'
+7317,Stimulus,presented,0
+7318,Stimulus,presented,1
+7418,stdout,received,'window size (800, 600)'
+7418,stdout,received,'fx 0.13500000000000004'
+7418,stdout,received,''
+7418,stdout,received,'[0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135]'
+7418,stdout,received,'rms_f 0.019500000000000017'
+7418,stdout,received,'r 1.0000000000000029'
+7418,stdout,received,'False'
+7418,stdout,received,'gamma = -3.62 p= 0.07'
+7419,Stimulus,presented,0
+7419,Stimulus,presented,1
+7519,stdout,received,'window size (800, 600)'
+7519,stdout,received,'fx 0.14000000000000004'
+7519,stdout,received,''
+7519,stdout,received,'[0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14 ]'
+7519,stdout,received,'rms_f 0.02150000000000002'
+7519,stdout,received,'r 1.0000000000000027'
+7519,stdout,received,'False'
+7519,stdout,received,'gamma = -3.63 p= 0.07'
+7519,Stimulus,presented,0
+7520,Stimulus,presented,1
+7620,stdout,received,'window size (800, 600)'
+7620,stdout,received,'fx 0.14500000000000005'
+7620,stdout,received,''
+7620,stdout,received,'[0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145]'
+7620,stdout,received,'rms_f 0.02250000000000002'
+7620,stdout,received,'r 1.0'
+7620,stdout,received,'False'
+7620,stdout,received,'gamma = -3.64 p= 0.07'
+7621,Stimulus,presented,0
+7625,Stimulus,presented,1
+7725,stdout,received,'window size (800, 600)'
+7725,stdout,received,'fx 0.15000000000000005'
+7725,stdout,received,''
+7725,stdout,received,'[0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15 ]'
+7725,stdout,received,'rms_f 0.02250000000000002'
+7725,stdout,received,'r 1.0'
+7725,stdout,received,'False'
+7725,stdout,received,'gamma = -3.65 p= 0.07'
+7726,Stimulus,presented,0
+7726,Stimulus,presented,1
+7827,stdout,received,'window size (800, 600)'
+7827,stdout,received,'fx 0.15500000000000005'
+7827,stdout,received,''
+7827,stdout,received,'[0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155]'
+7827,stdout,received,'rms_f 0.02250000000000002'
+7827,stdout,received,'r 1.0'
+7827,stdout,received,'False'
+7827,stdout,received,'gamma = -3.66 p= 0.07'
+7828,Stimulus,presented,0
+7828,Stimulus,presented,1
+7928,stdout,received,'window size (800, 600)'
+7928,stdout,received,'fx 0.16000000000000006'
+7928,stdout,received,''
+7928,stdout,received,'[0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16 ]'
+7928,stdout,received,'rms_f 0.02250000000000002'
+7928,stdout,received,'r 0.9999999999999976'
+7928,stdout,received,'False'
+7928,stdout,received,'gamma = -3.67 p= 0.06'
+7929,Stimulus,presented,0
+7929,Stimulus,presented,1
+8029,stdout,received,'window size (800, 600)'
+8029,stdout,received,'fx 0.16500000000000006'
+8029,stdout,received,''
+8029,stdout,received,'[0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165]'
+8029,stdout,received,'rms_f 0.02250000000000002'
+8029,stdout,received,'r 1.0'
+8029,stdout,received,'False'
+8029,stdout,received,'gamma = -3.68 p= 0.06'
+8030,Stimulus,presented,0
+8033,Stimulus,presented,1
+8133,stdout,received,'window size (800, 600)'
+8133,stdout,received,'fx 0.17000000000000007'
+8133,stdout,received,''
+8133,stdout,received,'[0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17 ]'
+8133,stdout,received,'rms_f 0.02250000000000002'
+8133,stdout,received,'r 1.0'
+8133,stdout,received,'False'
+8133,stdout,received,'gamma = -3.69 p= 0.06'
+8134,Stimulus,presented,0
+8135,Stimulus,presented,1
+8235,stdout,received,'window size (800, 600)'
+8235,stdout,received,'fx 0.17500000000000007'
+8235,stdout,received,''
+8235,stdout,received,'[0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175]'
+8235,stdout,received,'rms_f 0.02250000000000002'
+8235,stdout,received,'r 1.0'
+8235,stdout,received,'False'
+8235,stdout,received,'gamma = -3.70 p= 0.06'
+8236,Stimulus,presented,0
+8236,Stimulus,presented,1
+8336,stdout,received,'window size (800, 600)'
+8336,stdout,received,'fx 0.17000000000000007'
+8336,stdout,received,''
+8336,stdout,received,'[0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17 ]'
+8336,stdout,received,'rms_f 0.013500000000000012'
+8336,stdout,received,'r 1.0000000000000042'
+8336,stdout,received,'False'
+8336,stdout,received,'gamma = -3.71 p= 0.06'
+8337,Stimulus,presented,0
+8337,Stimulus,presented,1
+8437,stdout,received,'window size (800, 600)'
+8437,stdout,received,'fx 0.16500000000000006'
+8437,stdout,received,''
+8437,stdout,received,'[0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165]'
+8437,stdout,received,'rms_f 0.005500000000000005'
+8437,stdout,received,'r 1.0'
+8437,stdout,received,'False'
+8437,stdout,received,'gamma = -3.72 p= 0.06'
+8438,Stimulus,presented,0
+8441,Stimulus,presented,1
+8542,stdout,received,'window size (800, 600)'
+8542,stdout,received,'fx 0.16000000000000006'
+8542,stdout,received,''
+8542,stdout,received,'[0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16 ]'
+8542,stdout,received,'rms_f 0.0015000000000000013'
+8542,stdout,received,'r 1.0'
+8542,stdout,received,'False'
+8542,stdout,received,'gamma = -3.73 p= 0.06'
+8543,Stimulus,presented,0
+8543,Stimulus,presented,1
+8643,stdout,received,'window size (800, 600)'
+8643,stdout,received,'fx 0.15500000000000005'
+8643,stdout,received,''
+8643,stdout,received,'[0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155]'
+8643,stdout,received,'rms_f 0.007500000000000007'
+8643,stdout,received,'r 1.0000000000000073'
+8643,stdout,received,'False'
+8643,stdout,received,'gamma = -3.74 p= 0.06'
+8644,Stimulus,presented,0
+8644,Stimulus,presented,1
+8744,stdout,received,'window size (800, 600)'
+8744,stdout,received,'fx 0.15000000000000005'
+8744,stdout,received,''
+8744,stdout,received,'[0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15 ]'
+8744,stdout,received,'rms_f 0.012500000000000011'
+8744,stdout,received,'r 0.9999999999999956'
+8744,stdout,received,'False'
+8744,stdout,received,'gamma = -3.75 p= 0.06'
+8745,Stimulus,presented,0
+8745,Stimulus,presented,1
+8845,stdout,received,'window size (800, 600)'
+8845,stdout,received,'fx 0.14500000000000005'
+8845,stdout,received,''
+8845,stdout,received,'[0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145]'
+8845,stdout,received,'rms_f 0.016500000000000015'
+8845,stdout,received,'r 1.0'
+8845,stdout,received,'False'
+8845,stdout,received,'gamma = -3.76 p= 0.06'
+8846,Stimulus,presented,0
+8849,Stimulus,presented,1
+8949,stdout,received,'window size (800, 600)'
+8949,stdout,received,'fx 0.14000000000000004'
+8949,stdout,received,''
+8949,stdout,received,'[0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14 ]'
+8949,stdout,received,'rms_f 0.019500000000000017'
+8949,stdout,received,'r 1.0000000000000029'
+8949,stdout,received,'False'
+8949,stdout,received,'gamma = -3.77 p= 0.06'
+8950,Stimulus,presented,0
+8950,Stimulus,presented,1
+9050,stdout,received,'window size (800, 600)'
+9050,stdout,received,'fx 0.13500000000000004'
+9050,stdout,received,''
+9050,stdout,received,'[0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135]'
+9050,stdout,received,'rms_f 0.02150000000000002'
+9050,stdout,received,'r 1.0'
+9050,stdout,received,'False'
+9050,stdout,received,'gamma = -3.78 p= 0.06'
+9051,Stimulus,presented,0
+9051,Stimulus,presented,1
+9151,stdout,received,'window size (800, 600)'
+9151,stdout,received,'fx 0.13000000000000003'
+9151,stdout,received,''
+9151,stdout,received,'[0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13 ]'
+9151,stdout,received,'rms_f 0.02250000000000002'
+9151,stdout,received,'r 0.9999999999999976'
+9151,stdout,received,'False'
+9151,stdout,received,'gamma = -3.79 p= 0.06'
+9152,Stimulus,presented,0
+9152,Stimulus,presented,1
+9252,stdout,received,'window size (800, 600)'
+9252,stdout,received,'fx 0.12500000000000003'
+9252,stdout,received,''
+9252,stdout,received,'[0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125]'
+9252,stdout,received,'rms_f 0.02250000000000002'
+9252,stdout,received,'r 1.0'
+9252,stdout,received,'False'
+9252,stdout,received,'gamma = -3.80 p= 0.06'
+9252,Stimulus,presented,0
+9253,Stimulus,presented,1
+9353,stdout,received,'window size (800, 600)'
+9353,stdout,received,'fx 0.12000000000000002'
+9353,stdout,received,''
+9353,stdout,received,'[0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12 ]'
+9353,stdout,received,'rms_f 0.02250000000000002'
+9353,stdout,received,'r 1.1750000000000016'
+9353,stdout,received,'False'
+9353,stdout,received,'gamma = -3.82 p= 0.06'
+9354,Stimulus,presented,0
+9357,Stimulus,presented,1
+9457,stdout,received,'window size (800, 600)'
+9457,stdout,received,'fx 0.11500000000000002'
+9457,stdout,received,''
+9457,stdout,received,'[0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115]'
+9457,stdout,received,'rms_f 0.02250000000000002'
+9457,stdout,received,'r 1.3072565750786738'
+9457,stdout,received,'False'
+9457,stdout,received,'gamma = -3.83 p= 0.06'
+9458,Stimulus,presented,0
+9459,Stimulus,presented,1
+9559,stdout,received,'window size (800, 600)'
+9559,stdout,received,'fx 0.11000000000000001'
+9559,stdout,received,''
+9559,stdout,received,'[0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11 ]'
+9559,stdout,received,'rms_f 0.02250000000000002'
+9559,stdout,received,'r 1.297751828338573'
+9559,stdout,received,'False'
+9559,stdout,received,'gamma = -3.84 p= 0.06'
+9560,Stimulus,presented,0
+9560,Stimulus,presented,1
+9660,stdout,received,'window size (800, 600)'
+9660,stdout,received,'fx 0.10500000000000001'
+9660,stdout,received,''
+9660,stdout,received,'[0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105]'
+9660,stdout,received,'rms_f 0.02250000000000002'
+9660,stdout,received,'r 1.258196719480241'
+9660,stdout,received,'False'
+9660,stdout,received,'gamma = -3.85 p= 0.05'
+9661,Stimulus,presented,0
+9661,Stimulus,presented,1
+9762,stdout,received,'window size (800, 600)'
+9762,stdout,received,'fx 0.1'
+9762,stdout,received,''
+9762,stdout,received,'[0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1  ]'
+9762,stdout,received,'rms_f 0.02250000000000002'
+9762,stdout,received,'r 1.2187000315105634'
+9762,stdout,received,'False'
+9762,stdout,received,'gamma = -3.87 p= 0.05'
+9763,Stimulus,presented,0
+9766,Stimulus,presented,1
+9866,stdout,received,'window size (800, 600)'
+9866,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+9866,stdout,received,'fx 0.10500000000000001'
+9866,stdout,received,''
+9866,stdout,received,'[0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105]'
+9866,stdout,received,'rms_f 0.013500000000000012'
+9866,stdout,received,'r 2.215165837138041'
+9866,stdout,received,'False'
+9866,stdout,received,'gamma = -3.89 p= 0.05'
+9867,Stimulus,presented,0
+9868,Stimulus,presented,1
+9968,stdout,received,'window size (800, 600)'
+9968,stdout,received,'fx 0.11000000000000001'
+9968,stdout,received,''
+9968,stdout,received,'[0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11 ]'
+9968,stdout,received,'rms_f 0.005500000000000005'
+9968,stdout,received,'r 4.413078744331792'
+9968,stdout,received,'False'
+9969,stdout,received,'gamma = -3.93 p= 0.05'
+9969,Stimulus,presented,0
+9970,Stimulus,presented,1
+10070,stdout,received,'window size (800, 600)'
+10070,stdout,received,'fx 0.11500000000000002'
+10070,stdout,received,''
+10070,stdout,received,'[0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115]'
+10070,stdout,received,'rms_f 0.0015000000000000013'
+10070,stdout,received,'r 9.72718127494063'
+10070,stdout,received,'False'
+10070,stdout,received,'gamma = -4.03 p= 0.05'
+10071,Stimulus,presented,0
+10074,Stimulus,presented,1
+10174,stdout,received,'window size (800, 600)'
+10174,stdout,received,'fx 0.12000000000000002'
+10174,stdout,received,''
+10174,stdout,received,'[0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12 ]'
+10174,stdout,received,'rms_f 0.007500000000000007'
+10174,stdout,received,'r 0.8119668241109266'
+10174,stdout,received,'True'
+10174,stdout,received,'gamma = -4.02 p= 0.05'
+10175,Stimulus,presented,0
+10176,Stimulus,presented,1
+10276,stdout,received,'window size (800, 600)'
+10276,stdout,received,'fx 0.12500000000000003'
+10276,stdout,received,''
+10276,stdout,received,'[0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125]'
+10276,stdout,received,'rms_f 0.012500000000000011'
+10276,stdout,received,'r 0.24278476979506985'
+10276,stdout,received,'True'
+10276,stdout,received,'gamma = -4.02 p= 0.05'
+10277,Stimulus,presented,0
+10278,Stimulus,presented,1
+10378,stdout,received,'window size (800, 600)'
+10378,stdout,received,'fx 0.13000000000000003'
+10378,stdout,received,''
+10378,stdout,received,'[0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13 ]'
+10378,stdout,received,'rms_f 0.016500000000000015'
+10378,stdout,received,'r 0.5255332024941728'
+10378,stdout,received,'True'
+10378,stdout,received,'gamma = -4.01 p= 0.05'
+10379,Stimulus,presented,0
+10382,Stimulus,presented,1
+10482,stdout,received,'window size (800, 600)'
+10482,stdout,received,'fx 0.13500000000000004'
+10482,stdout,received,''
+10482,stdout,received,'[0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135]'
+10482,stdout,received,'rms_f 0.019500000000000017'
+10482,stdout,received,'r 0.6912021615135052'
+10482,stdout,received,'True'
+10482,stdout,received,'gamma = -4.01 p= 0.05'
+10483,Stimulus,presented,0
+10484,Stimulus,presented,1
+10584,stdout,received,'window size (800, 600)'
+10585,stdout,received,'fx 0.14000000000000004'
+10585,stdout,received,''
+10585,stdout,received,'[0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14 ]'
+10585,stdout,received,'rms_f 0.02150000000000002'
+10585,stdout,received,'r 0.17480577184154408'
+10585,stdout,received,'True'
+10585,stdout,received,'gamma = -4.01 p= 0.05'
+10586,Stimulus,presented,0
+10587,Stimulus,presented,1
+10687,stdout,received,'window size (800, 600)'
+10687,stdout,received,'fx 0.14500000000000005'
+10687,stdout,received,''
+10687,stdout,received,'[0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145]'
+10687,stdout,received,'rms_f 0.02250000000000002'
+10687,stdout,received,'r 0.8635315445280809'
+10687,stdout,received,'True'
+10687,stdout,received,'gamma = -4.00 p= 0.05'
+10689,Stimulus,presented,0
+10690,Stimulus,presented,1
+10790,stdout,received,'window size (800, 600)'
+10790,stdout,received,'fx 0.15000000000000005'
+10790,stdout,received,''
+10790,stdout,received,'[0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15 ]'
+10790,stdout,received,'rms_f 0.02250000000000002'
+10790,stdout,received,'r 3.331241241620985'
+10790,stdout,received,'False'
+10790,stdout,received,'gamma = -4.03 p= 0.05'
+10791,Stimulus,presented,0
+10792,Stimulus,presented,1
+10892,stdout,received,'window size (800, 600)'
+10892,stdout,received,'fx 0.15500000000000005'
+10892,stdout,received,''
+10892,stdout,received,'[0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155]'
+10892,stdout,received,'rms_f 0.02250000000000002'
+10892,stdout,received,'r 7.613389820641158'
+10892,stdout,received,'False'
+10892,stdout,received,'gamma = -4.11 p= 0.04'
+10893,Stimulus,presented,0
+10894,Stimulus,presented,1
+10994,stdout,received,'window size (800, 600)'
+10994,stdout,received,'fx 0.16000000000000006'
+10994,stdout,received,''
+10994,stdout,received,'[0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16 ]'
+10994,stdout,received,'rms_f 0.02250000000000002'
+10994,stdout,received,'r 7.776584619680456'
+10994,stdout,received,'False'
+10994,stdout,received,'gamma = -4.18 p= 0.04'
+10995,Stimulus,presented,0
+10996,Stimulus,presented,1
+11096,stdout,received,'window size (800, 600)'
+11096,stdout,received,'fx 0.16500000000000006'
+11096,stdout,received,''
+11096,stdout,received,'[0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165]'
+11096,stdout,received,'rms_f 0.02250000000000002'
+11096,stdout,received,'r 8.58974589658513'
+11096,stdout,received,'False'
+11096,stdout,received,'gamma = -4.27 p= 0.04'
+11098,Stimulus,presented,0
+11099,Stimulus,presented,1
+11199,stdout,received,'window size (800, 600)'
+11199,stdout,received,'fx 0.17000000000000007'
+11199,stdout,received,''
+11199,stdout,received,'[0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17 ]'
+11199,stdout,received,'rms_f 0.02250000000000002'
+11199,stdout,received,'r 7.913771887906996'
+11199,stdout,received,'False'
+11199,stdout,received,'gamma = -4.35 p= 0.03'
+11200,Stimulus,presented,0
+11201,Stimulus,presented,1
+11301,stdout,received,'window size (800, 600)'
+11301,stdout,received,'fx 0.17500000000000007'
+11301,stdout,received,''
+11301,stdout,received,'[0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175]'
+11301,stdout,received,'rms_f 0.02250000000000002'
+11301,stdout,received,'r 4.4090084238076805'
+11301,stdout,received,'False'
+11301,stdout,received,'gamma = -4.39 p= 0.03'
+11302,Stimulus,presented,0
+11302,Stimulus,presented,1
+11402,stdout,received,'window size (800, 600)'
+11402,stdout,received,'fx 0.17000000000000007'
+11402,stdout,received,''
+11402,stdout,received,'[0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17 ]'
+11402,stdout,received,'rms_f 0.013500000000000012'
+11402,stdout,received,'r 2.9160382920989987'
+11402,stdout,received,'False'
+11402,stdout,received,'gamma = -4.42 p= 0.03'
+11403,Stimulus,presented,0
+11404,Stimulus,presented,1
+11504,stdout,received,'window size (800, 600)'
+11504,stdout,received,'fx 0.16500000000000006'
+11504,stdout,received,''
+11504,stdout,received,'[0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165]'
+11504,stdout,received,'rms_f 0.005500000000000005'
+11504,stdout,received,'r 14.16412430598418'
+11504,stdout,received,'False'
+11504,stdout,received,'gamma = -4.56 p= 0.03'
+11507,Stimulus,presented,0
+11508,Stimulus,presented,1
+11608,stdout,received,'window size (800, 600)'
+11608,stdout,received,'fx 0.16000000000000006'
+11608,stdout,received,''
+11608,stdout,received,'[0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16 ]'
+11608,stdout,received,'rms_f 0.0015000000000000013'
+11608,stdout,received,'r 88.41861820201144'
+11608,stdout,received,'False'
+11608,stdout,received,'gamma = -5.45 p= 0.01'
+11609,Stimulus,presented,0
+11610,Stimulus,presented,1
+11710,stdout,received,'window size (800, 600)'
+11710,stdout,received,'fx 0.15500000000000005'
+11710,stdout,received,''
+11710,stdout,received,'[0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155]'
+11710,stdout,received,'rms_f 0.007500000000000007'
+11710,stdout,received,'r 28.540027257593778'
+11710,stdout,received,'False'
+11710,stdout,received,'gamma = -5.73 p= 0.01'
+11711,Stimulus,presented,0
+11712,Stimulus,presented,1
+11812,stdout,received,'window size (800, 600)'
+11812,stdout,received,'fx 0.15000000000000005'
+11812,stdout,received,''
+11812,stdout,received,'[0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15 ]'
+11812,stdout,received,'rms_f 0.012500000000000011'
+11812,stdout,received,'r 18.824825880853286'
+11812,stdout,received,'False'
+11812,stdout,received,'gamma = -5.92 p= 0.01'
+11815,Stimulus,presented,0
+11816,Stimulus,presented,1
+11916,stdout,received,'window size (800, 600)'
+11916,stdout,received,'fx 0.14500000000000005'
+11916,stdout,received,''
+11916,stdout,received,'[0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145]'
+11916,stdout,received,'rms_f 0.016500000000000015'
+11916,stdout,received,'r 12.086679093596393'
+11916,stdout,received,'False'
+11916,stdout,received,'gamma = -6.04 p= 0.01'
+11917,Stimulus,presented,0
+11918,Stimulus,presented,1
+12018,stdout,received,'window size (800, 600)'
+12018,stdout,received,'fx 0.14000000000000004'
+12018,stdout,received,''
+12018,stdout,received,'[0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14 ]'
+12018,stdout,received,'rms_f 0.019500000000000017'
+12018,stdout,received,'r 8.30315218624789'
+12018,stdout,received,'False'
+12018,stdout,received,'gamma = -6.13 p= 0.01'
+12019,Stimulus,presented,0
+12020,Stimulus,presented,1
+12120,stdout,received,'window size (800, 600)'
+12120,stdout,received,'fx 0.13500000000000004'
+12120,stdout,received,''
+12120,stdout,received,'[0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135]'
+12120,stdout,received,'rms_f 0.02150000000000002'
+12120,stdout,received,'r 5.646648328124026'
+12120,stdout,received,'False'
+12120,stdout,received,'gamma = -6.18 p= 0.01'
+12121,Stimulus,presented,0
+12124,Stimulus,presented,1
+12224,stdout,received,'window size (800, 600)'
+12224,stdout,received,'fx 0.13000000000000003'
+12224,stdout,received,''
+12224,stdout,received,'[0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13 ]'
+12224,stdout,received,'rms_f 0.02250000000000002'
+12224,stdout,received,'r 3.576044481798629'
+12224,stdout,received,'False'
+12224,stdout,received,'gamma = -6.22 p= 0.01'
+12225,Stimulus,presented,0
+12226,Stimulus,presented,1
+12326,stdout,received,'window size (800, 600)'
+12326,stdout,received,'fx 0.12500000000000003'
+12326,stdout,received,''
+12326,stdout,received,'[0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125]'
+12326,stdout,received,'rms_f 0.02250000000000002'
+12326,stdout,received,'r 2.027628947692321'
+12326,stdout,received,'False'
+12326,stdout,received,'gamma = -6.24 p= 0.01'
+12327,Stimulus,presented,0
+12328,Stimulus,presented,1
+12428,stdout,received,'window size (800, 600)'
+12428,stdout,received,'fx 0.12000000000000002'
+12428,stdout,received,''
+12428,stdout,received,'[0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12 ]'
+12428,stdout,received,'rms_f 0.02250000000000002'
+12428,stdout,received,'r 0.9849906693241743'
+12428,stdout,received,'True'
+12428,stdout,received,'gamma = -6.23 p= 0.01'
+12429,Stimulus,presented,0
+12432,Stimulus,presented,1
+12532,stdout,received,'window size (800, 600)'
+12533,stdout,received,'fx 0.11500000000000002'
+12533,stdout,received,''
+12534,stdout,received,'[0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115]'
+12534,stdout,received,'rms_f 0.02250000000000002'
+12534,stdout,received,'r 10.241555163181694'
+12534,stdout,received,'False'
+12534,stdout,received,'gamma = -6.33 p= 0.00'
+12535,Stimulus,presented,0
+12536,Stimulus,presented,1
+12636,stdout,received,'window size (800, 600)'
+12636,stdout,received,'fx 0.11000000000000001'
+12636,stdout,received,''
+12636,stdout,received,'[0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11 ]'
+12636,stdout,received,'rms_f 0.02250000000000002'
+12636,stdout,received,'r 12.011506007886902'
+12636,stdout,received,'False'
+12636,stdout,received,'gamma = -6.45 p= 0.00'
+12637,Stimulus,presented,0
+12639,Stimulus,presented,1
+12739,stdout,received,'window size (800, 600)'
+12741,stdout,received,'fx 0.10500000000000001'
+12741,stdout,received,''
+12741,stdout,received,'[0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105]'
+12741,stdout,received,'rms_f 0.02250000000000002'
+12741,stdout,received,'r 11.42301125108978'
+12741,stdout,received,'False'
+12741,stdout,received,'gamma = -6.57 p= 0.00'
+12742,Stimulus,presented,0
+12743,Stimulus,presented,1
+12843,stdout,received,'window size (800, 600)'
+12843,stdout,received,'fx 0.1'
+12843,stdout,received,''
+12843,stdout,received,'[0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1  ]'
+12843,stdout,received,'rms_f 0.02250000000000002'
+12843,stdout,received,'r 10.068438647085419'
+12843,stdout,received,'False'
+12843,stdout,received,'gamma = -6.67 p= 0.00'
+12844,Stimulus,presented,0
+12845,Stimulus,presented,1
+12945,stdout,received,'window size (800, 600)'
+12945,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+12945,stdout,received,'fx 0.10500000000000001'
+12945,stdout,received,''
+12945,stdout,received,'[0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105]'
+12945,stdout,received,'rms_f 0.013500000000000012'
+12945,stdout,received,'r 17.31550642585639'
+12945,stdout,received,'False'
+12945,stdout,received,'gamma = -6.84 p= 0.00'
+12946,Stimulus,presented,0
+12949,Stimulus,presented,1
+13049,stdout,received,'window size (800, 600)'
+13049,stdout,received,'fx 0.11000000000000001'
+13049,stdout,received,''
+13049,stdout,received,'[0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11 ]'
+13049,stdout,received,'rms_f 0.005500000000000005'
+13049,stdout,received,'r 32.886486888350746'
+13049,stdout,received,'False'
+13049,stdout,received,'gamma = -7.17 p= 0.00'
+13050,Stimulus,presented,0
+13051,Stimulus,presented,1
+13151,stdout,received,'window size (800, 600)'
+13151,stdout,received,'fx 0.11500000000000002'
+13151,stdout,received,''
+13151,stdout,received,'[0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115]'
+13151,stdout,received,'rms_f 0.0015000000000000013'
+13151,stdout,received,'r 55.24605629464517'
+13151,stdout,received,'False'
+13151,stdout,received,'gamma = -7.72 p= 0.00'
+13152,Stimulus,presented,0
+13153,Stimulus,presented,1
+13253,stdout,received,'window size (800, 600)'
+13253,stdout,received,'fx 0.12000000000000002'
+13253,stdout,received,''
+13253,stdout,received,'[0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12 ]'
+13253,stdout,received,'rms_f 0.007500000000000007'
+13253,stdout,received,'r 4.263020179330927'
+13253,stdout,received,'False'
+13253,stdout,received,'gamma = -7.76 p= 0.00'
+13254,Stimulus,presented,0
+13257,Stimulus,presented,1
+13357,stdout,received,'window size (800, 600)'
+13358,stdout,received,'fx 0.12500000000000003'
+13358,stdout,received,''
+13358,stdout,received,'[0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125]'
+13358,stdout,received,'rms_f 0.012500000000000011'
+13358,stdout,received,'r 0.22051077071200087'
+13358,stdout,received,'True'
+13358,stdout,received,'gamma = -7.76 p= 0.00'
+13359,Stimulus,presented,0
+13360,Stimulus,presented,1
+13460,stdout,received,'window size (800, 600)'
+13460,stdout,received,'fx 0.13000000000000003'
+13460,stdout,received,''
+13460,stdout,received,'[0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13 ]'
+13460,stdout,received,'rms_f 0.016500000000000015'
+13460,stdout,received,'r 1.9931730359273474'
+13460,stdout,received,'False'
+13460,stdout,received,'gamma = -7.78 p= 0.00'
+13461,Stimulus,presented,0
+13462,Stimulus,presented,1
+13562,stdout,received,'window size (800, 600)'
+13562,stdout,received,'fx 0.13500000000000004'
+13562,stdout,received,''
+13562,stdout,received,'[0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135]'
+13562,stdout,received,'rms_f 0.019500000000000017'
+13562,stdout,received,'r 2.062444034708239'
+13562,stdout,received,'False'
+13562,stdout,received,'gamma = -7.80 p= 0.00'
+13563,Stimulus,presented,0
+13566,Stimulus,presented,1
+13666,stdout,received,'window size (800, 600)'
+13667,stdout,received,'fx 0.14000000000000004'
+13667,stdout,received,''
+13667,stdout,received,'[0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14 ]'
+13667,stdout,received,'rms_f 0.02150000000000002'
+13667,stdout,received,'r 1.8709009638250007'
+13667,stdout,received,'False'
+13667,stdout,received,'gamma = -7.82 p= 0.00'
+13668,Stimulus,presented,0
+13668,Stimulus,presented,1
+13768,stdout,received,'window size (800, 600)'
+13768,stdout,received,'fx 0.14500000000000005'
+13768,stdout,received,''
+13768,stdout,received,'[0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145]'
+13768,stdout,received,'rms_f 0.02250000000000002'
+13768,stdout,received,'r 1.6857426835260851'
+13768,stdout,received,'False'
+13768,stdout,received,'gamma = -7.84 p= 0.00'
+13769,Stimulus,presented,0
+13769,Stimulus,presented,1
+13869,stdout,received,'window size (800, 600)'
+13869,stdout,received,'fx 0.15000000000000005'
+13869,stdout,received,''
+13869,stdout,received,'[0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15 ]'
+13869,stdout,received,'rms_f 0.02250000000000002'
+13869,stdout,received,'r 1.5378400401296815'
+13869,stdout,received,'False'
+13869,stdout,received,'gamma = -7.85 p= 0.00'
+13869,Stimulus,presented,0
+13870,Stimulus,presented,1
+13970,stdout,received,'window size (800, 600)'
+13970,stdout,received,'fx 0.15500000000000005'
+13970,stdout,received,''
+13970,stdout,received,'[0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155]'
+13970,stdout,received,'rms_f 0.02250000000000002'
+13970,stdout,received,'r 1.2410516470607316'
+13970,stdout,received,'False'
+13970,stdout,received,'gamma = -7.86 p= 0.00'
+13971,Stimulus,presented,0
+13975,Stimulus,presented,1
+14075,stdout,received,'window size (800, 600)'
+14075,stdout,received,'fx 0.16000000000000006'
+14075,stdout,received,''
+14075,stdout,received,'[0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16 ]'
+14075,stdout,received,'rms_f 0.02250000000000002'
+14075,stdout,received,'r 1.0528364099768017'
+14075,stdout,received,'False'
+14075,stdout,received,'gamma = -7.88 p= 0.00'
+14076,Stimulus,presented,0
+14076,Stimulus,presented,1
+14176,stdout,received,'window size (800, 600)'
+14176,stdout,received,'fx 0.16500000000000006'
+14176,stdout,received,''
+14176,stdout,received,'[0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165]'
+14176,stdout,received,'rms_f 0.02250000000000002'
+14176,stdout,received,'r 0.9946168551832116'
+14176,stdout,received,'False'
+14176,stdout,received,'gamma = -7.89 p= 0.00'
+14177,Stimulus,presented,0
+14178,Stimulus,presented,1
+14278,stdout,received,'window size (800, 600)'
+14278,stdout,received,'fx 0.17000000000000007'
+14278,stdout,received,''
+14278,stdout,received,'[0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17 ]'
+14278,stdout,received,'rms_f 0.02250000000000002'
+14278,stdout,received,'r 0.9972497331051671'
+14278,stdout,received,'False'
+14278,stdout,received,'gamma = -7.90 p= 0.00'
+14279,Stimulus,presented,0
+14279,Stimulus,presented,1
+14379,stdout,received,'window size (800, 600)'
+14379,stdout,received,'fx 0.17500000000000007'
+14379,stdout,received,''
+14379,stdout,received,'[0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175]'
+14379,stdout,received,'rms_f 0.02250000000000002'
+14379,stdout,received,'r 1.0'
+14379,stdout,received,'False'
+14379,stdout,received,'gamma = -7.91 p= 0.00'
+14382,Stimulus,presented,0
+14383,Stimulus,presented,1
+14483,stdout,received,'window size (800, 600)'
+14483,stdout,received,'fx 0.17000000000000007'
+14483,stdout,received,''
+14483,stdout,received,'[0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17 ]'
+14483,stdout,received,'rms_f 0.013500000000000012'
+14483,stdout,received,'r 1.0'
+14483,stdout,received,'False'
+14483,stdout,received,'gamma = -7.92 p= 0.00'
+14484,Stimulus,presented,0
+14484,Stimulus,presented,1
+14584,stdout,received,'window size (800, 600)'
+14584,stdout,received,'fx 0.16500000000000006'
+14584,stdout,received,''
+14584,stdout,received,'[0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165]'
+14584,stdout,received,'rms_f 0.005500000000000005'
+14584,stdout,received,'r 1.0'
+14584,stdout,received,'False'
+14584,stdout,received,'gamma = -7.93 p= 0.00'
+14585,Stimulus,presented,0
+14585,Stimulus,presented,1
+14685,stdout,received,'window size (800, 600)'
+14685,stdout,received,'fx 0.16000000000000006'
+14685,stdout,received,''
+14685,stdout,received,'[0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16 ]'
+14685,stdout,received,'rms_f 0.0015000000000000013'
+14685,stdout,received,'r 1.0'
+14685,stdout,received,'False'
+14685,stdout,received,'gamma = -7.94 p= 0.00'
+14686,Stimulus,presented,0
+14686,Stimulus,presented,1
+14786,stdout,received,'window size (800, 600)'
+14786,stdout,received,'fx 0.15500000000000005'
+14786,stdout,received,''
+14786,stdout,received,'[0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155]'
+14786,stdout,received,'rms_f 0.007500000000000007'
+14786,stdout,received,'r 1.0'
+14786,stdout,received,'False'
+14786,stdout,received,'gamma = -7.95 p= 0.00'
+14786,Stimulus,presented,0
+14787,Stimulus,presented,1
+14887,stdout,received,'window size (800, 600)'
+14887,stdout,received,'fx 0.15000000000000005'
+14887,stdout,received,''
+14887,stdout,received,'[0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15 ]'
+14887,stdout,received,'rms_f 0.012500000000000011'
+14887,stdout,received,'r 1.0'
+14887,stdout,received,'False'
+14887,stdout,received,'gamma = -7.96 p= 0.00'
+14888,Stimulus,presented,0
+14891,Stimulus,presented,1
+14991,stdout,received,'window size (800, 600)'
+14991,stdout,received,'fx 0.14500000000000005'
+14991,stdout,received,''
+14991,stdout,received,'[0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145]'
+14991,stdout,received,'rms_f 0.016500000000000015'
+14991,stdout,received,'r 1.0'
+14991,stdout,received,'False'
+14991,stdout,received,'gamma = -7.97 p= 0.00'
+14992,Stimulus,presented,0
+14993,Stimulus,presented,1
+15093,stdout,received,'window size (800, 600)'
+15093,stdout,received,'fx 0.14000000000000004'
+15093,stdout,received,''
+15093,stdout,received,'[0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14 ]'
+15093,stdout,received,'rms_f 0.019500000000000017'
+15093,stdout,received,'r 1.0'
+15093,stdout,received,'False'
+15093,stdout,received,'gamma = -7.98 p= 0.00'
+15094,Stimulus,presented,0
+15094,Stimulus,presented,1
+15194,stdout,received,'window size (800, 600)'
+15194,stdout,received,'fx 0.13500000000000004'
+15194,stdout,received,''
+15194,stdout,received,'[0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135]'
+15194,stdout,received,'rms_f 0.02150000000000002'
+15194,stdout,received,'r 1.0'
+15194,stdout,received,'False'
+15194,stdout,received,'gamma = -7.99 p= 0.00'
+15195,Stimulus,presented,0
+15195,Stimulus,presented,1
+15295,stdout,received,'window size (800, 600)'
+15295,stdout,received,'fx 0.13000000000000003'
+15295,stdout,received,''
+15295,stdout,received,'[0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13 ]'
+15295,stdout,received,'rms_f 0.02250000000000002'
+15295,stdout,received,'r 1.0'
+15295,stdout,received,'False'
+15295,stdout,received,'gamma = -8.00 p= 0.00'
+15296,Stimulus,presented,0
+15299,Stimulus,presented,1
+15399,stdout,received,'window size (800, 600)'
+15399,stdout,received,'fx 0.12500000000000003'
+15399,stdout,received,''
+15399,stdout,received,'[0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125]'
+15399,stdout,received,'rms_f 0.02250000000000002'
+15399,stdout,received,'r 1.0'
+15399,stdout,received,'False'
+15399,stdout,received,'gamma = -8.01 p= 0.00'
+15400,Stimulus,presented,0
+15400,Stimulus,presented,1
+15500,stdout,received,'window size (800, 600)'
+15500,stdout,received,'fx 0.12000000000000002'
+15500,stdout,received,''
+15500,stdout,received,'[0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12 ]'
+15500,stdout,received,'rms_f 0.02250000000000002'
+15500,stdout,received,'r 1.0'
+15500,stdout,received,'False'
+15500,stdout,received,'gamma = -8.02 p= 0.00'
+15501,Stimulus,presented,0
+15501,Stimulus,presented,1
+15601,stdout,received,'window size (800, 600)'
+15601,stdout,received,'fx 0.11500000000000002'
+15601,stdout,received,''
+15601,stdout,received,'[0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115]'
+15601,stdout,received,'rms_f 0.02250000000000002'
+15601,stdout,received,'r 1.0'
+15601,stdout,received,'False'
+15601,stdout,received,'gamma = -8.03 p= 0.00'
+15601,Stimulus,presented,0
+15602,Stimulus,presented,1
+15702,stdout,received,'window size (800, 600)'
+15702,stdout,received,'fx 0.11000000000000001'
+15702,stdout,received,''
+15702,stdout,received,'[0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11 ]'
+15702,stdout,received,'rms_f 0.02250000000000002'
+15702,stdout,received,'r 1.0'
+15702,stdout,received,'False'
+15702,stdout,received,'gamma = -8.04 p= 0.00'
+15703,Stimulus,presented,0
+15703,Stimulus,presented,1
+15803,stdout,received,'window size (800, 600)'
+15803,stdout,received,'fx 0.10500000000000001'
+15803,stdout,received,''
+15803,stdout,received,'[0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105]'
+15803,stdout,received,'rms_f 0.02250000000000002'
+15803,stdout,received,'r 1.0'
+15803,stdout,received,'False'
+15803,stdout,received,'gamma = -8.05 p= 0.00'
+15804,Stimulus,presented,0
+15804,Stimulus,presented,1
+15904,stdout,received,'window size (800, 600)'
+15904,stdout,received,'fx 0.1'
+15904,stdout,received,''
+15904,stdout,received,'[0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1  ]'
+15904,stdout,received,'rms_f 0.02250000000000002'
+15904,stdout,received,'r 1.0'
+15904,stdout,received,'False'
+15904,stdout,received,'gamma = -8.06 p= 0.00'
+15908,Stimulus,presented,0
+15908,Stimulus,presented,1
+16008,stdout,received,'window size (800, 600)'
+16008,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+16008,stdout,received,'fx 0.10500000000000001'
+16008,stdout,received,''
+16008,stdout,received,'[0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105]'
+16008,stdout,received,'rms_f 0.013500000000000012'
+16008,stdout,received,'r 1.0'
+16008,stdout,received,'False'
+16008,stdout,received,'gamma = -8.07 p= 0.00'
+16009,Stimulus,presented,0
+16009,Stimulus,presented,1
+16109,stdout,received,'window size (800, 600)'
+16109,stdout,received,'fx 0.11000000000000001'
+16109,stdout,received,''
+16109,stdout,received,'[0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11 ]'
+16109,stdout,received,'rms_f 0.005500000000000005'
+16109,stdout,received,'r 1.0'
+16109,stdout,received,'False'
+16109,stdout,received,'gamma = -8.08 p= 0.00'
+16110,Stimulus,presented,0
+16110,Stimulus,presented,1
+16210,stdout,received,'window size (800, 600)'
+16210,stdout,received,'fx 0.11500000000000002'
+16210,stdout,received,''
+16210,stdout,received,'[0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115]'
+16210,stdout,received,'rms_f 0.0015000000000000013'
+16210,stdout,received,'r 1.0'
+16210,stdout,received,'False'
+16210,stdout,received,'gamma = -8.09 p= 0.00'
+16211,Stimulus,presented,0
+16212,Stimulus,presented,1
+16312,stdout,received,'window size (800, 600)'
+16312,stdout,received,'fx 0.12000000000000002'
+16312,stdout,received,''
+16312,stdout,received,'[0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12 ]'
+16312,stdout,received,'rms_f 0.007500000000000007'
+16312,stdout,received,'r 0.14142135623730817'
+16312,stdout,received,'True'
+16312,stdout,received,'gamma = -8.08 p= 0.00'
+16317,Stimulus,presented,0
+16318,Stimulus,presented,1
+16418,stdout,received,'window size (800, 600)'
+16418,stdout,received,'fx 0.12500000000000003'
+16418,stdout,received,''
+16418,stdout,received,'[0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125]'
+16418,stdout,received,'rms_f 0.012500000000000011'
+16418,stdout,received,'r 3.1441802499927434'
+16418,stdout,received,'False'
+16418,stdout,received,'gamma = -8.12 p= 0.00'
+16419,Stimulus,presented,0
+16420,Stimulus,presented,1
+16520,stdout,received,'window size (800, 600)'
+16520,stdout,received,'fx 0.13000000000000003'
+16520,stdout,received,''
+16520,stdout,received,'[0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13 ]'
+16520,stdout,received,'rms_f 0.016500000000000015'
+16520,stdout,received,'r 2.9410433516571777'
+16520,stdout,received,'False'
+16520,stdout,received,'gamma = -8.14 p= 0.00'
+16522,Stimulus,presented,0
+16523,Stimulus,presented,1
+16623,stdout,received,'window size (800, 600)'
+16629,stdout,received,'fx 0.13500000000000004'
+16629,stdout,received,''
+16629,stdout,received,'[0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135]'
+16629,stdout,received,'rms_f 0.019500000000000017'
+16629,stdout,received,'r 2.068981080283365'
+16629,stdout,received,'False'
+16629,stdout,received,'gamma = -8.17 p= 0.00'
+16632,Stimulus,presented,0
+16632,Stimulus,presented,1
+16732,stdout,received,'window size (800, 600)'
+16732,stdout,received,'fx 0.14000000000000004'
+16732,stdout,received,''
+16732,stdout,received,'[0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14 ]'
+16732,stdout,received,'rms_f 0.02150000000000002'
+16732,stdout,received,'r 1.490570888761956'
+16732,stdout,received,'False'
+16732,stdout,received,'gamma = -8.18 p= 0.00'
+16733,Stimulus,presented,0
+16734,Stimulus,presented,1
+16834,stdout,received,'window size (800, 600)'
+16842,stdout,received,'fx 0.14500000000000005'
+16842,stdout,received,''
+16842,stdout,received,'[0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145]'
+16842,stdout,received,'rms_f 0.02250000000000002'
+16842,stdout,received,'r 1.105783911523814'
+16842,stdout,received,'False'
+16842,stdout,received,'gamma = -8.19 p= 0.00'
+16843,Stimulus,presented,0
+16844,Stimulus,presented,1
+16944,stdout,received,'window size (800, 600)'
+16944,stdout,received,'fx 0.15000000000000005'
+16945,stdout,received,''
+16945,stdout,received,'[0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15 ]'
+16945,stdout,received,'rms_f 0.02250000000000002'
+16945,stdout,received,'r 0.8430808516147148'
+16945,stdout,received,'True'
+16945,stdout,received,'gamma = -8.18 p= 0.00'
+16950,Stimulus,presented,0
+16950,Stimulus,presented,1
+17050,stdout,received,'window size (800, 600)'
+17050,stdout,received,'fx 0.15500000000000005'
+17050,stdout,received,''
+17050,stdout,received,'[0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155]'
+17050,stdout,received,'rms_f 0.02250000000000002'
+17050,stdout,received,'r 0.6539063005747923'
+17050,stdout,received,'True'
+17050,stdout,received,'gamma = -8.18 p= 0.00'
+17051,Stimulus,presented,0
+17052,Stimulus,presented,1
+17152,stdout,received,'window size (800, 600)'
+17152,stdout,received,'fx 0.16000000000000006'
+17152,stdout,received,''
+17152,stdout,received,'[0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16 ]'
+17152,stdout,received,'rms_f 0.02250000000000002'
+17152,stdout,received,'r 0.6108866029804217'
+17152,stdout,received,'True'
+17152,stdout,received,'gamma = -8.17 p= 0.00'
+17153,Stimulus,presented,0
+17153,Stimulus,presented,1
+17253,stdout,received,'window size (800, 600)'
+17253,stdout,received,'fx 0.16500000000000006'
+17253,stdout,received,''
+17253,stdout,received,'[0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165]'
+17253,stdout,received,'rms_f 0.02250000000000002'
+17253,stdout,received,'r 0.7399677679926596'
+17253,stdout,received,'True'
+17253,stdout,received,'gamma = -8.16 p= 0.00'
+17254,Stimulus,presented,0
+17254,Stimulus,presented,1
+17354,stdout,received,'window size (800, 600)'
+17354,stdout,received,'fx 0.17000000000000007'
+17354,stdout,received,''
+17354,stdout,received,'[0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17 ]'
+17354,stdout,received,'rms_f 0.02250000000000002'
+17354,stdout,received,'r 1.4295627623011258'
+17354,stdout,received,'False'
+17354,stdout,received,'gamma = -8.18 p= 0.00'
+17357,Stimulus,presented,0
+17357,Stimulus,presented,1
+17457,stdout,received,'window size (800, 600)'
+17457,stdout,received,'fx 0.17500000000000007'
+17457,stdout,received,''
+17458,stdout,received,'[0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175]'
+17458,stdout,received,'rms_f 0.02250000000000002'
+17458,stdout,received,'r 3.853850198329712'
+17458,stdout,received,'False'
+17458,stdout,received,'gamma = -8.22 p= 0.00'
+17459,Stimulus,presented,0
+17459,Stimulus,presented,1
+17559,stdout,received,'window size (800, 600)'
+17559,stdout,received,'fx 0.17000000000000007'
+17559,stdout,received,''
+17559,stdout,received,'[0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17 ]'
+17559,stdout,received,'rms_f 0.013500000000000012'
+17559,stdout,received,'r 5.252267602400944'
+17559,stdout,received,'False'
+17559,stdout,received,'gamma = -8.27 p= 0.00'
+17560,Stimulus,presented,0
+17561,Stimulus,presented,1
+17661,stdout,received,'window size (800, 600)'
+17661,stdout,received,'fx 0.16500000000000006'
+17661,stdout,received,''
+17662,stdout,received,'[0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165]'
+17662,stdout,received,'rms_f 0.005500000000000005'
+17662,stdout,received,'r 20.72497993698495'
+17662,stdout,received,'False'
+17662,stdout,received,'gamma = -8.48 p= 0.00'
+17663,Stimulus,presented,0
+17665,Stimulus,presented,1
+17765,stdout,received,'window size (800, 600)'
+17766,stdout,received,'fx 0.16000000000000006'
+17766,stdout,received,''
+17766,stdout,received,'[0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16 ]'
+17767,stdout,received,'rms_f 0.0015000000000000013'
+17767,stdout,received,'r 66.87379859310813'
+17767,stdout,received,'False'
+17767,stdout,received,'gamma = -9.14 p= 0.00'
+17767,Stimulus,presented,0
+17768,Stimulus,presented,1
+17868,stdout,received,'window size (800, 600)'
+17868,stdout,received,'fx 0.15500000000000005'
+17868,stdout,received,''
+17868,stdout,received,'[0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155]'
+17868,stdout,received,'rms_f 0.007500000000000007'
+17868,stdout,received,'r 11.659415736161124'
+17868,stdout,received,'False'
+17868,stdout,received,'gamma = -9.26 p= 0.00'
+17869,Stimulus,presented,0
+17870,Stimulus,presented,1
+17970,stdout,received,'window size (800, 600)'
+17970,stdout,received,'fx 0.15000000000000005'
+17970,stdout,received,''
+17970,stdout,received,'[0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15 ]'
+17970,stdout,received,'rms_f 0.012500000000000011'
+17970,stdout,received,'r 6.035958913047691'
+17970,stdout,received,'False'
+17970,stdout,received,'gamma = -9.32 p= 0.00'
+17971,Stimulus,presented,0
+17976,Stimulus,presented,1
+18076,stdout,received,'window size (800, 600)'
+18076,stdout,received,'fx 0.14500000000000005'
+18076,stdout,received,''
+18076,stdout,received,'[0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145]'
+18076,stdout,received,'rms_f 0.016500000000000015'
+18076,stdout,received,'r 3.9051672946003726'
+18076,stdout,received,'False'
+18076,stdout,received,'gamma = -9.36 p= 0.00'
+18077,Stimulus,presented,0
+18077,Stimulus,presented,1
+18177,stdout,received,'window size (800, 600)'
+18177,stdout,received,'fx 0.14000000000000004'
+18177,stdout,received,''
+18177,stdout,received,'[0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14 ]'
+18177,stdout,received,'rms_f 0.019500000000000017'
+18177,stdout,received,'r 2.80066181924164'
+18177,stdout,received,'False'
+18177,stdout,received,'gamma = -9.39 p= 0.00'
+18178,Stimulus,presented,0
+18178,Stimulus,presented,1
+18278,stdout,received,'window size (800, 600)'
+18278,stdout,received,'fx 0.13500000000000004'
+18278,stdout,received,''
+18278,stdout,received,'[0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135]'
+18278,stdout,received,'rms_f 0.02150000000000002'
+18278,stdout,received,'r 2.1559657255724507'
+18278,stdout,received,'False'
+18278,stdout,received,'gamma = -9.41 p= 0.00'
+18279,Stimulus,presented,0
+18279,Stimulus,presented,1
+18379,stdout,received,'window size (800, 600)'
+18379,stdout,received,'fx 0.13000000000000003'
+18379,stdout,received,''
+18379,stdout,received,'[0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13 ]'
+18379,stdout,received,'rms_f 0.02250000000000002'
+18379,stdout,received,'r 1.7560069840751507'
+18379,stdout,received,'False'
+18379,stdout,received,'gamma = -9.43 p= 0.00'
+18383,Stimulus,presented,0
+18383,Stimulus,presented,1
+18483,stdout,received,'window size (800, 600)'
+18483,stdout,received,'fx 0.12500000000000003'
+18483,stdout,received,''
+18483,stdout,received,'[0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125]'
+18483,stdout,received,'rms_f 0.02250000000000002'
+18483,stdout,received,'r 1.3116919748030356'
+18483,stdout,received,'False'
+18483,stdout,received,'gamma = -9.44 p= 0.00'
+18484,Stimulus,presented,0
+18484,Stimulus,presented,1
+18584,stdout,received,'window size (800, 600)'
+18584,stdout,received,'fx 0.12000000000000002'
+18584,stdout,received,''
+18584,stdout,received,'[0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12 ]'
+18584,stdout,received,'rms_f 0.02250000000000002'
+18584,stdout,received,'r 0.9999999999999993'
+18584,stdout,received,'False'
+18584,stdout,received,'gamma = -9.45 p= 0.00'
+18584,Stimulus,presented,0
+18585,Stimulus,presented,1
+18685,stdout,received,'window size (800, 600)'
+18685,stdout,received,'fx 0.11500000000000002'
+18685,stdout,received,''
+18685,stdout,received,'[0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115]'
+18685,stdout,received,'rms_f 0.02250000000000002'
+18685,stdout,received,'r 0.9999999999999993'
+18685,stdout,received,'False'
+18685,stdout,received,'gamma = -9.46 p= 0.00'
+18686,Stimulus,presented,0
+18686,Stimulus,presented,1
+18786,stdout,received,'window size (800, 600)'
+18799,stdout,received,'fx 0.11000000000000001'
+18799,stdout,received,''
+18799,stdout,received,'[0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11 ]'
+18799,stdout,received,'rms_f 0.02250000000000002'
+18799,stdout,received,'r 0.9999999999999993'
+18799,stdout,received,'False'
+18799,stdout,received,'gamma = -9.47 p= 0.00'
+18800,Stimulus,presented,0
+18801,Stimulus,presented,1
+18901,stdout,received,'window size (800, 600)'
+18901,stdout,received,'fx 0.10500000000000001'
+18901,stdout,received,''
+18902,stdout,received,'[0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105]'
+18902,stdout,received,'rms_f 0.02250000000000002'
+18902,stdout,received,'r 0.9999999999999993'
+18902,stdout,received,'False'
+18902,stdout,received,'gamma = -9.48 p= 0.00'
+18903,Stimulus,presented,0
+18903,Stimulus,presented,1
+19003,stdout,received,'window size (800, 600)'
+19003,stdout,received,'fx 0.1'
+19003,stdout,received,''
+19003,stdout,received,'[0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1  ]'
+19003,stdout,received,'rms_f 0.02250000000000002'
+19003,stdout,received,'r 0.9999999999999993'
+19003,stdout,received,'False'
+19003,stdout,received,'gamma = -9.49 p= 0.00'
+19004,Stimulus,presented,0
+19004,Stimulus,presented,1
+19104,stdout,received,'window size (800, 600)'
+19104,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+19104,stdout,received,'fx 0.10500000000000001'
+19104,stdout,received,''
+19104,stdout,received,'[0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105]'
+19104,stdout,received,'rms_f 0.013500000000000012'
+19104,stdout,received,'r 0.999999999999999'
+19104,stdout,received,'False'
+19104,stdout,received,'gamma = -9.50 p= 0.00'
+19108,Stimulus,presented,0
+19109,Stimulus,presented,1
+19209,stdout,received,'window size (800, 600)'
+19209,stdout,received,'fx 0.11000000000000001'
+19209,stdout,received,''
+19209,stdout,received,'[0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11 ]'
+19209,stdout,received,'rms_f 0.005500000000000005'
+19209,stdout,received,'r 0.9999999999999974'
+19209,stdout,received,'False'
+19209,stdout,received,'gamma = -9.51 p= 0.00'
+19210,Stimulus,presented,0
+19211,Stimulus,presented,1
+19311,stdout,received,'window size (800, 600)'
+19311,stdout,received,'fx 0.11500000000000002'
+19311,stdout,received,''
+19311,stdout,received,'[0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115]'
+19311,stdout,received,'rms_f 0.0015000000000000013'
+19311,stdout,received,'r 1.0000000000000093'
+19311,stdout,received,'False'
+19311,stdout,received,'gamma = -9.52 p= 0.00'
+19312,Stimulus,presented,0
+19316,Stimulus,presented,1
+19416,stdout,received,'window size (800, 600)'
+19416,stdout,received,'fx 0.12000000000000002'
+19416,stdout,received,''
+19416,stdout,received,'[0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12 ]'
+19416,stdout,received,'rms_f 0.007500000000000007'
+19416,stdout,received,'r 1.0000000000000018'
+19416,stdout,received,'False'
+19416,stdout,received,'gamma = -9.53 p= 0.00'
+19417,Stimulus,presented,0
+19418,Stimulus,presented,1
+19518,stdout,received,'window size (800, 600)'
+19518,stdout,received,'fx 0.12500000000000003'
+19518,stdout,received,''
+19518,stdout,received,'[0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125]'
+19518,stdout,received,'rms_f 0.012500000000000011'
+19518,stdout,received,'r 1.000000000000001'
+19518,stdout,received,'False'
+19518,stdout,received,'gamma = -9.54 p= 0.00'
+19519,Stimulus,presented,0
+19520,Stimulus,presented,1
+19620,stdout,received,'window size (800, 600)'
+19620,stdout,received,'fx 0.13000000000000003'
+19620,stdout,received,''
+19620,stdout,received,'[0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13 ]'
+19620,stdout,received,'rms_f 0.016500000000000015'
+19620,stdout,received,'r 1.0000000000000009'
+19620,stdout,received,'False'
+19620,stdout,received,'gamma = -9.55 p= 0.00'
+19621,Stimulus,presented,0
+19624,Stimulus,presented,1
+19724,stdout,received,'window size (800, 600)'
+19724,stdout,received,'fx 0.13500000000000004'
+19724,stdout,received,''
+19724,stdout,received,'[0.11  0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135]'
+19724,stdout,received,'rms_f 0.019500000000000017'
+19724,stdout,received,'r 1.0000000000000007'
+19724,stdout,received,'False'
+19724,stdout,received,'gamma = -9.56 p= 0.00'
+19725,Stimulus,presented,0
+19726,Stimulus,presented,1
+19826,stdout,received,'window size (800, 600)'
+19826,stdout,received,'fx 0.14000000000000004'
+19826,stdout,received,''
+19826,stdout,received,'[0.105 0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14 ]'
+19826,stdout,received,'rms_f 0.02150000000000002'
+19826,stdout,received,'r 1.0000000000000007'
+19826,stdout,received,'False'
+19826,stdout,received,'gamma = -9.57 p= 0.00'
+19827,Stimulus,presented,0
+19828,Stimulus,presented,1
+19928,stdout,received,'window size (800, 600)'
+19928,stdout,received,'fx 0.14500000000000005'
+19928,stdout,received,''
+19928,stdout,received,'[0.1   0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145]'
+19928,stdout,received,'rms_f 0.02250000000000002'
+19928,stdout,received,'r 1.0000000000000007'
+19928,stdout,received,'False'
+19928,stdout,received,'gamma = -9.58 p= 0.00'
+19929,Stimulus,presented,0
+19933,Stimulus,presented,1
+20033,stdout,received,'window size (800, 600)'
+21332,stdout,received,'fx 0.15000000000000005'
+21333,stdout,received,''
+21333,stdout,received,'[0.105 0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15 ]'
+21333,stdout,received,'rms_f 0.02250000000000002'
+21333,stdout,received,'r 1.0000000000000007'
+21333,stdout,received,'False'
+21333,stdout,received,'gamma = -9.59 p= 0.00'
+21336,Stimulus,presented,0
+21338,Stimulus,presented,1
+21438,stdout,received,'window size (800, 600)'
+21438,stdout,received,'fx 0.15500000000000005'
+21438,stdout,received,''
+21438,stdout,received,'[0.11  0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155]'
+21438,stdout,received,'rms_f 0.02250000000000002'
+21438,stdout,received,'r 1.0'
+21438,stdout,received,'False'
+21438,stdout,received,'gamma = -9.60 p= 0.00'
+21442,Stimulus,presented,0
+21443,Stimulus,presented,1
+21543,stdout,received,'window size (800, 600)'
+21543,stdout,received,'fx 0.16000000000000006'
+21543,stdout,received,''
+21543,stdout,received,'[0.115 0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16 ]'
+21543,stdout,received,'rms_f 0.02250000000000002'
+21543,stdout,received,'r 1.0'
+21543,stdout,received,'False'
+21543,stdout,received,'gamma = -9.61 p= 0.00'
+21544,Stimulus,presented,0
+21544,Stimulus,presented,1
+21644,stdout,received,'window size (800, 600)'
+21644,stdout,received,'fx 0.16500000000000006'
+21644,stdout,received,''
+21644,stdout,received,'[0.12  0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165]'
+21644,stdout,received,'rms_f 0.02250000000000002'
+21644,stdout,received,'r 1.0'
+21644,stdout,received,'False'
+21644,stdout,received,'gamma = -9.62 p= 0.00'
+21645,Stimulus,presented,0
+21646,Stimulus,presented,1
+21746,stdout,received,'window size (800, 600)'
+21746,stdout,received,'fx 0.17000000000000007'
+21746,stdout,received,''
+21746,stdout,received,'[0.125 0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17 ]'
+21746,stdout,received,'rms_f 0.02250000000000002'
+21746,stdout,received,'r 1.0'
+21746,stdout,received,'False'
+21746,stdout,received,'gamma = -9.63 p= 0.00'
+21749,Stimulus,presented,0
+21750,Stimulus,presented,1
+21850,stdout,received,'window size (800, 600)'
+21850,stdout,received,'fx 0.17500000000000007'
+21850,stdout,received,''
+21850,stdout,received,'[0.13  0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175]'
+21850,stdout,received,'rms_f 0.02250000000000002'
+21850,stdout,received,'r 1.0'
+21850,stdout,received,'False'
+21850,stdout,received,'gamma = -9.64 p= 0.00'
+21851,Stimulus,presented,0
+21852,Stimulus,presented,1
+21952,stdout,received,'window size (800, 600)'
+22059,stdout,received,'fx 0.17000000000000007'
+22060,stdout,received,''
+22060,stdout,received,'[0.135 0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17 ]'
+22060,stdout,received,'rms_f 0.013500000000000012'
+22060,stdout,received,'r 1.0'
+22060,stdout,received,'False'
+22060,stdout,received,'gamma = -9.65 p= 0.00'
+22061,Stimulus,presented,0
+22062,Stimulus,presented,1
+22162,stdout,received,'window size (800, 600)'
+22162,stdout,received,'fx 0.16500000000000006'
+22162,stdout,received,''
+22162,stdout,received,'[0.14  0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165]'
+22162,stdout,received,'rms_f 0.005500000000000005'
+22162,stdout,received,'r 1.0'
+22162,stdout,received,'False'
+22162,stdout,received,'gamma = -9.66 p= 0.00'
+22163,Stimulus,presented,0
+22166,Stimulus,presented,1
+22266,stdout,received,'window size (800, 600)'
+22266,stdout,received,'fx 0.16000000000000006'
+22266,stdout,received,''
+22266,stdout,received,'[0.145 0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16 ]'
+22266,stdout,received,'rms_f 0.0015000000000000013'
+22266,stdout,received,'r 1.0'
+22266,stdout,received,'False'
+22266,stdout,received,'gamma = -9.67 p= 0.00'
+22267,Stimulus,presented,0
+22267,Stimulus,presented,1
+22367,stdout,received,'window size (800, 600)'
+22367,stdout,received,'fx 0.15500000000000005'
+22367,stdout,received,''
+22367,stdout,received,'[0.15  0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155]'
+22367,stdout,received,'rms_f 0.007500000000000007'
+22367,stdout,received,'r 1.0'
+22367,stdout,received,'False'
+22367,stdout,received,'gamma = -9.68 p= 0.00'
+22368,Stimulus,presented,0
+22369,Stimulus,presented,1
+22469,stdout,received,'window size (800, 600)'
+22470,stdout,received,'fx 0.15000000000000005'
+22470,stdout,received,''
+22470,stdout,received,'[0.155 0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15 ]'
+22470,stdout,received,'rms_f 0.012500000000000011'
+22470,stdout,received,'r 24.98856588522036'
+22470,stdout,received,'False'
+22470,stdout,received,'gamma = -9.93 p= 0.00'
+22471,Stimulus,presented,0
+22475,Stimulus,presented,1
+22575,stdout,received,'window size (800, 600)'
+22575,stdout,received,'fx 0.14500000000000005'
+22576,stdout,received,''
+22576,stdout,received,'[0.16  0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145]'
+22576,stdout,received,'rms_f 0.016500000000000015'
+22576,stdout,received,'r 17.70117763560595'
+22576,stdout,received,'False'
+22576,stdout,received,'gamma = -10.00 p= 0.00'
+22577,Stimulus,presented,0
+22578,Stimulus,presented,1
+22678,stdout,received,'window size (800, 600)'
+22678,stdout,received,'fx 0.14000000000000004'
+22678,stdout,received,''
+22678,stdout,received,'[0.165 0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14 ]'
+22678,stdout,received,'rms_f 0.019500000000000017'
+22678,stdout,received,'r 13.18298600177253'
+22678,stdout,received,'False'
+22678,stdout,received,'gamma = -10.00 p= 0.00'
+22679,Stimulus,presented,0
+22681,Stimulus,presented,1
+22781,stdout,received,'window size (800, 600)'
+22783,stdout,received,'fx 0.13500000000000004'
+22783,stdout,received,''
+22783,stdout,received,'[0.17  0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135]'
+22783,stdout,received,'rms_f 0.02150000000000002'
+22783,stdout,received,'r 10.319919795432492'
+22783,stdout,received,'False'
+22783,stdout,received,'gamma = -10.00 p= 0.00'
+22784,Stimulus,presented,0
+22785,Stimulus,presented,1
+22885,stdout,received,'window size (800, 600)'
+22885,stdout,received,'fx 0.13000000000000003'
+22885,stdout,received,''
+22885,stdout,received,'[0.175 0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13 ]'
+22885,stdout,received,'rms_f 0.02250000000000002'
+22885,stdout,received,'r 8.288053579282584'
+22885,stdout,received,'False'
+22885,stdout,received,'gamma = -10.00 p= 0.00'
+22886,Stimulus,presented,0
+22887,Stimulus,presented,1
+22987,stdout,received,'window size (800, 600)'
+22987,stdout,received,'fx 0.12500000000000003'
+22987,stdout,received,''
+22987,stdout,received,'[0.17  0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125]'
+22987,stdout,received,'rms_f 0.02250000000000002'
+22987,stdout,received,'r 6.70491043210916'
+22987,stdout,received,'False'
+22987,stdout,received,'gamma = -10.00 p= 0.00'
+22991,Stimulus,presented,0
+22991,Stimulus,presented,1
+23091,stdout,received,'window size (800, 600)'
+23091,stdout,received,'fx 0.12000000000000002'
+23091,stdout,received,''
+23092,stdout,received,'[0.165 0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12 ]'
+23092,stdout,received,'rms_f 0.02250000000000002'
+23092,stdout,received,'r 5.12655284447701'
+23092,stdout,received,'False'
+23092,stdout,received,'gamma = -10.00 p= 0.00'
+23092,Stimulus,presented,0
+23093,Stimulus,presented,1
+23193,stdout,received,'window size (800, 600)'
+23193,stdout,received,'fx 0.11500000000000002'
+23193,stdout,received,''
+23193,stdout,received,'[0.16  0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115]'
+23193,stdout,received,'rms_f 0.02250000000000002'
+23193,stdout,received,'r 3.5593528382117623'
+23193,stdout,received,'False'
+23193,stdout,received,'gamma = -10.00 p= 0.00'
+23194,Stimulus,presented,0
+23194,Stimulus,presented,1
+23295,stdout,received,'window size (800, 600)'
+23295,stdout,received,'fx 0.11000000000000001'
+23295,stdout,received,''
+23295,stdout,received,'[0.155 0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11 ]'
+23295,stdout,received,'rms_f 0.02250000000000002'
+23295,stdout,received,'r 2.029327371721638'
+23295,stdout,received,'False'
+23295,stdout,received,'gamma = -10.00 p= 0.00'
+23296,Stimulus,presented,0
+23298,Stimulus,presented,1
+23398,stdout,received,'window size (800, 600)'
+23399,stdout,received,'fx 0.10500000000000001'
+23399,stdout,received,''
+23399,stdout,received,'[0.15  0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105]'
+23399,stdout,received,'rms_f 0.02250000000000002'
+23399,stdout,received,'r 0.793142440809275'
+23399,stdout,received,'True'
+23399,stdout,received,'gamma = -9.99 p= 0.00'
+23401,Stimulus,presented,0
+23401,Stimulus,presented,1
+23501,stdout,received,'window size (800, 600)'
+23501,stdout,received,'fx 0.1'
+23501,stdout,received,''
+23501,stdout,received,'[0.145 0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1  ]'
+23501,stdout,received,'rms_f 0.02250000000000002'
+23501,stdout,received,'r 0.975'
+23501,stdout,received,'True'
+23501,stdout,received,'gamma = -9.98 p= 0.00'
+23502,Stimulus,presented,0
+23503,Stimulus,presented,1
+23603,stdout,received,'window size (800, 600)'
+23603,stdout,received,'[ 0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1  0.1\n  0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1 -0.1\n -0.1 -0.1]'
+23603,stdout,received,'fx 0.10500000000000001'
+23604,stdout,received,''
+23604,stdout,received,'[0.14  0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105]'
+23604,stdout,received,'rms_f 0.013500000000000012'
+23604,stdout,received,'r 1.0046296296296295'
+23604,stdout,received,'False'
+23604,stdout,received,'gamma = -9.99 p= 0.00'
+23606,Stimulus,presented,0
+23607,Stimulus,presented,1
+23707,stdout,received,'window size (800, 600)'
+23708,stdout,received,'fx 0.11000000000000001'
+23708,stdout,received,''
+23708,stdout,received,'[0.135 0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11 ]'
+23708,stdout,received,'rms_f 0.005500000000000005'
+23708,stdout,received,'r 1.0113636363636367'
+23708,stdout,received,'False'
+23708,stdout,received,'gamma = -10.00 p= 0.00'
+23709,Stimulus,presented,0
+23709,Stimulus,presented,1
+23809,stdout,received,'window size (800, 600)'
+23812,stdout,received,'fx 0.11500000000000002'
+23812,stdout,received,''
+23812,stdout,received,'[0.13  0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115]'
+23812,stdout,received,'rms_f 0.0015000000000000013'
+23812,stdout,received,'r 0.9583333333333321'
+23812,stdout,received,'True'
+23812,stdout,received,'gamma = -9.99 p= 0.00'
+23814,Stimulus,presented,0
+23815,Stimulus,presented,1
+23915,stdout,received,'window size (800, 600)'
+23915,stdout,received,'fx 0.12000000000000002'
+23915,stdout,received,''
+23915,stdout,received,'[0.125 0.12  0.115 0.11  0.105 0.1   0.105 0.11  0.115 0.12 ]'
+23915,stdout,received,'rms_f 0.007500000000000007'
+23915,stdout,received,'r 0.9916666666666667'
+23915,stdout,received,'False'
+23915,stdout,received,'gamma = -10.00 p= 0.00'
+23915,Experiment,ended
