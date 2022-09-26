@@ -2,6 +2,8 @@ import sys
 import numpy as np
 import pygame
 
+from graphic.shape import Line
+
 
 class Window:
 
@@ -29,8 +31,6 @@ class Window:
                 pygame.quit()
                 sys.exit()
 
-        if self.cursor_touch_border():
-            self.move_back_cursor_to_the_middle()
         pygame.display.update()
         self.fps_clock.tick(self.fps)
 
@@ -66,3 +66,17 @@ class Window:
         y = y_scaled/y_max
 
         return np.array([x, y])
+
+    def show_margins(self, margin):
+        # Might be useful for debug
+        for start_position, stop_position in (
+                    (margin, margin), (1 - margin, margin),
+                    (margin, margin), (margin, 1 - margin),
+                    (1 - margin, margin), (1 - margin, 1 - margin),
+                    (margin, 1 - margin), (1 - margin, 1 - margin),
+                ):
+
+            Line(window=self,
+                 start_position=start_position,
+                 stop_position=stop_position,
+                 color='black', width=2)
