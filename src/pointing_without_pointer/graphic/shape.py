@@ -47,6 +47,8 @@ class Text(Visual):
 
         self.window.surface.fill(pygame.Color("white"))
 
+        self.draw()
+
     def draw(self):
 
         text_list = self.text.split("\n")
@@ -73,6 +75,8 @@ class Circle(Visual):
         self.radius = radius
         self.width = width
 
+        self.draw()
+
     def draw(self):
         pygame.draw.circle(self.window.surface,
                            color=pygame.Color(self.color),
@@ -93,6 +97,8 @@ class Line:
         self.start_position = start_position
         self.stop_position = stop_position
         self.width = width
+
+        self.draw()
 
     def draw(self):
         pygame.draw.line(self.window.surface,

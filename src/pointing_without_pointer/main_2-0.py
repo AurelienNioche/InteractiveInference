@@ -103,6 +103,8 @@ class Model:
 
         self.mouse_pos_prev_frame = np.zeros(2)
 
+        self.ignore_mouse_disp = False
+
         self.initialize()
         self.reset()
         while True:
@@ -138,6 +140,8 @@ class Model:
         self.n_frame_since_selected = 0
         self.disturbance_phase = 0  # Will be incremented
 
+        self.ignore_mouse_disp = False
+
     def loop(self):
 
         self.update_objs()
@@ -145,14 +149,7 @@ class Model:
 
     def update_objs(self):
 
-        mouse_pos = self.window.mouse_position
-
-        delta_mouse = mouse_pos - self.mouse_pos_prev_frame
-
-        self.control += delta_mouse * self.mouse_scale
-
-        self.hist_control = np.roll(self.hist_control, -1)
-        self.hist_control[:, -1] = self.control
+        self.update_control()
 
         self.update_wave()
 
@@ -163,7 +160,30 @@ class Model:
         else:
             self.update_deriv()
 
-        self.mouse_pos_prev_frame = mouse_pos
+    def update_control(self):
+
+        ctb = self.window.cursor_touch_border()
+
+        if not ctb:
+            mouse_pos = self.window.mouse_position
+            # print(f"{mouse_pos[0] * self.mouse_scale:.1f}, {mouse_pos * self.mouse_scale:.1f}")
+
+            delta_mouse = mouse_pos - self.mouse_pos_prev_frame
+            self.mouse_pos_prev_frame[:] = mouse_pos
+
+            # print(f"{delta_mouse[0]* self.mouse_scale:.1f}, {delta_mouse[1]* self.mouse_scale:.1f}")
+
+            add_to_ctl = delta_mouse * self.mouse_scale
+
+        else:
+            self.window.move_back_cursor_to_the_middle()
+            self.mouse_pos_prev_frame[:] = self.window.mouse_position
+            add_to_ctl = np.zeros(2)
+
+        self.control[:] += add_to_ctl
+
+        self.hist_control = np.roll(self.hist_control, -1)
+        self.hist_control[:, -1] = self.control
 
     def draw_trans_obj(self):
 
@@ -202,9 +222,6 @@ class Model:
         self.window.update()
 
     def update_deriv(self):
-
-        norm_ratio = np.sum(self.var_ratio + 0.4)
-        self.var_ratio[:] = ((self.var_ratio + 0.4) / norm_ratio) * 10e4
 
         self.hist_pos = np.roll(self.hist_pos, -1)
         self.hist_pos[:, :, -1] = self.pos
@@ -252,12 +269,13 @@ class Model:
         var_rat = 1.0 - np.sqrt((e_var+22000) / a_var+1e-5)
         var_rat += cvar
 
-        for i in range(self.n_target):
+        norm_ratio = np.sum(self.var_ratio + 0.4)
+        self.var_ratio[:] = ((self.var_ratio + 0.4) / norm_ratio) * 10e4
 
-            if var_rat[i] < self.add_threshold:
-                self.var_ratio[i] += var_rat[i] * self.add_coeff
-            elif var_rat[i] > self.decay_threshold:
-                self.var_ratio[i] /= self.decay_coeff
+        need_add = var_rat < self.add_threshold
+        self.var_ratio[need_add] += var_rat[need_add] * self.add_coeff
+        need_decay = var_rat > self.decay_threshold
+        self.var_ratio[need_decay] /= self.decay_coeff
 
     def update_wave(self):
 

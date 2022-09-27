@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import pygame
+from graphic.shape import Line
 
 
 class Window:
@@ -29,8 +30,6 @@ class Window:
                 pygame.quit()
                 sys.exit()
 
-        if self.cursor_touch_border():
-            self.move_back_cursor_to_the_middle()
         pygame.display.update()
         self.fps_clock.tick(self.fps)
 
@@ -53,9 +52,7 @@ class Window:
         x_scaled = x*x_max
         y_scaled = y*y_max
 
-        # print("set", x_scaled, y_scaled)
         pygame.mouse.set_pos(x_scaled, y_scaled)
-        # print("read", pygame.mouse.get_pos())
 
     @property
     def mouse_position(self):
@@ -66,3 +63,17 @@ class Window:
         y = y_scaled/y_max
 
         return np.array([x, y])
+
+    def show_margins(self, margin):
+        # Might be useful for debug
+        for start_position, stop_position in (
+                    (margin, margin), (1 - margin, margin),
+                    (margin, margin), (margin, 1 - margin),
+                    (1 - margin, margin), (1 - margin, 1 - margin),
+                    (margin, 1 - margin), (1 - margin, 1 - margin),
+                ):
+
+            Line(window=self,
+                 start_position=start_position,
+                 stop_position=stop_position,
+                 color='black', width=2)
