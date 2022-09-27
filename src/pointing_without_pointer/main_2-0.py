@@ -39,14 +39,13 @@ class Model:
         self.disturbance_phase = 0.0  # Will be incremented
         self.lag_tau = 0.08
 
+        self.var_ratio_scale = 10e5
+
         # self.time_window_sec = XXX
         # self.time_window = int(self.time_window_sec * self.window.fps)
         self.n_frame_var = 20    # `VAR_WIN`
 
         self.n_frame_selected = 20
-
-        # self.var_ratio_min = 0.0
-        # self.var_ratio_max = 6.0
 
         self.seed = 123
 
@@ -78,33 +77,25 @@ class Model:
 
         # ---------------------------------------- #
 
-        self.var_ratio = np.zeros(self.n_target)
-
         self.window = Window(size=self.window_size, fps=self.fps, hide_cursor=self.hide_cursor)
-
-        self.rng = np.random.default_rng(seed=self.seed)
 
         self.hist_pos = np.zeros((self.n_target, 2, self.n_frame_var))
         self.hist_control = np.zeros((2, self.n_frame_var))
         self.hist_model = np.zeros((self.n_target, 2, self.n_frame_var))
 
-        self.freq = self.rng.uniform(size=(self.n_target, self.n_sin), low=self.freq_min, high=self.freq_max)
-        self.phase = self.rng.uniform(size=(self.n_target, self.n_sin), low=self.phase_min, high=self.phase_max)
+        rng = np.random.default_rng(seed=self.seed)
+        self.freq = rng.uniform(size=(self.n_target, self.n_sin), low=self.freq_min, high=self.freq_max)
+        self.phase = rng.uniform(size=(self.n_target, self.n_sin), low=self.phase_min, high=self.phase_max)
 
         self.color = np.zeros(self.n_target, dtype=str)
         self.radius = np.zeros(self.n_target)
 
-        self.old_mouse_pos = np.zeros(2)
-        self.old_noise = np.zeros((self.n_target, 2))
-
-        self.n_frame_since_selected = 0
+        self.var_ratio = np.zeros(self.n_target)
         self.control = np.zeros(2)
         self.pos = np.zeros((self.n_target, 2))
         self.selected = np.zeros(self.n_target, dtype=bool)
 
-        self.ign = 0
-
-        self.mouse_pos_prev_frame = np.zeros(2)
+        self.n_frame_since_selected = 0
 
         self.initialize()
         self.reset()
@@ -113,11 +104,6 @@ class Model:
 
     def initialize(self):
 
-        # To be sure that the mouse can be captured correctly...
-        for i in range(self.init_frames):
-            self.window.clear()
-            self.window.update()
-
         self.window.move_back_cursor_to_the_middle()
 
         self.pos[:] = 0.5, 0.5
@@ -125,7 +111,7 @@ class Model:
     def reset(self):
 
         self.control[:] = 0
-        self.mouse_pos_prev_frame[:] = self.window.mouse_position
+        self.hist_control[:] = 0
 
         for i in range(self.n_target):
             for coord in range(2):
@@ -138,8 +124,6 @@ class Model:
         self.var_ratio[:] = 0
         self.selected[:] = 0
 
-        self.ign = 0
-
     def loop(self):
 
         self.update_objs()
@@ -147,15 +131,12 @@ class Model:
 
     def update_objs(self):
 
-        mouse_pos = self.window.mouse_position
-        delta_mouse = mouse_pos - self.mouse_pos_prev_frame
-        for coord in range(2):
-            self.control[coord] += delta_mouse[coord] * self.mouse_scale
-        self.mouse_pos_prev_frame[:] = mouse_pos
+        self.window.get_events()
+        self.control[:] = self.window.mouse_displacement
 
-        if self.window.cursor_touch_border():
-            self.window.move_back_cursor_to_the_middle()
-            #cself.mouse_pos_prev_frame[:] = 0.5
+        # if self.window.cursor_touch_border():
+        #     self.window.move_back_cursor_to_the_middle()
+        #     # self.mouse_pos_prev_frame[:] = 0.5
 
         self.update_history()
         self.update_wave()
@@ -226,7 +207,7 @@ class Model:
     def update_deriv(self):
 
         # For computation
-        self.var_ratio *= 1e5
+        self.var_ratio *= self.var_ratio_scale
 
         e_var = np.zeros(self.n_target)
         for i in range(self.n_target):

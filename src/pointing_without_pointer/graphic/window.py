@@ -7,7 +7,8 @@ from graphic.shape import Line
 
 class Window:
 
-    def __init__(self, size=(800, 600), fps=30, background="white", hide_cursor=True, caption=""):
+    def __init__(self, size=(800, 600), fps=30, background="white", hide_cursor=True, caption="",
+                 init_frames=5):
 
         pygame.init()
         self.size = size
@@ -16,20 +17,36 @@ class Window:
         self.fps = fps  # frames per second setting
         self.fps_clock = pygame.time.Clock()
 
+        self.mouse_position = np.zeros(2)
+        self.mouse_displacement = np.zeros(2)
+
         self.background = pygame.Color(background)
 
         if hide_cursor:
             pygame.mouse.set_visible(False)
 
+
+        # To be sure that the mouse can be captured correctly...
+        for i in range(init_frames):
+            self.update()
+
+    def get_events(self):
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT \
+                    or (event.type == pygame.KEYDOWN
+                        and event.key == pygame.K_ESCAPE):
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEMOTION:
+                mp = self._mouse_position()
+                self.mouse_displacement[:] = self.mouse_position - mp
+                self.mouse_position[:] = mp
+
     def clear(self):
         self.surface.fill(self.background)
 
     def update(self):
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and pygame.K_ESCAPE):
-                pygame.quit()
-                sys.exit()
 
         pygame.display.update()
         self.fps_clock.tick(self.fps)
@@ -41,9 +58,9 @@ class Window:
         x, y = x_coord/x_max, y_coord/y_max
 
         return np.isclose(x, 0, atol=0.01) \
-                or np.isclose(x, 1, atol=0.01) \
-                or np.isclose(y, 0, atol=0.01) \
-                or np.isclose(y, 1, atol=0.01)
+            or np.isclose(x, 1, atol=0.01) \
+            or np.isclose(y, 0, atol=0.01) \
+            or np.isclose(y, 1, atol=0.01)
 
     def move_back_cursor_to_the_middle(self):
 
@@ -56,9 +73,9 @@ class Window:
         # print("set", x_scaled, y_scaled)
         pygame.mouse.set_pos(x_scaled, y_scaled)
         # print("read", pygame.mouse.get_pos())
+        self.mouse_position[:] = x, y
 
-    @property
-    def mouse_position(self):
+    def _mouse_position(self):
 
         x_scaled, y_scaled = pygame.mouse.get_pos()
         x_max, y_max = self.surface.get_size()

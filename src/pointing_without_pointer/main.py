@@ -201,6 +201,7 @@ def main():
                  start_position=pos[i],
                  stop_position=pos[i] + delta_noise*line_scale).draw()
 
+        window.get_events()
         window.update()
 
         old_mouse_pos[:] = mouse_pos
