@@ -35,6 +35,8 @@ class Model:
         self.disturbance_scale = 655.5
         self.lag_tau = 0.08
 
+        self.selection_threshold = 0.955
+
         # self.time_window_sec = XXX
         # self.time_window = int(self.time_window_sec * self.window.fps)
         self.n_frame_var = 20    # `VAR_WIN`
@@ -48,7 +50,7 @@ class Model:
 
         self.scale_noise = 0.03
 
-        self.mouse_scale = 0.5
+        self.mouse_scale = 50
 
         self.init_frames = 5
 
@@ -140,7 +142,7 @@ class Model:
 
         delta_mouse = mouse_pos - self.mouse_pos_prev_frame
 
-        self.control += delta_mouse * 50  # self.mouse_scale
+        self.control += delta_mouse * self.mouse_scale
 
         self.hist_control = np.roll(self.hist_control, -1)
         self.hist_control[:, -1] = self.control
@@ -160,8 +162,8 @@ class Model:
         selected = np.zeros(self.n_target, dtype=bool)
 
         for i in range(self.n_target):
-            p_val[i] = self.var_ratio[i] / 1000.0
-            selected[i] = p_val[i] >= 95.5
+            p_val[i] = self.var_ratio[i] / 100000.0
+            selected[i] = p_val[i] >= self.selection_threshold
 
         visual_pos = np.zeros_like(self.pos)
         for coord in range(2):
@@ -175,7 +177,7 @@ class Model:
         color[:] = self.color_still
         color[selected] = self.color_selected
 
-        radius = self.base_radius + (self.max_radius - self.base_radius) * (self.var_ratio / 1e5)
+        radius = self.base_radius + (self.max_radius - self.base_radius) * p_val
 
         self.window.clear()
 
@@ -212,11 +214,6 @@ class Model:
                 diff = h[coord] - m[coord]
                 var[coord] = np.sum(diff**2, axis=-1)
             e_var[i] = distance(np.zeros(2), var)
-
-        # m = np.zeros((self.n_target, 2))
-        # for i in range(self.n_target):
-        #     hc, hm = self.hist_control[i], self.hist_model[i]
-        #     m = np.mean(hc + hm)
 
         a_var = np.zeros(self.n_target)
         for i in range(self.n_target):
