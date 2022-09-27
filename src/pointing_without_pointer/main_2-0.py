@@ -17,6 +17,8 @@ class Model:
 
         self.fps = 30
 
+        self.n_target = 2
+
         # --- Model parameters ---
         self.add_coeff = 5.0  # `ADD_COEFF`
         self.decay_coeff = 1.15  # `DECAY_COEFF`
@@ -54,7 +56,7 @@ class Model:
 
         self.hide_cursor = False
 
-        self.init_positions = np.array([(0.5, 0.5), ])  # np.array([(0.3, 0.3), (0.7, 0.7)])
+        # self.init_positions = np.array([(0.5, 0.5), ])  # np.array([(0.3, 0.3), (0.7, 0.7)])
 
         self.line_scale = 4.0
 
@@ -69,8 +71,6 @@ class Model:
         self.color_selected = "red"
 
         # ---------------------------------------- #
-
-        self.n_target = len(self.init_positions)
 
         self.var_ratio = np.zeros(self.n_target)
 
@@ -97,6 +97,8 @@ class Model:
         self.control = np.zeros(2)
         self.pos = np.zeros((self.n_target, 2))
 
+        self.margin = 0.05
+
         self.mouse_pos_prev_frame = np.zeros(2)
 
         self.initialize()
@@ -122,73 +124,15 @@ class Model:
         self.mouse_pos_prev_frame[:] = self.window.mouse_position
 
         for i in range(self.n_target):
-            self.pos[i] = self.init_positions[i]
+            self.pos[i] = 0.5, 0.5
             for coord in range(2):
-                self.hist_pos[i, coord, :] = self.init_positions[i, coord]
-                self.hist_model[i, coord, :] = self.init_positions[i, coord]
+                self.hist_pos[i, coord, :] = self.pos[i, coord]
+                self.hist_model[i, coord, :] = self.pos[i, coord]
 
     def loop(self):
 
         self.update_objs()
         self.draw_trans_obj()
-
-        #
-        #
-        # noise = np.zeros((self.n_target, 2))
-        # f = np.zeros((self.n_target, 2))
-        # pos = np.zeros((self.n_target, 2))
-        #
-        # for i in range(self.n_target):
-        #     noise[i] = self.noise_maker[i].new()
-        #
-        # noise[:] *= self.scale_noise
-        #
-        # f[:] = self.init_positions[:] + noise[:]
-        #
-        # pos[:] = f[:] + mouse_pos
-        #
-        # pos = np.clip(pos, 0.0, 1.0)
-        #
-        # self.hist_pos = np.roll(self.hist_pos, -1)
-        # self.hist_control = np.roll(self.hist_control, -1)
-        # self.hist_pos[:, :, -1] = pos
-        # self.hist_control[:, :, -1] = f
-        #
-        #
-        #
-        # p = softmax(self.var_ratio)
-        #
-        # delta_mouse = mouse_pos - old_mouse_pos
-        #
-        # if not selected:
-        #
-        #     self.radius[:] = self.base_radius + self.var_radius * p[:]
-        #
-        #     for i in range(self.n_target):
-        #
-        #         selected_i = p[i] > 0.99
-        #
-        #         if selected_i:
-        #             selected = True
-        #             time_since_selected = 0
-        #             self.color[i] = self.color_selected
-        #
-        # else:
-        #     self.n_frame_since_selected += 1
-        #
-        #     if self.n_frame_since_selected >= self.n_frame_selected:
-        #         self.selected = False
-        #         self.color[:] = self.color_still
-        #         self.var_ratio[:] = 0
-        #         self.hist_control[:] = 0
-        #         self.hist_pos[:] = 0
-        #
-        # delta_noise = noise[:] - old_noise[:]
-        #
-        # self.update_graphics(pos=pos, delta_mouse=delta_mouse, delta_noise=delta_noise)
-        #
-        # self.old_mouse_pos[:] = mouse_pos
-        # self.old_noise[:] = noise
 
     def update_objs(self):
 
@@ -213,25 +157,33 @@ class Model:
     def draw_trans_obj(self):
 
         p_val = np.zeros(self.n_target)
-        selected = np.zeros(self.n_target)
+        selected = np.zeros(self.n_target, dtype=bool)
 
         for i in range(self.n_target):
             p_val[i] = self.var_ratio[i] / 1000.0
-            selected[i] = p_val[i] >= 5.5
+            selected[i] = p_val[i] >= 95.5
+
+        visual_pos = np.zeros_like(self.pos)
+        for coord in range(2):
+            visual_pos[:, coord] = self.pos[:, coord] + self.control[coord]
+
+        # Convert coordinates from (-100, 100) to (0, 1)
+        visual_pos[:] = np.clip(visual_pos, -100, 100)
+        visual_pos[:] = 0.5 + visual_pos / (2*100)
+
+        color = np.zeros(self.n_target, dtype=object)
+        color[:] = self.color_still
+        color[selected] = self.color_selected
+
+        radius = self.base_radius + (self.max_radius - self.base_radius) * (self.var_ratio / 1e5)
 
         self.window.clear()
 
         for i in range(self.n_target):
-            init_pos = self.pos[i]
-            print("init_pos", init_pos)
-            norm_position = 0.5 + self.pos[i] / 200
-            print("norm position", norm_position)
-            position = 0.25 + 0.5*norm_position
-            print("position", position)
             Circle(window=self.window,
-                   position=position, color='green',
-                   radius=10).draw()
-        # Circle(window=self.window, position=pos[
+                   position=visual_pos[i],
+                   color=color[i],
+                   radius=radius[i]).draw()
 
         self.window.update()
 
