@@ -25,11 +25,6 @@ class Window:
 
     def update(self):
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                pygame.quit()
-                sys.exit()
-
         pygame.display.update()
         self.fps_clock.tick(self.fps)
 

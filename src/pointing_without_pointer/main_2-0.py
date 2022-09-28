@@ -1,8 +1,10 @@
 import numpy as np
-from scipy.special import softmax
+import time
+import sys
+import pygame
 
 from graphic.window import Window
-from graphic.shape import Line, Circle
+from graphic.shape import Circle
 
 np.seterr(all='raise')
 
@@ -31,8 +33,8 @@ class Model:
         self.phase_min = 0
         self.phase_max = 2*np.pi
 
-        self.phase_inc = 0.003    # `phase_inc`
-        self.disturbance_scale = 655.5
+        self.phase_inc = 0.003    # `phase_inc`; maybe 0.0005
+        self.disturbance_scale = 655.5  # Maybe 255.5
         self.lag_tau = 0.08
 
         self.selection_threshold = 0.955
@@ -40,17 +42,11 @@ class Model:
         # self.time_window_sec = XXX
         # self.time_window = int(self.time_window_sec * self.window.fps)
         self.n_frame_var = 20    # `VAR_WIN`
-
         self.n_frame_selected = 20
-
-        # self.var_ratio_min = 0.0
-        # self.var_ratio_max = 6.0
 
         self.seed = 123
 
-        self.scale_noise = 0.03
-
-        self.mouse_scale = 50
+        self.mouse_scale = 0.5
 
         self.init_frames = 5
 
@@ -58,14 +54,11 @@ class Model:
 
         self.hide_cursor = False
 
-        # self.init_positions = np.array([(0.5, 0.5), ])  # np.array([(0.3, 0.3), (0.7, 0.7)])
-
         self.line_scale = 4.0
-
         self.base_radius = 5
         self.var_radius = 50
-
         self.width_circle_line = 2
+        self.margin = 0.05
 
         self.max_radius = self.base_radius + self.var_radius
 
@@ -74,36 +67,23 @@ class Model:
 
         # ---------------------------------------- #
 
-        self.var_ratio = np.zeros(self.n_target)
-
         self.window = Window(fps=self.fps, hide_cursor=self.hide_cursor)
-
-        self.rng = np.random.default_rng(seed=self.seed)
 
         self.hist_pos = np.zeros((self.n_target, 2, self.n_frame_var))
         self.hist_control = np.zeros((2, self.n_frame_var))
         self.hist_model = np.zeros((self.n_target, 2, self.n_frame_var))
 
-        self.freq = self.rng.uniform(size=(self.n_target, self.n_sin), low=self.freq_min, high=self.freq_max)
-        self.phase = self.rng.uniform(size=(self.n_target, self.n_sin), low=self.phase_min, high=self.phase_max)
+        rng = np.random.default_rng(seed=self.seed)
+        self.freq = rng.uniform(size=(self.n_target, self.n_sin), low=self.freq_min, high=self.freq_max)
+        self.phase = rng.uniform(size=(self.n_target, self.n_sin), low=self.phase_min, high=self.phase_max)
 
-        self.color = np.zeros(self.n_target, dtype=str)
-        self.radius = np.zeros(self.n_target)
-
-        self.old_mouse_pos = np.zeros(2)
-        self.old_noise = np.zeros((self.n_target, 2))
-
+        self.var_ratio = np.zeros(self.n_target)
         self.selected = np.zeros(self.n_target, dtype=bool)
         self.n_frame_since_selected = 0
         self.disturbance_phase = 0  # Will be incremented
         self.control = np.zeros(2)
         self.pos = np.zeros((self.n_target, 2))
-
-        self.margin = 0.05
-
         self.mouse_pos_prev_frame = np.zeros(2)
-
-        self.ignore_mouse_disp = False
 
         self.initialize()
         self.reset()
@@ -126,8 +106,6 @@ class Model:
 
         self.window.move_back_cursor_to_the_middle()
 
-        self.color[:] = self.color_still
-
         self.control[:] = 0
         self.hist_control[:] = 0
         self.mouse_pos_prev_frame[:] = self.window.mouse_position
@@ -138,19 +116,11 @@ class Model:
                 self.hist_model[i, coord, :] = self.pos[i, coord]
 
         self.n_frame_since_selected = 0
-        self.disturbance_phase = 0  # Will be incremented
-
-        self.ignore_mouse_disp = False
+        # self.disturbance_phase = 0  # Will be incremented
 
     def loop(self):
-
-        self.update_objs()
-        self.draw_trans_obj()
-
-    def update_objs(self):
-
+        self.check_keys()
         self.update_control()
-
         self.update_wave()
 
         if self.selected.any():
@@ -159,6 +129,7 @@ class Model:
                 self.reset()
         else:
             self.update_deriv()
+        self.draw()
 
     def update_control(self):
 
@@ -166,13 +137,8 @@ class Model:
 
         if not ctb:
             mouse_pos = self.window.mouse_position
-            # print(f"{mouse_pos[0] * self.mouse_scale:.1f}, {mouse_pos * self.mouse_scale:.1f}")
-
             delta_mouse = mouse_pos - self.mouse_pos_prev_frame
             self.mouse_pos_prev_frame[:] = mouse_pos
-
-            # print(f"{delta_mouse[0]* self.mouse_scale:.1f}, {delta_mouse[1]* self.mouse_scale:.1f}")
-
             add_to_ctl = delta_mouse * self.mouse_scale
 
         else:
@@ -180,12 +146,15 @@ class Model:
             self.mouse_pos_prev_frame[:] = self.window.mouse_position
             add_to_ctl = np.zeros(2)
 
-        self.control[:] += add_to_ctl
+        # For scaling
+        screen_size = self.window.surface.get_size()
+        for coord in range(2):
+            self.control[coord] += add_to_ctl[coord] * screen_size[coord]
 
         self.hist_control = np.roll(self.hist_control, -1)
         self.hist_control[:, -1] = self.control
 
-    def draw_trans_obj(self):
+    def draw(self):
 
         p_val = np.zeros(self.n_target)
 
@@ -223,39 +192,46 @@ class Model:
 
     def update_deriv(self):
 
+        # For scaling
+        screen_size = self.window.surface.get_size()
+
+        # Update `hist_pos`
         self.hist_pos = np.roll(self.hist_pos, -1)
         self.hist_pos[:, :, -1] = self.pos
 
-        self.hist_model = np.roll(self.hist_model, -1)
-
+        # Updating `hist_model`
+        new_val = np.zeros((self.n_target, 2))
         for i in range(self.n_target):
             for coord in range(2):
                 pos = self.pos[i, coord]
-                hm = self.hist_model[i, coord, -1]
-                new_val = (1 - self.lag_tau) * hm + self.lag_tau * pos
-                self.hist_model[i, coord, -1] = new_val
+                hm = self.hist_model[i, coord, -2]
+                new_val[i, coord] = (1 - self.lag_tau) * hm + self.lag_tau * pos
+        self.hist_model = np.roll(self.hist_model, -1)
+        self.hist_model[:, :, -1] = new_val
 
+        # Compute `c_var` (accumulation of control change)
         var = np.zeros(2)
         for frame in range(1, self.n_frame_var):
             for coord in range(2):
                 c_now = self.hist_control[coord, frame]
                 c_prev_frame = self.hist_control[coord, frame - 1]
                 diff = c_now - c_prev_frame
-                var[coord] += diff ** 2
-        cvar = distance(np.zeros(2), var)
-        if cvar > 2000:
-            cvar = 2000
-        cvar /= 1000
+                var[coord] += diff**2
+        c_var = distance(np.zeros(2), var)
+        if c_var > 2000:
+            c_var = 2000
 
+        # Compute `e_var` (vector norm of 2D variances of disturbance)
         e_var = np.zeros(self.n_target)
         for i in range(self.n_target):
             var = np.zeros(2)
             for coord in range(2):
                 h = self.hist_pos[i, coord, :]
-                diff = h - h.mean()
+                diff = (h - h.mean()) * screen_size[coord]
                 var[coord] = (diff**2).sum()
             e_var[i] = distance(np.zeros(2), var)
 
+        # Compute `a_var` (accumulation of object movement under control)
         a_var = np.zeros(self.n_target)
         for i in range(self.n_target):
             var = np.zeros(2)
@@ -266,12 +242,15 @@ class Model:
                 var[coord] = (add**2).sum()
             a_var[i] = distance(np.zeros(2), var)
 
-        var_rat = 1.0 - np.sqrt((e_var+22000) / a_var+1e-5)
-        var_rat += cvar
+        # Compute `var_rat`
+        var_rat = 1.0 - np.sqrt((e_var+22000) / (a_var+1e-5))
+        var_rat *= c_var / 1000
 
+        # Apply normalization
         norm_ratio = np.sum(self.var_ratio + 0.4)
         self.var_ratio[:] = ((self.var_ratio + 0.4) / norm_ratio) * 10e4
 
+        # Update var_ratio depending on the threshold
         need_add = var_rat < self.add_threshold
         self.var_ratio[need_add] += var_rat[need_add] * self.add_coeff
         need_decay = var_rat > self.decay_threshold
@@ -291,9 +270,31 @@ class Model:
             for j in range(0, self.n_sin, 2):
                 for k in range(2):
                     total_d[k] += disturbance[i, j + k]
+
+            # total_d = (1 / (1 + np.exp(-total_d * 4)) - 0.5) * 2
             self.pos[i] += total_d
 
         self.pos = np.clip(self.pos, -100, 100)
+
+    def check_keys(self):
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    self.phase_inc += 0.0005
+                    print(f"Increasing `phase_inc` (={self.phase_inc})")
+                elif event.key == pygame.K_q:
+                    self.phase_inc -= 0.0005
+                    print(f"Decreasing `phase_inc` (={self.phase_inc})")
+                elif event.key == pygame.K_z:
+                    self.disturbance_scale += 50
+                    print(f"Increasing `disturbance_scale` (={self.disturbance_scale})")
+                elif event.key == pygame.K_s:
+                    self.disturbance_scale -= 50
+                    print(f"Decreasing `disturbance_scale` (={self.disturbance_scale})")
 
 
 def main():
