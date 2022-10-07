@@ -70,13 +70,15 @@ class Window:
 
     def quadrant_center(self, quadrant):
 
+        x_span, y_span = self.size()
+
         if quadrant == "first":
-            return (self.size()[0] - self.center()[0]) / 2, self.center()[1] / 2
+            return 0.75*x_span, 0.25*y_span
         elif quadrant == "second":
-            return self.center()[0] / 2, self.center()[1] / 2
+            return 0.25*x_span, 0.25*y_span
         elif quadrant == "third":
-            return self.center()[0] / 2, (self.size()[0] - self.center()[0]) / 2
+            return 0.25*x_span, 0.75*y_span
         elif quadrant == "fourth":
-            return (self.size()[0] - self.center()[0]) / 2, (self.size()[0] - self.center()[0]) / 2
+            return 0.75*x_span, 0.75*y_span
         else:
             raise ValueError

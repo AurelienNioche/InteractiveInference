@@ -26,6 +26,8 @@ class User(gym.Env):
 
         p_star = position[self.goal]
 
+        print("p_star", p_star)
+
         prev_mu_hat = self.mu_hat.copy()
 
         delta = np.zeros(2)

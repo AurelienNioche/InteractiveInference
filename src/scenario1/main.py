@@ -61,8 +61,6 @@ class Model:
         self.width_circle_line = 2
         self.margin = 0.05
 
-        self.max_radius = self.base_radius + self.var_radius
-
         self.color_still = np.array(["orange", "blue"])
         self.color_selected = "red"
 
@@ -142,10 +140,7 @@ class Model:
 
     def draw(self):
 
-        p_val = np.zeros(self.n_target)
-
-        for i in range(self.n_target):
-            p_val[i] = self.var_ratio[i] / 1e5
+        p_val = self.var_ratio / 1e5
 
         self.selected[:] = p_val >= self.selection_threshold
 
@@ -166,7 +161,7 @@ class Model:
         color[:] = self.color_still
         color[self.selected] = self.color_selected
 
-        radius = self.base_radius + (self.max_radius - self.base_radius) * p_val
+        radius = self.base_radius + self.var_radius*p_val
 
         self.window.clear()
 
@@ -179,9 +174,6 @@ class Model:
         self.window.update()
 
     def update_deriv(self):
-
-        # For scaling
-        screen_size = self.window.surface.get_size()
 
         # Update `hist_pos`
         self.hist_pos = np.roll(self.hist_pos, -1)
@@ -224,7 +216,7 @@ class Model:
         for i in range(self.n_target):
             var = np.zeros(2)
             for coord in range(2):
-                hc = self.hist_control[coord, :] * screen_size[coord]
+                hc = self.hist_control[coord, :]
                 hm = self.hist_model[i, coord, :]
                 add = hc + hm
                 var[coord] = (add**2).sum()
@@ -240,7 +232,7 @@ class Model:
 
         # Update var_ratio depending on the threshold
         need_add = var_rat < self.add_threshold
-        self.var_ratio[need_add] += var_rat[need_add] * self.add_coeff
+        self.var_ratio[need_add] -= var_rat[need_add] * self.add_coeff
         need_decay = var_rat > self.decay_threshold
         self.var_ratio[need_decay] /= self.decay_coeff
 
@@ -300,7 +292,7 @@ class Model:
             self.update_deriv()
         self.draw()
 
-        return 0.5 + (self.pos / 200)
+        return self.pos
 
 
 def main():
@@ -308,8 +300,10 @@ def main():
     n_target = 2
     hide_cursor = True
 
+    user_control = True
+
     user_goal = 0
-    user_sigma = 0.3/600
+    user_sigma = 0.3
     user_alpha = 0.5
 
     print("user_sigma", user_sigma)
@@ -321,12 +315,19 @@ def main():
 
     user_action = np.zeros(2)
 
+    if not user_control:
+        print("DEBUG MODE: NO USER CONTROL:)")
+
     while True:
 
         model_action = model.step(user_action=user_action)
-        user_action, _, _, _ = user.step(model_action)
-        print('user action', user_action)
-        # user_action = np.random.random(size=2)
+        if user_control:
+            user_action, _, _, _ = user.step(model_action)
+            user_action *= 2
+            print('user action', user_action)
+        else:
+            user_action = np.zeros(2)
+            # user_action = np.random.random(size=2)
 
 
 
