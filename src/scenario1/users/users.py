@@ -4,48 +4,54 @@ import gym
 
 class User(gym.Env):
 
-    def __init__(self, n_targets, beta=1.0, debug=False):
+    def __init__(self, n_target, goal, alpha, sigma, beta=1.0, seed=123):
         super().__init__()
 
-        self.n_targets = n_targets
+        self.n_target = n_target
 
+        self.alpha = alpha
         self.beta = beta
+        self.sigma = sigma
 
-        self.goal = None  # index of preferred target, assigned during reset()
+        self.goal = goal
         self.mu_hat = None
         self.t = None
 
-        self.debug = debug
+        self.rng = np.random.default_rng(seed=seed)
 
     def step(self, action: np.ndarray):
 
         # Position is the action from the assistant
         position = action
 
-        alpha = 1 / self.t
-
         p_star = position[self.goal]
 
-        self.mu_hat = self.mu_hat * (1 - alpha) + p_star * alpha
+        prev_mu_hat = self.mu_hat.copy()
 
-        user_action = self.beta * (self.mu_hat - p_star)
+        delta = np.zeros(2)
+
+        for coord in range(2):
+            self.mu_hat[coord] = self.mu_hat[coord] * (1 - self.alpha) + p_star[coord] * self.alpha
+
+            delta[coord] = - self.beta * (self.mu_hat[coord] - prev_mu_hat[coord])
 
         self.t += 1
 
-        obs = user_action
+        noise = self.rng.normal(0, self.sigma)
+        obs = delta + noise
         reward, done, info = None, None, None
         return obs, reward, done, info
 
     def reset(self):
 
-        if not self.debug:
-            self.goal = np.random.randint(self.n_targets)
-        else:
-            self.goal = 0
+        # if not self.debug:
+        #     self.goal = np.random.randint(self.n_target)
+        # else:
+        #     self.goal = 0
 
         self.t = 1
 
-        self.mu_hat = 0  # Could be whathever
+        self.mu_hat = np.zeros(2)  # Could be whatever
 
         # We don't consume observation after the reset
         observation = None

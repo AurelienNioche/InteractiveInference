@@ -72,3 +72,23 @@ class Window:
                  start_position=start_position,
                  stop_position=stop_position,
                  color='black', width=2)
+
+    def move_mouse(self, movement):
+
+        x_pix, y_pix = pygame.mouse.get_pos()
+        x_max, y_max = self.surface.get_size()
+
+        print("screen size", x_max, y_max)
+
+        x_pix_move = movement[0] * x_max
+        y_pix_move = movement[1] * y_max
+
+        print("prev x_pix", x_pix)
+        print("prev y_pix", y_pix)
+
+        x_pix += x_pix_move
+        y_pix += y_pix_move
+
+        print("x_pix", x_pix)
+        print("y_pix", y_pix)
+        pygame.mouse.set_pos(x_pix, y_pix)
