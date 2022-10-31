@@ -16,17 +16,15 @@ def distance(pos1, pos2):
 
 class Model:
 
-    def __init__(self, n_target, hide_cursor):
+    def __init__(self, colors, hide_cursor=False):
 
         self.fps = 30
-
-        self.n_target = n_target
 
         # --- Model parameters ---
         self.add_coeff = 5.0  # `ADD_COEFF`
         self.decay_coeff = 1.15  # `DECAY_COEFF`
-        self.decay_threshold = -0.9  # `DECAY_THRESH`
-        self.add_threshold = -2.0  # `ADD_THRESH`
+        self.decay_threshold = -0.05  # `DECAY_THRESH` / originally: -0.9
+        self.add_threshold = -2.0  # `ADD_THRESH`  / originally: -2.0
 
         self.n_sin = 4  # `N_SIN`
         self.freq_min = 1
@@ -61,12 +59,22 @@ class Model:
         self.width_circle_line = 2
         self.margin = 0.05
 
-        self.color_still = np.array(["orange", "blue"])
-        self.color_selected = "red"
-
         # ---------------------------------------- #
 
         self.window = Window(fps=self.fps, hide_cursor=self.hide_cursor)
+
+        # --------------------------------------- #
+
+        self.n_target = len(colors)
+        self.init_position = np.zeros((self.n_target, 2))
+        self.color_still = np.zeros(self.n_target, dtype=object)
+        for i in range(self.n_target):
+            self.init_position[i] = np.random.random(2) * self.window.size()
+            self.color_still[i] = colors[i]
+
+        self.color_selected = "red"
+
+        # ---------------------------------------- #
 
         self.hist_pos = np.zeros((self.n_target, 2, self.n_frame_var))
         self.hist_control = np.zeros((2, self.n_frame_var))
@@ -142,20 +150,18 @@ class Model:
 
         p_val = self.var_ratio / 1e5
 
+        # print(f"p_val {p_val}")
+
         self.selected[:] = p_val >= self.selection_threshold
 
         visual_pos = np.zeros_like(self.pos)
         for coord in range(2):
             visual_pos[:, coord] = self.pos[:, coord] + self.control[coord]
 
-        # Convert coordinates from (-100, 100) to (0, 1)
         visual_pos[:] = np.clip(visual_pos, -100, 100)
 
-        if self.n_target != 2:
-            raise NotImplementedError
-
-        visual_pos[0] = self.window.quadrant_center("second") + visual_pos[0]
-        visual_pos[1] = self.window.quadrant_center("fourth") + visual_pos[1]
+        for i in range(self.n_target):
+            visual_pos[i] += self.init_position[i]
 
         color = np.zeros(self.n_target, dtype=object)
         color[:] = self.color_still
@@ -201,6 +207,8 @@ class Model:
         if c_var > 2000:
             c_var = 2000
 
+        # print(f"c_var {c_var}")
+
         # Compute `e_var` (vector norm of 2D variances of disturbance)
         e_var = np.zeros(self.n_target)
         for i in range(self.n_target):
@@ -210,6 +218,8 @@ class Model:
                 diff = h - h.mean()
                 var[coord] = (diff**2).sum()
             e_var[i] = distance(np.zeros(2), var)
+
+        # print(f"e_var {e_var}")
 
         # Compute `a_var` (accumulation of object movement under control)
         a_var = np.zeros(self.n_target)
@@ -222,19 +232,38 @@ class Model:
                 var[coord] = (add**2).sum()
             a_var[i] = distance(np.zeros(2), var)
 
-        # Compute `var_rat`
-        var_rat = 1.0 - np.sqrt((e_var+22000) / (a_var+1e-5))
-        var_rat *= c_var / 1000
+        # print(f"a_var {a_var}")
 
-        # Apply normalization
-        norm_ratio = np.sum(self.var_ratio + 0.4)
-        self.var_ratio[:] = ((self.var_ratio + 0.4) / norm_ratio) * 10e4
+        # Compute `var_rat`
+        var_rat = np.zeros(self.n_target)
+        for i in range(self.n_target):
+            ratio = (e_var[i]+22000) / (a_var[i]+1e-5)
+            # print("ratio",i, ratio)
+            ratio = 1.0 - np.sqrt(ratio)
+            # print("ratio",i, ratio)
+            var_rat[i] = ratio
+        var_rat *= c_var / 1000.0
+        # print(f"var_rat {var_rat}")
 
         # Update var_ratio depending on the threshold
         need_add = var_rat < self.add_threshold
-        self.var_ratio[need_add] -= var_rat[need_add] * self.add_coeff
+        for i in np.nonzero(need_add)[0]:
+            # print("NEED ADD", i)
+            self.var_ratio[i] -= var_rat[i] * self.add_coeff
         need_decay = var_rat > self.decay_threshold
-        self.var_ratio[need_decay] /= self.decay_coeff
+        for i in np.nonzero(need_decay)[0]:
+            # print("NEED DECAY", i)
+            self.var_ratio[i] /= self.decay_coeff
+
+        # print("var_ratio", self.var_ratio)
+
+        # Apply normalization
+        norm_ratio = np.sum(self.var_ratio + 0.4)
+        self.var_ratio += 0.4
+        self.var_ratio /= norm_ratio
+        # print(f"var_ratio {self.var_ratio}")
+        self.var_ratio *= 10e4
+        # print(f"var_ratio {self.var_ratio}")
 
     def update_wave(self):
 
@@ -297,7 +326,6 @@ class Model:
 
 def main():
 
-    n_target = 2
     hide_cursor = True
 
     user_control = True
@@ -306,9 +334,13 @@ def main():
     user_sigma = 0.3
     user_alpha = 0.5
 
-    print("user_sigma", user_sigma)
+    colors = ("orange", ) + ("blue", ) * 20
 
-    model = Model(n_target=n_target, hide_cursor=hide_cursor)
+    n_target = len(colors)
+
+    # print("user_sigma", user_sigma)
+
+    model = Model(colors=colors, hide_cursor=hide_cursor)
     model.reset()
     user = User(n_target=n_target, sigma=user_sigma, goal=user_goal, alpha=user_alpha)
     user.reset()
@@ -316,7 +348,7 @@ def main():
     user_action = np.zeros(2)
 
     if not user_control:
-        print("DEBUG MODE: NO USER CONTROL:)")
+        print("DEBUG MODE: NO USER CONTROL")
 
     while True:
 
@@ -324,11 +356,11 @@ def main():
         if user_control:
             user_action, _, _, _ = user.step(model_action)
             user_action *= 2
-            print('user action', user_action)
+            # print('user action', user_action)
         else:
             user_action = np.zeros(2)
+            # print("NO USER CONTROL")
             # user_action = np.random.random(size=2)
-
 
 
 if __name__ == "__main__":
