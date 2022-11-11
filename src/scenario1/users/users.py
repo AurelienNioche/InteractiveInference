@@ -44,6 +44,13 @@ class User(gym.Env):
         reward, done, info = None, None, None
         return obs, reward, done, info
 
+    def p_action(self):
+
+        ...
+        p = np.random.random(self.n_target)
+
+        return p
+
     def reset(self):
 
         # if not self.debug:
