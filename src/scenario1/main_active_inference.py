@@ -14,7 +14,7 @@ def distance(pos1, pos2):
     return np.sqrt(((pos1 - pos2) ** 2).sum())
 
 
-class Model:
+class JohnModel:
 
     def __init__(self, colors, hide_cursor=False):
 
@@ -340,7 +340,7 @@ def main():
 
     # print("user_sigma", user_sigma)
 
-    model = Model(colors=colors, hide_cursor=hide_cursor)
+    model = JohnModel(colors=colors, hide_cursor=hide_cursor)
     model.reset()
     user = User(n_target=n_target, sigma=user_sigma, goal=user_goal, alpha=user_alpha)
     user.reset()
