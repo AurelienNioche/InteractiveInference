@@ -20,27 +20,6 @@ class Assistant:
 
         self.fps = 30
 
-        # --- Model parameters ---
-        self.add_coeff = 5.0  # `ADD_COEFF`
-        self.decay_coeff = 1.15  # `DECAY_COEFF`
-        self.decay_threshold = -0.05  # `DECAY_THRESH` / originally: -0.9
-        self.add_threshold = -2.0  # `ADD_THRESH`  / originally: -2.0
-
-        self.n_sin = 4  # `N_SIN`
-        self.freq_min = 1
-        self.freq_max = 51
-        self.phase_min = 0
-        self.phase_max = 2*np.pi
-
-        self.phase_inc = 0.003    # `phase_inc`; maybe 0.0005
-        self.disturbance_scale = 655.5  # Maybe 255.5
-        self.lag_tau = 0.08
-
-        self.selection_threshold = 0.955
-
-        # self.time_window_sec = XXX
-        # self.time_window = int(self.time_window_sec * self.window.fps)
-        self.n_frame_var = 20    # `VAR_WIN`
         self.n_frame_selected = 20
 
         self.seed = 123
@@ -76,21 +55,24 @@ class Assistant:
 
         # ---------------------------------------- #
 
-        self.hist_pos = np.zeros((self.n_target, 2, self.n_frame_var))
-        self.hist_control = np.zeros((2, self.n_frame_var))
-        self.hist_model = np.zeros((self.n_target, 2, self.n_frame_var))
+        self.rng = np.random.default_rng(seed=self.seed)
 
-        rng = np.random.default_rng(seed=self.seed)
-        self.freq = rng.uniform(size=(self.n_target, self.n_sin), low=self.freq_min, high=self.freq_max)
-        self.phase = rng.uniform(size=(self.n_target, self.n_sin), low=self.phase_min, high=self.phase_max)
-
-        self.var_ratio = np.zeros(self.n_target)
+        self.p_val = np.zeros(self.n_target)
         self.selected = np.zeros(self.n_target, dtype=bool)
+
         self.n_frame_since_selected = 0
-        self.disturbance_phase = 0  # Will be incremented
+        self.mouse_pos_prev_frame = np.zeros(2)
         self.control = np.zeros(2)
         self.pos = np.zeros((self.n_target, 2))
-        self.mouse_pos_prev_frame = np.zeros(2)
+
+        # ------------------------------------------ #
+
+        self.constant_amplitude = 3
+        self.angle = np.zeros(self.n_target)
+
+        self.movement = np.zeros((self.n_target, 2))
+
+        # ------------------------------------------ #
 
         self.initialize()
         self.reset()
@@ -102,42 +84,77 @@ class Assistant:
             self.window.clear()
             self.window.update()
 
-        self.pos[:] = 0.5
-
-    def update(self):
-
-        p_val = self.var_ratio / 1e5
-
-        # print(f"p_val {p_val}")
-
-        self.selected[:] = p_val >= self.selection_threshold
-
-    def update_control(self, user_action):
-
-        self.window.move_mouse(movement=user_action)
-
-        ctb = self.window.cursor_touch_border()
-
-        if not ctb:
-            mouse_pos = self.window.mouse_position
-            delta_mouse = mouse_pos - self.mouse_pos_prev_frame
-            self.mouse_pos_prev_frame[:] = mouse_pos
-            add_to_ctl = delta_mouse * self.mouse_scale
-
-        else:
-            self.window.move_back_cursor_to_the_middle()
-            self.mouse_pos_prev_frame[:] = self.window.mouse_position
-            add_to_ctl = np.zeros(2)
-
-        for coord in range(2):
-            self.control[coord] += add_to_ctl[coord]
-
     def reset(self):
 
+        self.p_val[:] = 0
         self.selected[:] = 0
         self.n_frame_since_selected = 0
 
+        self.movement[:, 0] = self.constant_amplitude
+        self.movement[:, 1] = 0
+
         self.window.move_back_cursor_to_the_middle()
+
+    def update(self):
+
+        self.angle[:] = self.rng.choice([0, 90], size=self.n_target)#90 #self.rng.uniform(0, 360, size=self.n_target)
+
+        for i in range(self.n_target):
+            angle = self.angle[i]
+            x, y = self.movement[i]
+
+            if angle <= 90 or angle >= 270:
+                x_prime = np.abs(x)
+            else:
+                x_prime = - np.abs(x)
+
+            y_prime = np.tan(np.radians(angle)) * x_prime
+
+            norm = self.constant_amplitude / np.sqrt(y_prime**2 + x**2)
+            y_norm = y_prime * norm
+            x_norm = x_prime * norm
+            print(f"target {i}: old x={x:.3f}, y={y:.3f} || y_prime={y_prime:.3f} norm={norm:.3f} || new x={x_norm:.3f}, y= {y_norm:.3f}")
+            self.movement[i, :] = x_norm, y_norm
+
+
+            if angle <= 90 or angle >= 270:
+                x_prime = np.abs(x)
+            else:
+                x_prime = - np.abs(x)
+
+            y_prime = np.tan(np.radians(angle)) * x_prime
+
+            norm = self.constant_amplitude / np.sqrt(y_prime**2 + x**2)
+            y_norm = y_prime * norm
+            x_norm = x_prime * norm
+            print(f"target {i}: {x_norm:.3f}, {y_norm:.3f}")
+            self.movement[i, :] = x_norm, y_norm
+
+        self.p_val[:] = 0
+        self.selected[:] = 0
+        self.pos[:] += self.movement
+
+    def update_control(self, user_action):
+
+        print("DEBUG NO UPDATE CONTROL")
+
+        # self.window.move_mouse(movement=user_action)
+        #
+        # ctb = self.window.cursor_touch_border()
+        #
+        # if not ctb:
+        #     mouse_pos = self.window.mouse_position
+        #     delta_mouse = mouse_pos - self.mouse_pos_prev_frame
+        #     self.mouse_pos_prev_frame[:] = mouse_pos
+        #     add_to_ctl = delta_mouse * self.mouse_scale
+        #
+        # else:
+        #     self.window.move_back_cursor_to_the_middle()
+        #     self.mouse_pos_prev_frame[:] = self.window.mouse_position
+        #     add_to_ctl = np.zeros(2)
+        #
+        # for coord in range(2):
+        #     self.control[coord] += add_to_ctl[coord]
 
     def draw(self):
 
@@ -145,7 +162,9 @@ class Assistant:
         for coord in range(2):
             visual_pos[:, coord] = self.pos[:, coord] + self.control[coord]
 
-        visual_pos[:] = np.clip(visual_pos, -100, 100)
+        # visual_pos[:] = np.clip(visual_pos, -100, 100)
+
+        # TODO: maintain pos withing window
 
         for i in range(self.n_target):
             visual_pos[i] += self.init_position[i]
@@ -154,7 +173,7 @@ class Assistant:
         color[:] = self.color_still
         color[self.selected] = self.color_selected
 
-        radius = self.base_radius + self.var_radius*p_val
+        radius = self.base_radius + self.var_radius*self.p_val
 
         self.window.clear()
 
@@ -165,8 +184,6 @@ class Assistant:
                    radius=radius[i]).draw()
 
         self.window.update()
-
-
 
     def check_keys(self):
 
@@ -210,13 +227,13 @@ def main():
 
     hide_cursor = True
 
-    user_control = True
+    user_control = False
 
     user_goal = 0
     user_sigma = 0.3
     user_alpha = 0.5
 
-    colors = ("orange", ) + ("blue", ) * 20
+    colors = "orange", "blue"
 
     n_target = len(colors)
 
