@@ -27,7 +27,7 @@ class AiAssistant(gym.Env, ABC):
 
         super().__init__()
 
-        self.n_targets = user_model.n_targets
+        self.n_targets = user_model.n_target
 
         self.user_model = user_model
 

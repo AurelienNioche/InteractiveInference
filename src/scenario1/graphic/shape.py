@@ -5,17 +5,9 @@ class Visual:
 
     def __init__(self, window, position):
         self.window = window
+        if position is None:
+            position = window.center()
         self.position = position
-
-    @property
-    def coordinates(self):
-
-        x, y = self.position
-        x_max, y_max = self.window.surface.get_size()
-        x_scaled = x*x_max
-        y_scaled = y*y_max
-
-        return x_scaled, y_scaled
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
@@ -52,8 +44,6 @@ class Text(Visual):
     def draw(self):
 
         text_list = self.text.split("\n")
-
-        coord = self.coordinates
         for i, text in enumerate(text_list):
 
             text_surface_obj = self.font_obj.render(text,
@@ -61,15 +51,14 @@ class Text(Visual):
                                                     pygame.Color(self.color),
                                                     self.background)
             text_rect_obj = text_surface_obj.get_rect()
-            text_rect_obj.center = coord[0], coord[1] + i*self.fontsize
+            text_rect_obj.center = self.position[0], self.position[1] + i*self.fontsize
 
             self.window.surface.blit(text_surface_obj, text_rect_obj)
 
 
 class Circle(Visual):
 
-    def __init__(self, window, position=(0.5, 0.5), color="black", radius=10, width=0):
-
+    def __init__(self, window, position=None, color="black", radius=10, width=0):
         super().__init__(window=window, position=position)
         self.color = color
         self.radius = radius
@@ -80,15 +69,15 @@ class Circle(Visual):
     def draw(self):
         pygame.draw.circle(self.window.surface,
                            color=pygame.Color(self.color),
-                           center=self.coordinates, radius=self.radius,
+                           center=self.position, radius=self.radius,
                            width=self.width)
 
 
 class Line:
 
     def __init__(self, window,
-                 start_position=(-0.2, -0.2),
-                 stop_position=(+0.2, +0.2),
+                 start_position,
+                 stop_position,
                  color="black",
                  width=2):
 
@@ -103,18 +92,9 @@ class Line:
     def draw(self):
         pygame.draw.line(self.window.surface,
                          pygame.Color(self.color),
-                         self.coordinates(self.start_position),
-                         self.coordinates(self.stop_position),
+                         self.start_position,
+                         self.stop_position,
                          width=self.width)
-
-    def coordinates(self, position):
-
-        x, y = position
-        x_max, y_max = self.window.surface.get_size()
-        x_scaled = x*x_max
-        y_scaled = y*y_max
-
-        return x_scaled, y_scaled
 
     def update(self, **kwargs):
         for k, v in kwargs.items():

@@ -1,10 +1,11 @@
 import numpy as np
-import time
 import sys
 import pygame
 
 from graphic.window import Window
 from graphic.shape import Circle
+
+from users.users import User
 
 np.seterr(all='raise')
 
@@ -13,19 +14,17 @@ def distance(pos1, pos2):
     return np.sqrt(((pos1 - pos2) ** 2).sum())
 
 
-class Model:
+class JohnModel:
 
-    def __init__(self):
+    def __init__(self, colors, hide_cursor=False):
 
         self.fps = 30
-
-        self.n_target = 2
 
         # --- Model parameters ---
         self.add_coeff = 5.0  # `ADD_COEFF`
         self.decay_coeff = 1.15  # `DECAY_COEFF`
-        self.decay_threshold = -0.9  # `DECAY_THRESH`
-        self.add_threshold = -2.0  # `ADD_THRESH`
+        self.decay_threshold = -0.05  # `DECAY_THRESH` / originally: -0.9
+        self.add_threshold = -2.0  # `ADD_THRESH`  / originally: -2.0
 
         self.n_sin = 4  # `N_SIN`
         self.freq_min = 1
@@ -52,7 +51,7 @@ class Model:
 
         # --- Graphic parameters ---
 
-        self.hide_cursor = False
+        self.hide_cursor = hide_cursor
 
         self.line_scale = 4.0
         self.base_radius = 5
@@ -60,14 +59,22 @@ class Model:
         self.width_circle_line = 2
         self.margin = 0.05
 
-        self.max_radius = self.base_radius + self.var_radius
-
-        self.color_still = "chartreuse1"
-        self.color_selected = "red"
-
         # ---------------------------------------- #
 
         self.window = Window(fps=self.fps, hide_cursor=self.hide_cursor)
+
+        # --------------------------------------- #
+
+        self.n_target = len(colors)
+        self.init_position = np.zeros((self.n_target, 2))
+        self.color_still = np.zeros(self.n_target, dtype=object)
+        for i in range(self.n_target):
+            self.init_position[i] = np.random.random(2) * self.window.size()
+            self.color_still[i] = colors[i]
+
+        self.color_selected = "red"
+
+        # ---------------------------------------- #
 
         self.hist_pos = np.zeros((self.n_target, 2, self.n_frame_var))
         self.hist_control = np.zeros((2, self.n_frame_var))
@@ -87,8 +94,6 @@ class Model:
 
         self.initialize()
         self.reset()
-        while True:
-            self.loop()
 
     def initialize(self):
 
@@ -118,20 +123,9 @@ class Model:
         self.n_frame_since_selected = 0
         # self.disturbance_phase = 0  # Will be incremented
 
-    def loop(self):
-        self.check_keys()
-        self.update_control()
-        self.update_wave()
+    def update_control(self, user_action):
 
-        if self.selected.any():
-            self.n_frame_since_selected += 1
-            if self.n_frame_since_selected == self.n_frame_selected:
-                self.reset()
-        else:
-            self.update_deriv()
-        self.draw()
-
-    def update_control(self):
+        self.window.move_mouse(movement=user_action)
 
         ctb = self.window.cursor_touch_border()
 
@@ -146,20 +140,17 @@ class Model:
             self.mouse_pos_prev_frame[:] = self.window.mouse_position
             add_to_ctl = np.zeros(2)
 
-        # For scaling
-        screen_size = self.window.surface.get_size()
         for coord in range(2):
-            self.control[coord] += add_to_ctl[coord] * screen_size[coord]
+            self.control[coord] += add_to_ctl[coord]
 
         self.hist_control = np.roll(self.hist_control, -1)
         self.hist_control[:, -1] = self.control
 
     def draw(self):
 
-        p_val = np.zeros(self.n_target)
+        p_val = self.var_ratio / 1e5
 
-        for i in range(self.n_target):
-            p_val[i] = self.var_ratio[i] / 1e5
+        # print(f"p_val {p_val}")
 
         self.selected[:] = p_val >= self.selection_threshold
 
@@ -167,18 +158,16 @@ class Model:
         for coord in range(2):
             visual_pos[:, coord] = self.pos[:, coord] + self.control[coord]
 
-        # Convert coordinates from (-100, 100) to (0, 1)
         visual_pos[:] = np.clip(visual_pos, -100, 100)
-        visual_pos[:] = 0.5 + visual_pos / (2*100)
 
-        for coord in range(2):
-            visual_pos[:, coord] = self.margin + (1 - self.margin*2) * visual_pos[:, coord]
+        for i in range(self.n_target):
+            visual_pos[i] += self.init_position[i]
 
         color = np.zeros(self.n_target, dtype=object)
         color[:] = self.color_still
         color[self.selected] = self.color_selected
 
-        radius = self.base_radius + (self.max_radius - self.base_radius) * p_val
+        radius = self.base_radius + self.var_radius*p_val
 
         self.window.clear()
 
@@ -191,9 +180,6 @@ class Model:
         self.window.update()
 
     def update_deriv(self):
-
-        # For scaling
-        screen_size = self.window.surface.get_size()
 
         # Update `hist_pos`
         self.hist_pos = np.roll(self.hist_pos, -1)
@@ -221,15 +207,19 @@ class Model:
         if c_var > 2000:
             c_var = 2000
 
+        # print(f"c_var {c_var}")
+
         # Compute `e_var` (vector norm of 2D variances of disturbance)
         e_var = np.zeros(self.n_target)
         for i in range(self.n_target):
             var = np.zeros(2)
             for coord in range(2):
                 h = self.hist_pos[i, coord, :]
-                diff = (h - h.mean()) * screen_size[coord]
+                diff = h - h.mean()
                 var[coord] = (diff**2).sum()
             e_var[i] = distance(np.zeros(2), var)
+
+        # print(f"e_var {e_var}")
 
         # Compute `a_var` (accumulation of object movement under control)
         a_var = np.zeros(self.n_target)
@@ -242,19 +232,38 @@ class Model:
                 var[coord] = (add**2).sum()
             a_var[i] = distance(np.zeros(2), var)
 
-        # Compute `var_rat`
-        var_rat = 1.0 - np.sqrt((e_var+22000) / (a_var+1e-5))
-        var_rat *= c_var / 1000
+        # print(f"a_var {a_var}")
 
-        # Apply normalization
-        norm_ratio = np.sum(self.var_ratio + 0.4)
-        self.var_ratio[:] = ((self.var_ratio + 0.4) / norm_ratio) * 10e4
+        # Compute `var_rat`
+        var_rat = np.zeros(self.n_target)
+        for i in range(self.n_target):
+            ratio = (e_var[i]+22000) / (a_var[i]+1e-5)
+            # print("ratio",i, ratio)
+            ratio = 1.0 - np.sqrt(ratio)
+            # print("ratio",i, ratio)
+            var_rat[i] = ratio
+        var_rat *= c_var / 1000.0
+        # print(f"var_rat {var_rat}")
 
         # Update var_ratio depending on the threshold
         need_add = var_rat < self.add_threshold
-        self.var_ratio[need_add] += var_rat[need_add] * self.add_coeff
+        for i in np.nonzero(need_add)[0]:
+            # print("NEED ADD", i)
+            self.var_ratio[i] -= var_rat[i] * self.add_coeff
         need_decay = var_rat > self.decay_threshold
-        self.var_ratio[need_decay] /= self.decay_coeff
+        for i in np.nonzero(need_decay)[0]:
+            # print("NEED DECAY", i)
+            self.var_ratio[i] /= self.decay_coeff
+
+        # print("var_ratio", self.var_ratio)
+
+        # Apply normalization
+        norm_ratio = np.sum(self.var_ratio + 0.4)
+        self.var_ratio += 0.4
+        self.var_ratio /= norm_ratio
+        # print(f"var_ratio {self.var_ratio}")
+        self.var_ratio *= 10e4
+        # print(f"var_ratio {self.var_ratio}")
 
     def update_wave(self):
 
@@ -296,10 +305,62 @@ class Model:
                     self.disturbance_scale -= 50
                     print(f"Decreasing `disturbance_scale` (={self.disturbance_scale})")
 
+    def step(self, user_action):
+
+        self.check_keys()
+
+        self.update_control(user_action)
+
+        self.update_wave()
+
+        if self.selected.any():
+            self.n_frame_since_selected += 1
+            if self.n_frame_since_selected == self.n_frame_selected:
+                self.reset()
+        else:
+            self.update_deriv()
+        self.draw()
+
+        return self.pos
+
 
 def main():
 
-    Model()
+    hide_cursor = True
+
+    user_control = True
+
+    user_goal = 0
+    user_sigma = 0.3
+    user_alpha = 0.5
+
+    colors = ("orange", ) + ("blue", ) * 20
+
+    n_target = len(colors)
+
+    # print("user_sigma", user_sigma)
+
+    model = JohnModel(colors=colors, hide_cursor=hide_cursor)
+    model.reset()
+    user = User(n_target=n_target, sigma=user_sigma, goal=user_goal, alpha=user_alpha)
+    user.reset()
+
+    user_action = np.zeros(2)
+
+    if not user_control:
+        print("DEBUG MODE: NO USER CONTROL")
+
+    while True:
+
+        model_action = model.step(user_action=user_action)
+        if user_control:
+            user_action, _, _, _ = user.step(model_action)
+            user_action *= 2
+            # print('user action', user_action)
+        else:
+            user_action = np.zeros(2)
+            # print("NO USER CONTROL")
+            # user_action = np.random.random(size=2)
 
 
 if __name__ == "__main__":
