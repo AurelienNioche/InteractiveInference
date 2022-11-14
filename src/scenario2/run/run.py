@@ -64,11 +64,11 @@ def run(
         trace["targets_position"].append(assistant.targets_position)
         trace["assistant_belief"].append(assistant.belief)
 
-        user_output, _, user_done, _ = user.step(assistant_output)
+        user_output, _, user_done, _ = user.act(assistant_output)
         if user_done:
             break
 
-        assistant_output, _, assistant_done, _ = assistant.step(user_output)
+        assistant_output, _, assistant_done, _ = assistant.act(user_output)
         if assistant_done:
             break
 

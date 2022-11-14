@@ -305,7 +305,7 @@ class JohnModel:
                     self.disturbance_scale -= 50
                     print(f"Decreasing `disturbance_scale` (={self.disturbance_scale})")
 
-    def step(self, user_action):
+    def act(self, user_action):
 
         self.check_keys()
 
@@ -352,9 +352,9 @@ def main():
 
     while True:
 
-        model_action = model.step(user_action=user_action)
+        model_action = model.act(user_action=user_action)
         if user_control:
-            user_action, _, _, _ = user.step(model_action)
+            user_action = user.act(model_action)
             user_action *= 2
             # print('user action', user_action)
         else:

@@ -3,13 +3,12 @@ from abc import ABC
 import numpy as np
 import torch
 import gym
-from itertools import product
 
 
 class AiAssistant(gym.Env, ABC):
 
     """
-    x: position of the targets
+    x: target positions
     psi: latent state; preferences of the user for each target
     actions: moving one target closer, and moving away all the other targets
     b_star: preferences of the assistant; preferences relate to the distance to the preferred target
