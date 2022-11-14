@@ -33,7 +33,7 @@ class Assistant:
         self.hide_cursor = hide_cursor
 
         self.line_scale = 4.0
-        self.base_radius = 5
+        self.base_radius = 20
         self.var_radius = 50
         self.width_circle_line = 2
         self.margin = 0.05
@@ -46,11 +46,7 @@ class Assistant:
 
         self.n_target = len(colors)
         self.init_position = np.zeros((self.n_target, 2))
-        self.color_still = np.zeros(self.n_target, dtype=object)
-        for i in range(self.n_target):
-            self.init_position[i] = np.random.random(2) * self.window.size()
-            self.color_still[i] = colors[i]
-
+        self.colors = np.asarray(colors, dtype=object)
         self.color_selected = "red"
 
         # ---------------------------------------- #
@@ -79,6 +75,9 @@ class Assistant:
 
     def initialize(self):
 
+        for i in range(self.n_target):
+            self.pos[i] = self.rng.random(2) * self.window.size()
+
         # To be sure that the mouse can be captured correctly...
         for i in range(self.init_frames):
             self.window.clear()
@@ -97,38 +96,20 @@ class Assistant:
 
     def update(self):
 
-        self.angle[:] = self.rng.choice([0, 90], size=self.n_target)#90 #self.rng.uniform(0, 360, size=self.n_target)
+        self.angle[:] = self.rng.choice([0, 90], size=self.n_target)  # 90 #self.rng.uniform(0, 360, size=self.n_target)
 
         for i in range(self.n_target):
             angle = self.angle[i]
-            x, y = self.movement[i]
+            x, _ = self.movement[i]
 
-            if angle <= 90 or angle >= 270:
-                x_prime = np.abs(x)
-            else:
-                x_prime = - np.abs(x)
-
-            y_prime = np.tan(np.radians(angle)) * x_prime
-
-            norm = self.constant_amplitude / np.sqrt(y_prime**2 + x**2)
-            y_norm = y_prime * norm
-            x_norm = x_prime * norm
-            print(f"target {i}: old x={x:.3f}, y={y:.3f} || y_prime={y_prime:.3f} norm={norm:.3f} || new x={x_norm:.3f}, y= {y_norm:.3f}")
-            self.movement[i, :] = x_norm, y_norm
-
-
-            if angle <= 90 or angle >= 270:
-                x_prime = np.abs(x)
-            else:
-                x_prime = - np.abs(x)
+            x_prime = np.abs(x)
+            if 90 > angle < 270:
+                x_prime *= -1
 
             y_prime = np.tan(np.radians(angle)) * x_prime
 
-            norm = self.constant_amplitude / np.sqrt(y_prime**2 + x**2)
-            y_norm = y_prime * norm
-            x_norm = x_prime * norm
-            print(f"target {i}: {x_norm:.3f}, {y_norm:.3f}")
-            self.movement[i, :] = x_norm, y_norm
+            norm = self.constant_amplitude / np.sqrt(y_prime**2 + x_prime**2)
+            self.movement[i, :] = np.asarray([x_prime, y_prime]) * norm
 
         self.p_val[:] = 0
         self.selected[:] = 0
@@ -138,40 +119,35 @@ class Assistant:
 
         print("DEBUG NO UPDATE CONTROL")
 
-        # self.window.move_mouse(movement=user_action)
-        #
-        # ctb = self.window.cursor_touch_border()
-        #
-        # if not ctb:
-        #     mouse_pos = self.window.mouse_position
-        #     delta_mouse = mouse_pos - self.mouse_pos_prev_frame
-        #     self.mouse_pos_prev_frame[:] = mouse_pos
-        #     add_to_ctl = delta_mouse * self.mouse_scale
-        #
-        # else:
-        #     self.window.move_back_cursor_to_the_middle()
-        #     self.mouse_pos_prev_frame[:] = self.window.mouse_position
-        #     add_to_ctl = np.zeros(2)
-        #
-        # for coord in range(2):
-        #     self.control[coord] += add_to_ctl[coord]
+        self.window.move_mouse(movement=user_action)
+
+        ctb = self.window.cursor_touch_border()
+
+        if not ctb:
+            mouse_pos = self.window.mouse_position
+            delta_mouse = mouse_pos - self.mouse_pos_prev_frame
+            self.mouse_pos_prev_frame[:] = mouse_pos
+            add_to_ctl = delta_mouse * self.mouse_scale
+
+        else:
+            self.window.move_back_cursor_to_the_middle()
+            self.mouse_pos_prev_frame[:] = self.window.mouse_position
+            add_to_ctl = np.zeros(2)
+
+        for coord in range(2):
+            self.control[coord] += add_to_ctl[coord]
 
     def draw(self):
 
         visual_pos = np.zeros_like(self.pos)
+        max_coord = self.window.size()
         for coord in range(2):
-            visual_pos[:, coord] = self.pos[:, coord] + self.control[coord]
+            vp = self.pos[:, coord] + self.control[coord]
+            vp = np.clip(vp, 0, max_coord[coord])
+            visual_pos[:, coord] = vp
 
-        # visual_pos[:] = np.clip(visual_pos, -100, 100)
-
-        # TODO: maintain pos withing window
-
-        for i in range(self.n_target):
-            visual_pos[i] += self.init_position[i]
-
-        color = np.zeros(self.n_target, dtype=object)
-        color[:] = self.color_still
-        color[self.selected] = self.color_selected
+        colors = np.copy(self.colors)
+        colors[self.selected] = self.color_selected
 
         radius = self.base_radius + self.var_radius*self.p_val
 
@@ -180,30 +156,19 @@ class Assistant:
         for i in range(self.n_target):
             Circle(window=self.window,
                    position=visual_pos[i],
-                   color=color[i],
+                   color=colors[i],
                    radius=radius[i]).draw()
 
         self.window.update()
 
-    def check_keys(self):
+    @staticmethod
+    def check_keys():
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN
+                                             and event.key == pygame.K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            # elif event.type == pygame.KEYDOWN:
-            #     if event.key == pygame.K_a:
-            #         self.phase_inc += 0.0005
-            #         print(f"Increasing `phase_inc` (={self.phase_inc})")
-            #     elif event.key == pygame.K_q:
-            #         self.phase_inc -= 0.0005
-            #         print(f"Decreasing `phase_inc` (={self.phase_inc})")
-            #     elif event.key == pygame.K_z:
-            #         self.disturbance_scale += 50
-            #         print(f"Increasing `disturbance_scale` (={self.disturbance_scale})")
-            #     elif event.key == pygame.K_s:
-            #         self.disturbance_scale -= 50
-            #         print(f"Decreasing `disturbance_scale` (={self.disturbance_scale})")
 
     def step(self, user_action):
 
@@ -237,8 +202,6 @@ def main():
 
     n_target = len(colors)
 
-    # print("user_sigma", user_sigma)
-
     model = Assistant(colors=colors, hide_cursor=hide_cursor)
     model.reset()
     user = User(n_target=n_target, sigma=user_sigma, goal=user_goal, alpha=user_alpha)
@@ -250,16 +213,12 @@ def main():
         print("DEBUG MODE: NO USER CONTROL")
 
     while True:
-
         model_action = model.step(user_action=user_action)
         if user_control:
             user_action, _, _, _ = user.step(model_action)
             user_action *= 2
-            # print('user action', user_action)
         else:
             user_action = np.zeros(2)
-            # print("NO USER CONTROL")
-            # user_action = np.random.random(size=2)
 
 
 if __name__ == "__main__":
