@@ -49,7 +49,7 @@ class Window:
     @staticmethod
     def move_mouse(movement):
 
-        mouse_pos = np.asarray(pygame.mouse.get_pos())
+        mouse_pos = np.asarray(pygame.mouse.get_pos(), dtype=np.float64)
         movement = np.asarray(movement)
         mouse_pos += movement
         pygame.mouse.set_pos(*mouse_pos)

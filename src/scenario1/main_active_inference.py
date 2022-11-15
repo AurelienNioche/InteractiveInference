@@ -6,7 +6,9 @@ import torch
 from graphic.window import Window
 from graphic.shape import Circle
 
-from users.users import User
+from users.users import User, UserModel
+
+from plot.plot_traces import plot_traces
 
 np.seterr(all='raise')
 
@@ -70,13 +72,11 @@ class Assistant:
         self.t = None  # Iteration counter
         self.x = None  # Positions of the targets
 
+        self.user_action = None
+
     @property
     def belief(self):
         return torch.softmax(self.b, dim=0).detach().numpy().copy()
-
-    @property
-    def targets_position(self):
-        return self.x.detach().numpy().copy()
 
     @property
     def action(self):
@@ -95,11 +95,10 @@ class Assistant:
         Update the belief based on a new observation
         """
 
-        p = self.user_model.complain_prob(x)
-        p_y = p ** y * (1 - p) ** (1 - y)
+        logp_y = torch.from_numpy(self.user_model.p_action(positions=x, action=y))
 
         q = torch.softmax(b - b.max(), dim=0)
-        logp_yq = (p_y * q).log()
+        logp_yq = q.log() + logp_y
         logp_yq.requires_grad = True
 
         # Start by creating a new belief `b_prime` from the previous belief `b`
@@ -130,10 +129,10 @@ class Assistant:
 
     def act(self, user_action, environment_state):
 
+        self.user_action = user_action,
         self.b, _ = self.revise_belief(y=user_action, b=self.b, x=environment_state)
 
         self.a = getattr(self, f'_act_{self.decision_rule}')(
-            user_action=user_action,
             **self.decision_rule_parameters)
         return self.a
 
@@ -433,17 +432,19 @@ class Display:
 def main():
 
     control_using_mouse = True
-    control_per_artificial_user = False
+    control_per_artificial_user = True
 
     hide_cursor = False
 
     user_goal = 0
-    user_sigma = 0.3
+    user_sigma = 5.0
     user_alpha = 0.5
+    user_beta = 1.0
 
     colors = "orange", "blue"
 
     n_target = len(colors)
+    n_iteration = 100
 
     display = Display(
         colors=colors,
@@ -452,15 +453,24 @@ def main():
         control_per_artificial_user=control_per_artificial_user)
 
     display.reset()
-    assistant = Assistant(user_model=User, n_target=n_target,
-                          decision_rule="active_inference")
-    assistant.reset()
-    user = User(n_target=n_target, sigma=user_sigma, goal=user_goal, alpha=user_alpha)
+    user = User(n_target=n_target, sigma=user_sigma, goal=user_goal, alpha=user_alpha, beta=user_beta)
     user.reset()
+    user_model = UserModel(n_target=n_target, sigma=user_sigma, alpha=user_alpha, beta=user_beta)
+    user_model.reset()
+
+    assistant = Assistant(user_model=user_model, n_target=n_target,
+                          decision_rule="random")
+    #                       decision_rule="active_inference")
+    assistant.reset()
 
     user_action = np.zeros(2)
 
-    while True:
+    trace = {k: [] for k in ("assistant_belief", "user_action", "targets_positions", "assistant_action")}
+
+    for it in range(n_iteration):
+
+        trace["targets_positions"].append(display.target_positions)
+        trace["assistant_belief"].append(assistant.belief)
 
         assistant_action = assistant.act(
             user_action=user_action,
@@ -468,7 +478,17 @@ def main():
         display.update(user_action=user_action, assistant_action=assistant_action)
         if control_per_artificial_user:
             user_action = user.act(display.target_positions)
-            user_action *= 2
+            # user_action *= 2
+
+        trace["user_action"].append(user.action)
+        trace["assistant_action"].append(assistant.action)
+
+    trace["preferred_target"] = user.goal
+
+    plot_traces(trace,
+                save=False,
+                show=True,
+                run_name=None)
 
 
 if __name__ == "__main__":
