@@ -2,10 +2,10 @@ import numpy as np
 import sys
 import pygame
 
-from graphic.window import Window
-from graphic.shape import Circle
+from graphic.components.window import Window
+from graphic.components.shape import Circle
 
-from users.users import User
+from users.moving_average_user import User
 
 np.seterr(all='raise')
 

@@ -1,7 +1,6 @@
-import sys
 import numpy as np
 import pygame
-from graphic.shape import Line
+from graphic.components.shape import Line
 
 
 class Window:

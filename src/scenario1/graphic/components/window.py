@@ -31,34 +31,31 @@ class Window:
         x_max, y_max = self.surface.get_size()
 
         return np.isclose(x, 0, atol=0.01) \
-            or np.isclose(x, x_max, atol=1.0) \
+            or np.isclose(x, x_max, atol=20.0) \
             or np.isclose(y, 0, atol=0.01) \
-            or np.isclose(y, y_max, atol=1.0)
+            or np.isclose(y, y_max, atol=20.0)
 
     def move_back_cursor_to_the_middle(self):
 
         pygame.event.set_grab(True)
-        coord_max = np.asarray(self.surface.get_size())
-        center = 0.5*coord_max
-        pygame.mouse.set_pos(*center)
+        pygame.mouse.set_pos(*self.center)
+
+    @property
+    def center(self):
+        return 0.5*self.size()
 
     @property
     def mouse_position(self):
         return np.asarray(pygame.mouse.get_pos())
 
-    @staticmethod
-    def move_mouse(movement):
+    def move_mouse(self, movement):
 
-        mouse_pos = np.asarray(pygame.mouse.get_pos(), dtype=np.float64)
-        movement = np.asarray(movement)
+        mouse_pos = self.mouse_position.astype(np.float64)
         mouse_pos += movement
-        pygame.mouse.set_pos(*mouse_pos)
+        pygame.mouse.set_pos(*np.round(mouse_pos))
 
     def size(self):
         return np.asarray(self.surface.get_size())
-
-    def center(self):
-        return self.size() / 2
 
     def quadrant_center(self, quadrant):
 

@@ -4,9 +4,9 @@ from scipy import stats
 
 class User:
 
-    DUMMY_VALUE = - 1
+    DUMMY_VALUE = - 1.0
 
-    def __init__(self, n_target, goal, alpha, sigma, beta=1.0, seed=123):
+    def __init__(self, n_target, goal, alpha, beta, sigma, seed=123):
 
         self.n_target = n_target
 
@@ -16,7 +16,6 @@ class User:
 
         self.goal = goal
         self.moving_average = None
-        self.t = None
 
         self.rng = np.random.default_rng(seed=seed)
 
@@ -56,8 +55,8 @@ class User:
 
 class UserModel(User):
 
-    def __init__(self, n_target, alpha, sigma, beta):
-        super().__init__(n_target=n_target, alpha=alpha, sigma=sigma, beta=beta, goal=None)
+    def __init__(self, n_target, alpha, beta, sigma):
+        super().__init__(n_target=n_target, alpha=alpha, beta=beta, sigma=sigma, goal=None)
         self.moving_average = np.full((n_target, 2), self.DUMMY_VALUE)
 
     def p_action(self, positions, action):
