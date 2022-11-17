@@ -30,6 +30,9 @@ class Assistant:
 
         super().__init__()
 
+        torch.manual_seed(seed)
+        torch.autograd.set_detect_anomaly(True)
+
         self.window = window
         self.constant_amplitude = constant_amplitude
 
@@ -47,8 +50,8 @@ class Assistant:
             if decision_rule == "active_inference":
                 decision_rule_parameters = dict(
                     decay_factor=0.9,
-                    n_rollout=5,
-                    n_step_per_rollout=2,
+                    n_rollout=1,
+                    n_step_per_rollout=1,
                     n_sample_epistemic_value=10)
             elif decision_rule == "random":
                 decision_rule_parameters = dict()
@@ -68,7 +71,7 @@ class Assistant:
 
     @property
     def action(self):
-        return self.a.to_numpy()
+        return self.a.numpy()
 
     def reset(self):
 
@@ -93,11 +96,10 @@ class Assistant:
         Update the belief based on a new observation
         """
 
-        logp_y = torch.from_numpy(self.user_model.p_action(positions=x, action=y))
+        logp_y = self.user_model.logp_action(positions=x, action=y)
 
         logq = torch.log_softmax(b - b.max(), dim=0)
         logp_yq = logq + logp_y
-        logp_yq.requires_grad = True
 
         # Start by creating a new belief `b_prime` from the previous belief `b`
         b_prime = torch.nn.Parameter(b.clone())
@@ -113,27 +115,30 @@ class Assistant:
 
             opt.zero_grad()
 
-            q_prime = torch.softmax(b_prime - b_prime.max(), dim=0)
+            b_prime_scaled = b_prime.clone()
+            with torch.no_grad():
+                b_prime_scaled -= b_prime_scaled.max()   # To re-check
+            q_prime = torch.softmax(b_prime_scaled, dim=0)
             loss = torch.sum(q_prime * (q_prime.log() - logp_yq))
 
-            loss.backward()
+            loss.backward(retain_graph=True)
             opt.step()
 
             if torch.isclose(old_b_prime, b_prime).all():
                 # print(f"converged at step {step}")
                 break
 
-        return b_prime.detach(), loss.item()
+        return b_prime, loss
 
     def act(self, user_action):
 
-        self.user_action = user_action,
-        self.b, _ = self.revise_belief(y=user_action, b=self.b, x=self.x)
+        self.user_action = torch.from_numpy(user_action)
+        self.b, _ = self.revise_belief(y=self.user_action, b=self.b.detach(), x=self.x.detach())
 
         self.a = getattr(self, f'_act_{self.decision_rule}')(
             **self.decision_rule_parameters)
         self.x = self.update_environment(x=self.x, a=self.a)
-        return self.x.to_numpy()
+        return self.x.numpy()
 
     def _act_random(self):
 
@@ -164,8 +169,8 @@ class Assistant:
                 n_step_per_rollout=n_step_per_rollout,
                 decay_factor=decay_factor,
                 n_sample_epistemic_value=n_sample_epistemic_value)  # kl div
-
-            loss.backward()
+            print("loss", loss)
+            loss.backward(retain_graph=True)
             opt.step()
 
             if torch.isclose(old_a, a).all():
@@ -183,22 +188,24 @@ class Assistant:
             x = self.x.clone()
             b = self.b.clone()
 
-            action_plan = np.zeros(n_step_per_rollout, dtype=int)
+            action_plan = torch.zeros((n_step_per_rollout, self.n_target))
             action_plan[0] = action
             if n_step_per_rollout > 1:
-                action_plan[1:] = torch.rand(size=(n_step_per_rollout-1, self.n_target)) * 360
+                action_plan[1:] = torch.rand((n_step_per_rollout-1, self.n_target)) * 360
 
-            for step, action in enumerate(action_plan):
+            for step in range(n_step_per_rollout):
 
-                prev_x = x.copy()
-                x = self.update_environment(x=x, a=action)
+                a = action_plan[step]
+                prev_x = x.clone()
+
+                x = self.update_environment(x=x, a=a)
 
                 efe_step, b = self.efe(x=x, prev_x=prev_x,
                                        b=b, n_sample_epistemic_value=n_sample_epistemic_value)
 
                 efe_rollout += decay_factor**step * efe_step
 
-            total_efe += efe_rollout.item()
+            total_efe += efe_rollout
 
         total_efe /= n_rollout
         return total_efe
@@ -221,22 +228,19 @@ class Assistant:
 
     def epistemic_value(self, b, x, prev_x, n_sample_epistemic_value):
 
-        ep_value = torch.zeros(n_sample_epistemic_value)
-        b_new = torch.zeros((n_sample_epistemic_value, len(self.b)))
-
-        goals = torch.multinomial(self.b, n_sample_epistemic_value)
-        user_actions = torch.tensor([self.user_model.sim_act(
-            goal=goal,
-            prev_positions=prev_x,
-            positions=x) for goal in goals])
-
-        for i, y in enumerate(user_actions):
+        epistemic_value = 0
+        b_new = torch.zeros((n_sample_epistemic_value, self.n_target))
+        goals = torch.multinomial(torch.softmax(b, dim=0), n_sample_epistemic_value, replacement=True)
+        for i in range(n_sample_epistemic_value):
+            goal = goals[i]
+            y = self.user_model.sim_act(goal=goal, positions=x, prev_positions=prev_x)
             b_new_i, kl_div_i = self.revise_belief(y=y, b=b, x=x)
             b_new[i] = b_new_i
-            ep_value[i] = kl_div_i
+            epistemic_value += kl_div_i
 
-        epistemic_value = ep_value.mean()
-        b_new = b_new[torch.randint(low=0, high=n_sample_epistemic_value, size=1)]
+        epistemic_value /= n_sample_epistemic_value
+        b_new = b_new[torch.randint(n_sample_epistemic_value, (1, ))].squeeze()
+        print("epistermic value", epistemic_value)
         return epistemic_value, b_new
 
     def update_environment(self, x, a):
@@ -259,10 +263,12 @@ class Assistant:
 
         max_coord = torch.from_numpy(self.window.size())
         for coord in range(2):
-            pos[:, coord] = torch.clip(pos[:, coord], 0, max_coord[coord])
+            for target in range(self.n_target):
+                if pos[target, coord] > max_coord[coord]:
+                    pos[target, coord] = max_coord[coord]
 
         return pos
 
     @property
     def target_positions(self):
-        return self.x.to_numpy()
+        return self.x.numpy()

@@ -24,7 +24,10 @@ class User:
         delta = target_position - target_prev_pos
         return delta, target_position.copy()
 
-    def act(self, positions, goal):
+    def act(self, positions, goal=None):
+
+        if goal is None:
+            goal = self.goal
 
         delta, self.target_prev_pos = self.update_historic_and_compute_delta(
             target_position=positions[goal],
@@ -41,25 +44,33 @@ class UserModel(User):
 
     def __init__(self, n_target, sigma):
         super().__init__(n_target=n_target, sigma=sigma, goal=None)
-        self.target_prev_pos = np.full((n_target, 2), self.DUMMY_VALUE)
+        self.target_prev_pos = torch.full((n_target, 2), self.DUMMY_VALUE)
 
-    def p_action(self, positions, action):
-        delta = np.zeros_like(self.target_prev_pos)
-        p = np.zeros(self.n_target)
+    def update_historic_and_compute_delta(self, target_position, target_prev_pos):
+
+        if target_prev_pos is None or torch.all(torch.isclose(target_prev_pos, torch.full_like(target_prev_pos, self.DUMMY_VALUE))):
+            target_prev_pos = target_position # .clone()
+
+        delta = target_position - target_prev_pos
+        return delta, target_position.clone()
+
+    def logp_action(self, positions, action):
+        delta = torch.zeros_like(self.target_prev_pos)
+        logp = torch.zeros(self.n_target)
         for target in range(self.n_target):
             delta[target], self.target_prev_pos[target] = self.update_historic_and_compute_delta(
                 target_position=positions[target],
                 target_prev_pos=self.target_prev_pos[target])
-
-            p[target] = np.sum([np.log(stats.norm(delta[target, coord], self.sigma).pdf(action[coord]))
-                                for coord in range(2)])
-        return p
+            for coord in range(2):
+                logp_coord = torch.distributions.Normal(delta[target, coord], self.sigma).log_prob(action[coord])
+                logp[target] += logp_coord
+        return logp
 
     def sim_act(self, goal, positions, prev_positions):
 
         delta, _ = self.update_historic_and_compute_delta(
             target_position=positions[goal],
-            target_prev_pos=prev_positions)
-        noise = torch.randn(0, self.sigma, 2)
+            target_prev_pos=prev_positions[goal])
+        noise = torch.randn(2) * self.sigma
         action = delta + noise
         return action
