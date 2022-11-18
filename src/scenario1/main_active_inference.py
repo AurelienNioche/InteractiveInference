@@ -41,7 +41,7 @@ def main():
     assistant = Assistant(user_model=user_model, n_target=n_target,
                           window=display.window,
                           decision_rule="random")
-                          #decision_rule="active_inference")
+                          # decision_rule="active_inference")
     assistant.reset()
 
     target_positions = assistant.target_positions
