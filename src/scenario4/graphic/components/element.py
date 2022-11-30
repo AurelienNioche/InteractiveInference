@@ -1,4 +1,5 @@
 import pygame
+import numpy as np
 
 
 class Visual:
@@ -6,7 +7,7 @@ class Visual:
     def __init__(self, window, position):
         self.window = window
         if position is None:
-            position = window.center()
+            position = window.center
         self.position = position
 
     def update(self, **kwargs):
@@ -16,6 +17,37 @@ class Visual:
 
     def draw(self):
         pass
+
+
+class Image(Visual):
+
+    def __init__(self, window, path, position=None, size=None):
+        super().__init__(window=window, position=position)
+        self.image, self.size = Image.load(path, size)
+
+    @classmethod
+    def load(cls, path, size):
+        raw = pygame.image.load(path)
+        try:
+            img = raw.convert_alpha()
+        except:
+            img = raw.convert()
+        if size is None:
+            pass
+        elif isinstance(size, float) or isinstance(size, int):
+            original_size = np.asarray(img.get_size())
+            ratio = size / original_size[0]
+            img = pygame.transform.scale(img, ratio * original_size)
+        else:
+            img = pygame.transform.scale(img, size)
+
+        size = np.asarray(img.get_size())
+        return img, size
+
+    def draw(self):
+        width, height = self.size
+        left_top_corner = self.position[0]-width/2, self.position[1]-height/2
+        self.window.surface.blit(self.image, left_top_corner)
 
 
 class Text(Visual):
@@ -67,7 +99,7 @@ class Circle(Visual):
         self.draw()
 
     def draw(self):
-        pygame.draw.circle(self.window.surface,
+        pygame.draw.circle(surface=self.window.surface,
                            color=pygame.Color(self.color),
                            center=self.position, radius=self.radius,
                            width=self.width)
@@ -90,13 +122,29 @@ class Line:
         self.draw()
 
     def draw(self):
-        pygame.draw.line(self.window.surface,
-                         pygame.Color(self.color),
-                         self.start_position,
-                         self.stop_position,
+        pygame.draw.line(surface=self.window.surface,
+                         color=pygame.Color(self.color),
+                         start_pos=self.start_position,
+                         end_pos=self.stop_position,
                          width=self.width)
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
         self.draw()
+
+
+class Rectangle(Visual):
+
+    def __init__(self, window, position=None,
+                 color="black",
+                 size=(100, 100)):
+        super().__init__(window=window, position=position)
+        self.color = color
+        self.size = np.asarray(size)
+
+    def draw(self):
+        top_left_corner = self.position
+        pygame.draw.rect(surface=self.window.surface,
+                         color=pygame.Color(self.color),
+                         rect=(*top_left_corner, *self.size))

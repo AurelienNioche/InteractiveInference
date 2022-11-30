@@ -7,13 +7,11 @@ class Window:
     def __init__(self, size=(800, 600), fps=30, background="white", hide_cursor=True, caption=""):
 
         pygame.init()
-        self.surface = pygame.display.set_mode(size, 0, 32)
+        self.surface = pygame.display.set_mode(size)
         pygame.display.set_caption(caption)
         self.fps = fps
         self.fps_clock = pygame.time.Clock()
-
         self.background = pygame.Color(background)
-
         if hide_cursor:
             pygame.mouse.set_visible(False)
 

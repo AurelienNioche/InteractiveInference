@@ -1,33 +1,41 @@
 import numpy as np
 import torch
-import math
 
 
 class Fish:
 
-    def __init__(self, goal, seed, sigma, position, movement_amplitude):
+    def __init__(self, environment, goal, seed, sigma, init_position, movement_amplitude):
 
+        self.environment = environment
         self.goal = goal
         self.rng = np.random.default_rng(seed=seed)
         self.sigma = sigma
-        self.position = position
 
         self.movement_amplitude = movement_amplitude
 
-        self.action = None
-        self.position = None
+        self.action = init_position
 
-    def act(self, positions, goal=None):
+    def act(self, *args, **kwargs):
+
+        noise = self.rng.normal(0, self.sigma, size=2)
+        self.action = self.mu(*args, **kwargs) + noise
+        return self.action
+
+    def mu(self, positions, goal=None, own_position=None):
 
         if goal is None:
+            assert self.goal is not None
             goal = self.goal
 
-        x0, y0, x1, y1 = positions[goal]
-        own_x, own_y = self.position
-        if x0 <= own_x <= x1 and y0 <= own_y <= y1:
+        if own_position is None:
+            assert self.action is not None
+            own_position = self.action
+
+        own_x, own_y = own_position
+        if self.environment.fish_in(target=goal, fish_position=own_position, target_positions=positions):
             mu = np.zeros(2)
         else:
-            x_center, y_center = (x0 + x1) / 2, (y0 + y1) / 2
+            x_center, y_center = self.environment.target_center(target=goal)
             opp = y_center - own_y
             adj = x_center - own_x
             target_angle = np.degrees(np.arctan2(opp, adj))
@@ -40,10 +48,7 @@ class Fish:
 
             norm = self.movement_amplitude / torch.sqrt(y_prime ** 2 + x_prime ** 2)
             mu = np.array([x_prime, y_prime]) * norm
-
-        noise = self.rng.normal(0, self.sigma, size=2)
-        self.action = mu + noise
-        return self.action
+        return mu
 
     def reset(self):
         pass
@@ -51,42 +56,26 @@ class Fish:
 
 class FishModel(Fish):
 
-    def __init__(self, n_target, sigma):
-        super().__init__(n_target=n_target, sigma=sigma, goal=None)
-        self.target_prev_pos = torch.full((n_target, 2), self.DUMMY_VALUE)
+    def __init__(self, environment, n_target, movement_amplitude, sigma, seed):
 
-    def update_historic_and_compute_delta(self, target_position, target_prev_pos):
+        self.n_target = n_target
+        super().__init__(environment=environment, seed=seed, sigma=sigma, movement_amplitude=movement_amplitude,
+                         init_position=None, goal=None)
 
-        if target_prev_pos is None or torch.all(torch.isclose(target_prev_pos, torch.full_like(target_prev_pos, self.DUMMY_VALUE))):
-            target_prev_pos = target_position  # .clone()
+    def logp_action(self, positions, action, own_position):
 
-        delta = target_position - target_prev_pos
-        return delta, target_position.clone()
-
-    def logp_action(self, positions, action, prev_positions=None, update=False):
-        if prev_positions is None:
-            prev_positions = self.target_prev_pos
-
-        delta = torch.zeros_like(prev_positions)
-        logp = torch.zeros(self.n_target)
-        for target in range(self.n_target):
-            delta[target], new_pos_target = self.update_historic_and_compute_delta(
-                target_position=positions[target],
-                target_prev_pos=prev_positions[target])
-
-            if update:
-                self.target_prev_pos[target] = new_pos_target
-
+        logp = np.zeros(self.n_target)
+        for goal in range(self.n_target):
+            mu = self.mu(positions=positions, goal=goal, own_position=own_position)
             for coord in range(2):
-                logp_coord = torch.distributions.Normal(delta[target, coord], self.sigma).log_prob(action[coord])
-                logp[target] += logp_coord
+                a_coord = action[coord]
+                border = self.environment.size(0)
+                dist = torch.distributions.Normal(mu[coord], self.sigma)
+                if a_coord == 0:
+                    logp_coord = (1 - dist.cdf(a_coord)).log()
+                elif a_coord == border:
+                    logp_coord = dist.cdf(a_coord).log()
+                else:
+                    logp_coord = dist.log_prob(a_coord)
+                logp[goal] += logp_coord
         return logp
-
-    def sim_act(self, goal, positions, prev_positions):
-
-        delta, _ = self.update_historic_and_compute_delta(
-            target_position=positions[goal],
-            target_prev_pos=prev_positions[goal])
-        noise = torch.randn(2) * self.sigma
-        action = delta + noise
-        return action

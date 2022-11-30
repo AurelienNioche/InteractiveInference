@@ -1,10 +1,11 @@
 import numpy as np
 import pygame
+import sys
 
 
 class Window:
 
-    def __init__(self, size=(800, 600), fps=30, background="white", hide_cursor=True, caption=""):
+    def __init__(self, size=(800, 600), fps=30, background="white", hide_cursor=False, caption=""):
 
         pygame.init()
         self.surface = pygame.display.set_mode(size, 0, 32)
@@ -20,8 +21,14 @@ class Window:
     def clear(self):
         self.surface.fill(self.background)
 
-    def update(self):
+    def draw(self):
+        pass
 
+    def graphic_update(self):
+
+        self.check_keys()
+        self.clear()
+        self.draw()
         pygame.display.update()
         self.fps_clock.tick(self.fps)
 
@@ -54,8 +61,14 @@ class Window:
         mouse_pos += movement
         pygame.mouse.set_pos(*np.round(mouse_pos))
 
-    def size(self):
-        return np.asarray(self.surface.get_size())
+    def size(self, dim=None):
+        _size = np.asarray(self.surface.get_size())
+        if dim is None:
+            return _size
+        elif isinstance(dim, int):
+            return _size[dim]
+        else:
+            raise ValueError
 
     def quadrant_center(self, quadrant):
 
@@ -71,3 +84,12 @@ class Window:
             return 0.75*x_span, 0.75*y_span
         else:
             raise ValueError
+
+    @staticmethod
+    def check_keys():
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN
+                                             and event.key == pygame.K_ESCAPE):
+                pygame.quit()
+                sys.exit()
