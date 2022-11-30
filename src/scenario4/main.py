@@ -2,7 +2,7 @@ import numpy as np
 
 from graphic.display import Display
 
-from users.following_user import User, UserModel
+from users.fish import Fish, FishModel
 from assistants.active_inference_assistant import Assistant
 
 from plot.plot_traces import plot_traces
