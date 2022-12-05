@@ -1,41 +1,55 @@
 import numpy as np
-import torch
+import scipy
+from typing import Union
 
 
 class Fish:
 
-    def __init__(self, environment, goal, seed, sigma, init_position, movement_amplitude):
+    def __init__(self, environment, goal: Union[None, int] = 0, sigma=1.,
+                 movement_amplitude=3,
+                 seed=123):
 
-        self.environment = environment
+        self.env = environment
         self.goal = goal
         self.rng = np.random.default_rng(seed=seed)
         self.sigma = sigma
 
         self.movement_amplitude = movement_amplitude
+        self.action = None
 
-        self.action = init_position
+    @property
+    def position(self):
+        return self.env.fish.position
 
-    def act(self, *args, **kwargs):
+    def act(self, own_position=None, *args, **kwargs):
+
+        if own_position is None:
+            own_position = self.position
 
         noise = self.rng.normal(0, self.sigma, size=2)
-        self.action = self.mu(*args, **kwargs) + noise
+        mvt = self.mu(own_position=own_position, *args, **kwargs) + noise
+
+        new_pos = own_position + mvt
+        for coord in range(2):
+            new_pos[coord] = np.clip(new_pos[coord], a_min=0, a_max=self.env.size(coord))
+
+        self.action = new_pos - own_position
         return self.action
 
-    def mu(self, positions, goal=None, own_position=None):
+    def mu(self, target_positions=None, goal=None, own_position=None):
 
         if goal is None:
             assert self.goal is not None
             goal = self.goal
 
         if own_position is None:
-            assert self.action is not None
-            own_position = self.action
+            own_position = self.position
 
         own_x, own_y = own_position
-        if self.environment.fish_in(target=goal, fish_position=own_position, target_positions=positions):
+        if self.env.fish_is_in(target=goal, fish_position=own_position, target_positions=target_positions):
             mu = np.zeros(2)
         else:
-            x_center, y_center = self.environment.target_center(target=goal)
+            x_center, y_center = self.env.fish_aim(target=goal, fish_position=own_position)
             opp = y_center - own_y
             adj = x_center - own_x
             target_angle = np.degrees(np.arctan2(opp, adj))
@@ -46,7 +60,7 @@ class Fish:
 
             y_prime = np.tan(np.radians(target_angle)) * x_prime
 
-            norm = self.movement_amplitude / torch.sqrt(y_prime ** 2 + x_prime ** 2)
+            norm = self.movement_amplitude / np.sqrt(y_prime ** 2 + x_prime ** 2)
             mu = np.array([x_prime, y_prime]) * norm
         return mu
 
@@ -56,26 +70,26 @@ class Fish:
 
 class FishModel(Fish):
 
-    def __init__(self, environment, n_target, movement_amplitude, sigma, seed):
+    def __init__(self, environment, movement_amplitude, sigma, seed=12345):
 
-        self.n_target = n_target
+        self.n_target = environment.n_target
         super().__init__(environment=environment, seed=seed, sigma=sigma, movement_amplitude=movement_amplitude,
-                         init_position=None, goal=None)
+                         goal=None)
 
-    def logp_action(self, positions, action, own_position):
+    def logp_action(self, target_positions, action, own_position):
 
         logp = np.zeros(self.n_target)
         for goal in range(self.n_target):
-            mu = self.mu(positions=positions, goal=goal, own_position=own_position)
+            mu = self.mu(target_positions=target_positions, goal=goal, own_position=own_position)
             for coord in range(2):
                 a_coord = action[coord]
-                border = self.environment.size(0)
-                dist = torch.distributions.Normal(mu[coord], self.sigma)
+                border = self.env.size(0)
+                dist = scipy.stats.norm(mu[coord], self.sigma)
                 if a_coord == 0:
-                    logp_coord = (1 - dist.cdf(a_coord)).log()
+                    logp_coord = np.log((1 - dist.cdf(a_coord)))
                 elif a_coord == border:
-                    logp_coord = dist.cdf(a_coord).log()
+                    logp_coord = np.log(dist.cdf(a_coord))
                 else:
-                    logp_coord = dist.log_prob(a_coord)
+                    logp_coord = np.log(dist.pdf(a_coord))
                 logp[goal] += logp_coord
         return logp

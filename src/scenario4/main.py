@@ -1,6 +1,7 @@
 import numpy as np
+import torch
 
-from graphic.display import Display
+from graphic.environment import Environment
 
 from users.fish import Fish, FishModel
 from assistants.active_inference_assistant import Assistant
@@ -12,33 +13,52 @@ np.seterr(all='raise')
 
 def main():
 
-    colors = ("orange", "blue")
+    seed = 123
+    torch.manual_seed(seed)
+    torch.autograd.set_detect_anomaly(True)
 
-    display_kwargs = dict(
+    n_iteration = 200
+
+    env = Environment(
+        colors=("blue", "orange"),
         fps=30,
-        colors=colors,
-        hide_cursor=False,
-    )
+        hide_cursor=False)
+    env.reset(fish_init_position=np.array([env.size(0), env.size(1) * 0.5]))
 
-    # n_target = len(display_kwargs["colors"])
+    movement_amplitude = 3
+    sigma = 10.
 
-    # user_kwargs = dict(
-    #     sigma=20.0,
-    #     n_target=n_target
-    # )
-    #
-    # n_iteration = 200
+    fish = Fish(
+        environment=env, goal=0, seed=123, sigma=sigma, movement_amplitude=movement_amplitude)
 
-    display = Display(**display_kwargs)
-    display.reset()
+    assistant = Assistant(
+        user_model=FishModel(environment=env,
+                             movement_amplitude=movement_amplitude,
+                             sigma=sigma),
+        decision_rule="random",
+        )
+    assistant.reset()
 
-    # print("Starting")
+    trace = {k: [] for k in ("assistant_belief", )}  # "user_action", "targets_positions", "assistant_action")}
+    trace["assistant_belief"].append(assistant.belief)
 
-    i = 0
-    while True:
-        display.update(user_action=0.5*display.size(),
-                       assistant_action=np.array([0.25, ]))
-        i += 1
+    for it in range(n_iteration):
+        previous_target_positions = env.target_positions.copy()
+        previous_fish_position = env.fish.position.copy()
+        fish_jump = fish.act()
+        env.update(
+            user_action=fish_jump,
+            assistant_action=None)
+        assistant_action = assistant.act(
+            fish_action=fish_jump,
+            previous_fish_position=previous_fish_position,
+            previous_target_positions=previous_target_positions)
+        env.update(
+            user_action=None,
+            assistant_action=assistant_action)
+
+        trace["assistant_belief"].append(assistant.belief)
+
     # user = User(**user_kwargs, goal=0)
     # user.reset()
     # user_model = UserModel(**user_kwargs)
@@ -55,7 +75,7 @@ def main():
     #
     # trace = {k: [] for k in ("assistant_belief", "user_action", "targets_positions", "assistant_action")}
     #
-    # for it in range(n_iteration):
+
     #
     #     trace["targets_positions"].append(display.target_positions)
     #     trace["assistant_belief"].append(assistant.belief)
@@ -70,10 +90,10 @@ def main():
     #
     # trace["preferred_target"] = user.goal
     #
-    # plot_traces(trace,
-    #             save=False,
-    #             show=True,
-    #             run_name=None)
+    plot_traces(trace,
+                save=False,
+                show=True,
+                run_name=None)
 
 
 if __name__ == "__main__":

@@ -21,14 +21,14 @@ class Window:
     def clear(self):
         self.surface.fill(self.background)
 
-    def draw(self):
+    def draw(self, *args, **kwargs):
         pass
 
-    def graphic_update(self):
+    def graphic_update(self, *args, **kwargs):
 
         self.check_keys()
         self.clear()
-        self.draw()
+        self.draw(*args, **kwargs)
         pygame.display.update()
         self.fps_clock.tick(self.fps)
 

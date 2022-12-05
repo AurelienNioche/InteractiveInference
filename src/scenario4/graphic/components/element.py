@@ -71,8 +71,6 @@ class Text(Visual):
 
         self.window.surface.fill(pygame.Color("white"))
 
-        self.draw()
-
     def draw(self):
 
         text_list = self.text.split("\n")
@@ -95,8 +93,6 @@ class Circle(Visual):
         self.color = color
         self.radius = radius
         self.width = width
-
-        self.draw()
 
     def draw(self):
         pygame.draw.circle(surface=self.window.surface,

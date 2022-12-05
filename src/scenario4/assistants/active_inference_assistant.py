@@ -16,11 +16,7 @@ class Assistant:
     """
 
     def __init__(self,
-                 n_target,
                  user_model,
-                 window,
-                 constant_amplitude=3,
-                 seed=123,
                  belief_update_learning_rate=0.1,
                  belief_update_max_epochs=500,
                  action_selection_learning_rate=0.1,
@@ -30,13 +26,8 @@ class Assistant:
 
         super().__init__()
 
-        torch.manual_seed(seed)
-        torch.autograd.set_detect_anomaly(True)
-
-        self.window = window
-        self.constant_amplitude = constant_amplitude
-
-        self.n_target = n_target
+        self.env = user_model.env
+        self.n_target = self.env.n_target
         self.user_model = user_model
 
         self.belief_update_max_epochs = belief_update_max_epochs
@@ -60,9 +51,6 @@ class Assistant:
 
         self.a = None  # Current action
         self.b = None  # Beliefs over user preferences
-        self.x = None  # State of the world (positions of the targets)
-
-        self.user_action = None
 
     @property
     def belief(self):
@@ -70,32 +58,18 @@ class Assistant:
 
     @property
     def action(self):
-        return self.a.numpy()
+        return self.a.numpy().copy()
 
     def reset(self):
-
-        if self.n_target == 1:
-            self.x = torch.tensor([[0.5, 0.5]])
-
-        elif self.n_target == 2:
-            self.x = torch.tensor([[0.25, 0.25], [0.75, 0.75]])
-        else:
-            for i in range(self.n_target):
-                self.x[i] = torch.rand(2)
-
-        for i in range(self.n_target):
-            self.x[i] *= self.window.size()
-
-        self.a = torch.rand(self.n_target) * 360
         self.b = torch.ones(self.n_target)
-        return self.x
 
-    def revise_belief(self, y, b, x):
+    def revise_belief(self, b, fish_action, target_positions, fish_position):
         """
         Update the belief based on a new observation
         """
-
-        logp_y = self.user_model.logp_action(positions=x, action=y, update=True).detach()
+        logp_y = torch.from_numpy(
+            self.user_model.logp_action(target_positions=target_positions, own_position=fish_position,
+                                        action=fish_action))
 
         logq = torch.log_softmax(b - b.max(), dim=0).detach()
         logp_yq = (logq + logp_y).detach()
@@ -122,20 +96,18 @@ class Assistant:
 
         return b_prime.detach(), loss.detach()
 
-    def act(self, user_action):
+    def act(self, fish_action, previous_target_positions, previous_fish_position):
 
-        self.user_action = torch.from_numpy(user_action)
-        self.b, _ = self.revise_belief(y=self.user_action.detach(), b=self.b.detach(), x=self.x.detach())
+        self.b, _ = self.revise_belief(fish_action=fish_action, b=self.b.detach(),
+                                       target_positions=previous_target_positions,
+                                       fish_position=previous_fish_position)
 
         self.a = getattr(self, f'_act_{self.decision_rule}')(
             **self.decision_rule_parameters)
-        self.x = self.update_environment(x=self.x, a=self.a)
-        return self.x.numpy()
+        return self.a
 
     def _act_random(self):
-
-        angles = torch.rand(self.n_target) * 360
-        return angles
+        return torch.rand(1)
 
     def _act_active_inference(self,
                               decay_factor,
