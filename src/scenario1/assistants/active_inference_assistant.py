@@ -95,7 +95,7 @@ class Assistant:
         Update the belief based on a new observation
         """
 
-        logp_y = self.user_model.logp_action(positions=x, action=y, update=True).detach()
+        logp_y = self.user_model.logp_action(positions=x, fish_jump=y, update=True).detach()
 
         logq = torch.log_softmax(b - b.max(), dim=0).detach()
         logp_yq = (logq + logp_y).detach()

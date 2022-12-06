@@ -28,7 +28,7 @@ def plot_traces(trace, show=False, save=True,
         # vmin=0, vmax=1,
     )
 
-    ax.invert_yaxis()
+    # ax.invert_yaxis()
     ax.yaxis.get_major_locator().set_params(integer=True)
 
     ax.set_xlim([0, n_epochs])

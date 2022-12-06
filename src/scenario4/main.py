@@ -23,28 +23,25 @@ def main():
         colors=("blue", "orange"),
         fps=30,
         hide_cursor=False)
-    env.reset(fish_init_position=np.array([env.size(0), env.size(1) * 0.5]))
-
-    movement_amplitude = 3
-    sigma = 10.
+    env.reset(fish_init_position=torch.tensor([0, env.size(1) * 0.5]))
 
     fish = Fish(
-        environment=env, goal=0, seed=123, sigma=sigma, movement_amplitude=movement_amplitude)
+        environment=env, sigma=10., movement_amplitude=3)
 
     assistant = Assistant(
         user_model=FishModel(environment=env,
-                             movement_amplitude=movement_amplitude,
-                             sigma=sigma),
-        decision_rule="random",
-        )
+                             movement_amplitude=fish.movement_amplitude,
+                             sigma=fish.sigma),
+        decision_rule="active_inference")
+
     assistant.reset()
 
     trace = {k: [] for k in ("assistant_belief", )}  # "user_action", "targets_positions", "assistant_action")}
-    trace["assistant_belief"].append(assistant.belief)
+    trace["assistant_belief"].append(assistant.np_belief)
 
     for it in range(n_iteration):
-        previous_target_positions = env.target_positions.copy()
-        previous_fish_position = env.fish.position.copy()
+        previous_target_positions = env.target_positions.clone()
+        previous_fish_position = env.fish_position.clone()
         fish_jump = fish.act()
         env.update(
             user_action=fish_jump,
@@ -57,7 +54,7 @@ def main():
             user_action=None,
             assistant_action=assistant_action)
 
-        trace["assistant_belief"].append(assistant.belief)
+        trace["assistant_belief"].append(assistant.np_belief)
 
     # user = User(**user_kwargs, goal=0)
     # user.reset()

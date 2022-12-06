@@ -1,9 +1,4 @@
-import numpy as np
 import torch
-
-
-def distance(pos1, pos2):
-    return np.sqrt(((pos1 - pos2) ** 2).sum())
 
 
 class Assistant:
@@ -54,22 +49,28 @@ class Assistant:
 
     @property
     def belief(self):
-        return torch.softmax(self.b, dim=0).detach().numpy().copy()
+        return torch.softmax(self.b, dim=0)
+
+    @property
+    def np_belief(self):
+        return self.belief.detach().numpy().copy()
 
     @property
     def action(self):
-        return self.a.numpy().copy()
+        return self.a
 
     def reset(self):
         self.b = torch.ones(self.n_target)
+        self.a = torch.zeros(1)
 
     def revise_belief(self, b, fish_action, target_positions, fish_position):
         """
         Update the belief based on a new observation
         """
-        logp_y = torch.from_numpy(
-            self.user_model.logp_action(target_positions=target_positions, own_position=fish_position,
-                                        action=fish_action))
+        logp_y = self.user_model.logp_action(
+            target_positions=target_positions,
+            fish_initial_position=fish_position,
+            fish_jump=fish_action)
 
         logq = torch.log_softmax(b - b.max(), dim=0).detach()
         logp_yq = (logq + logp_y).detach()
@@ -114,76 +115,41 @@ class Assistant:
                               n_rollout,
                               n_step_per_rollout):
 
-        x = self.x.detach().clone()
         b = self.b.detach().clone()
-        a = self.a.detach().clone()
+
+        fish_position = self.env.fish_position
 
         a_n_epoch = self.action_selection_max_epochs
         b_n_epoch = self.belief_update_max_epochs
         a_lr = self.action_selection_learning_rate
         b_lr = self.belief_update_learning_rate
 
-        user_sigma = self.user_model.sigma
-        n_target = self.n_target
-        mvt_amplitude = self.constant_amplitude
-        max_coord = self.window.size()
+        sim_act = self.user_model.act
+        logp_action = self.user_model.logp_action
+        update_target_positions = self.env.update_target_positions
+        update_fish_position = self.env.update_fish_position
 
-        def update_environment(positions, action):
-
-            for i in range(n_target):
-                angle = action[i]
-                if 90 < angle <= 270:
-                    x_prime = -1
-                else:
-                    x_prime = 1
-                y_prime = torch.tan(torch.deg2rad(angle)) * x_prime
-
-                norm = mvt_amplitude / torch.sqrt(y_prime ** 2 + x_prime ** 2)
-                movement = torch.tensor([x_prime, y_prime]) * norm
-                positions[i] += movement
-
-            for coord in range(2):
-                for target in range(n_target):
-                    if positions[target, coord] > max_coord[coord]:
-                        positions[target, coord] = max_coord[coord]
-
-            return positions
-
-        def logp_action(positions, action, prev_positions):
-
-            logp_y = torch.zeros(n_target)
-            for target in range(n_target):
-                for coord in range(2):
-                    d = positions[target, coord] - prev_positions[target, coord]
-                    logp_coord = torch.distributions.Normal(d, user_sigma).log_prob(action[coord])
-                    logp_y[target] += logp_coord
-
-            return logp_y
-
-        sim_act = self.user_model.sim_act
-
-        a = torch.nn.Parameter(a)
-        a_opt = torch.optim.Adam([a, ], lr=a_lr)
+        unc_a = torch.nn.Parameter(torch.zeros(1))
+        a_opt = torch.optim.Adam([unc_a, ], lr=a_lr)
 
         for _ in range(a_n_epoch):
 
-            old_a = a.clone()
+            old_unc_a = unc_a.clone()
             a_opt.zero_grad()
 
             # -----------------------------------
             # Build action plans
             # -----------------------------------
 
-            first_action = torch.sigmoid(a)
+            first_action = torch.sigmoid(unc_a)
+            print("first action", first_action)
 
-            action_plan = torch.zeros((n_rollout, n_step_per_rollout, n_target))
+            action_plan = torch.zeros((n_rollout, n_step_per_rollout))
             action_plan[:, 0] = first_action
             if n_step_per_rollout > 1:
-                action_plan[:, 1:, :] = torch.rand((n_rollout, n_step_per_rollout - 1, n_target)) * 360
+                action_plan[:, 1:] = torch.rand((n_rollout, n_step_per_rollout - 1))
 
-            action_plan *= 360  # Convert in degrees
-
-            total_efe = 0
+            action_loss = 0
             for rol in range(n_rollout):
 
                 efe_rollout = 0
@@ -195,7 +161,7 @@ class Assistant:
 
                 # -----------------------------------------------
 
-                x_rol = x.clone()
+                fish_position_rol = fish_position.clone()
                 b_rol = b.clone()
 
                 for step in range(n_step_per_rollout):
@@ -204,9 +170,7 @@ class Assistant:
 
                     # ---- Update positions based on action ---------------------------------------------
 
-                    x_rol_prev = x_rol.clone()
-
-                    x_rol = update_environment(positions=x_rol, action=action)
+                    targets_positions_rol = update_target_positions(x_shift=action.detach().item())
 
                     # ------------------------------------------------------------------------------
                     # Evaluate epistemic value -----------------------------------------------------
@@ -214,13 +178,17 @@ class Assistant:
 
                     # Simulate action based on goal ----------------------------------------
 
-                    y = sim_act(positions=x_rol, goal=goal, prev_positions=x_rol_prev)
+                    fish_jump = sim_act(target_positions=targets_positions_rol, goal=goal,
+                                        fish_position=fish_position_rol)
 
                     # Compute log probability of user action given a specific goal in mind -------
-                    logp_y = logp_action(positions=x_rol, action=y, prev_positions=x_rol_prev)
+                    logp_y = logp_action(target_positions=targets_positions_rol, fish_jump=fish_jump,
+                                         fish_initial_position=fish_position_rol)
 
                     logq = torch.log_softmax(b_rol - b_rol.detach().max(), dim=0)
                     logp_yq = logq + logp_y
+
+                    fish_position = update_fish_position(fish_position=fish_position, fish_jump=fish_jump)
 
                     # Revise belief -------------------
 
@@ -247,7 +215,9 @@ class Assistant:
                     # Compute extrinsic value
                     # --------------------------------------
 
-                    extrinsic_value = (q_rol * q_rol.log()).sum()  # minus entropy
+                    extrinsic_value = 0  # (q_rol * q_rol.log()).sum()  # minus entropy
+
+                    print(first_action, epistemic_value)
 
                     # --------------------------------------
                     # Compute loss
@@ -255,43 +225,14 @@ class Assistant:
                     efe_step = - epistemic_value - extrinsic_value
                     efe_rollout += decay_factor ** step * efe_step
 
-                total_efe += efe_rollout
+                action_loss += efe_rollout
 
-            total_efe /= n_rollout
-            total_efe.backward()
+            action_loss /= n_rollout
+            action_loss.backward()
             a_opt.step()
 
-            if torch.isclose(old_a, a).all():
+            if torch.isclose(old_unc_a, unc_a).all():
+
                 break
 
-        return a.detach()
-
-    def update_environment(self, x, a):
-        pos = x
-        for i in range(self.n_target):
-            angle = a[i]
-            # 0° Move left
-            # 90° Move down
-            # 180° Move right
-            # 270° Move up
-            x_prime = 1.0
-            if 90 < angle <= 270:
-                x_prime *= -1
-
-            y_prime = torch.tan(torch.deg2rad(angle)) * x_prime
-
-            norm = self.constant_amplitude / torch.sqrt(y_prime**2 + x_prime**2)
-            movement = torch.tensor([x_prime, y_prime]) * norm
-            pos[i] += movement
-
-        max_coord = torch.from_numpy(self.window.size())
-        for coord in range(2):
-            for target in range(self.n_target):
-                if pos[target, coord] > max_coord[coord]:
-                    pos[target, coord] = max_coord[coord]
-
-        return pos
-
-    @property
-    def target_positions(self):
-        return self.x.numpy()
+        return torch.sigmoid(unc_a).detach()
