@@ -16,7 +16,6 @@ def main():
     seed = 123
     torch.manual_seed(seed)
     torch.autograd.set_detect_anomaly(True)
-    np.random.seed(seed)
 
     n_iteration = 200
 
@@ -24,17 +23,15 @@ def main():
         colors=("blue", "orange"),
         fps=30,
         hide_cursor=False)
-
-    fish_init_position = np.array([env.size(0)* 1.0, env.size(1) * 0.5])
+    env.reset(fish_init_position=torch.tensor([0, env.size(1) * 0.5]),
+              init_shift=torch.zeros(1))
 
     fish = Fish(
-        environment=env, sigma=10., jump_size=3.)
-    fish.reset(init_position=fish_init_position)
-    env.reset(init_shift=0, fish_init_position=fish.position)
+        environment=env, sigma=10., movement_amplitude=3.)
 
     assistant = Assistant(
         fish_model=FishModel(environment=env,
-                             jump_size=fish.jump_size,
+                             movement_amplitude=fish.jump_size,
                              sigma=fish.sigma),
         decision_rule="active_inference")
 
@@ -44,27 +41,22 @@ def main():
     trace["assistant_belief"].append(assistant.np_belief)
 
     for it in range(n_iteration):
-        previous_target_positions = env.target_positions.copy()
-        previous_fish_position = fish.position.copy()
+        previous_target_positions = env.target_positions.clone()
+        previous_fish_position = env.fish_position.clone()
         fish_jump = fish.act(
-            fish_position=fish.position,
+            fish_position=env.fish_position,
             target_positions=env.target_positions,
             goal=fish.goal)
-        new_fish_position = fish.update_fish_position(
-            fish_position=previous_fish_position,
-            fish_jump=fish_jump,
-            window_size=env.size())
         env.update(
-            new_fish_position=new_fish_position,
+            user_action=fish_jump,
             assistant_action=None)
         assistant_action = assistant.act(
             fish_jump=fish_jump,
             previous_fish_position=previous_fish_position,
-            previous_target_positions=previous_target_positions,
-            new_fish_position=new_fish_position)
+            previous_target_positions=previous_target_positions)
         env.update(
-            assistant_action=assistant_action,
-            new_fish_position=None)
+            user_action=None,
+            assistant_action=assistant_action)
 
         trace["assistant_belief"].append(assistant.np_belief)
 

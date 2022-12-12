@@ -1,96 +1,126 @@
 import torch
 from typing import Union
+import numpy as np
+from scipy import stats
 
 
 class Fish:
 
     def __init__(self, environment, goal: Union[None, int] = 0,
                  sigma=1.,
-                 movement_amplitude=3):
+                 jump_size=3):
 
         self.env = environment
         self.goal = goal
         self.sigma = sigma
 
-        self.movement_amplitude = movement_amplitude
-        self.action = None
+        self.jump_size = jump_size
+        self.position = None
 
-    @property
-    def position(self):
-        return self.env.fish_position
+    def act(self, fish_position, target_positions, goal):
 
-    def act(self, fish_position=None, *args, **kwargs):
+        fish_noise = np.random.normal(size=2) * self.sigma
+        fish_mu = Fish.compute_mu(
+            fish_position=fish_position,
+            target_positions=target_positions,
+            goal=goal,
+            jump_size=self.jump_size)
+        unbounded_fish_jump = fish_mu + fish_noise
 
-        if fish_position is None:
-            fish_position = self.position
+        new_pos = Fish.update_fish_position(fish_position=fish_position, fish_jump=unbounded_fish_jump,
+                                            window_size=self.env.size())
 
-        noise = torch.randn(2) * self.sigma
-        mvt = self.mu(fish_position=fish_position, *args, **kwargs) + noise
+        fish_jump = new_pos - fish_position
+        return fish_jump
 
-        new_pos = fish_position + mvt
+    @staticmethod
+    def update_fish_position(fish_position, fish_jump, window_size):
+        new_pos = fish_position + fish_jump
         for coord in range(2):
-            new_pos[coord] = torch.clip(new_pos[coord], min=0, max=self.env.size(coord))
+            new_pos[coord] = np.clip(new_pos[coord], a_min=0., a_max=window_size[coord])
+        return new_pos
 
-        self.action = new_pos - fish_position
-        return self.action
+    @staticmethod
+    def compute_mu(target_positions, goal, fish_position, jump_size):
 
-    def mu(self, target_positions=None, goal=None, fish_position=None):
+        x, first_width, second_width = target_positions[goal]
 
-        if goal is None:
-            assert self.goal is not None
-            goal = self.goal
-
-        if fish_position is None:
-            fish_position = self.position
-
-        own_x, own_y = fish_position
-        if self.env.fish_is_in(target=goal, fish_position=fish_position,
-                               target_positions=target_positions):
-            mu = torch.zeros(2)
+        fish_x = fish_position[0]
+        fish_is_in = x <= fish_x <= x + first_width or (second_width > 0. and 0. <= fish_x <= second_width)
+        if fish_is_in:
+            mu = np.zeros(2)
         else:
-            x_center, y_center = self.env.fish_aim(target=goal, fish_position=fish_position)
-            opp = y_center - own_y
-            adj = x_center - own_x
-            target_angle = torch.rad2deg(torch.arctan2(opp, adj))
+            mu = Fish.compute_aim(
+                target_positions=target_positions,
+                goal=goal,
+                fish_position=fish_position,
+                jump_size=jump_size)
 
-            x_prime = 1.0
-            if 90 < target_angle <= 270:
-                x_prime *= -1
-
-            y_prime = torch.tan(torch.deg2rad(target_angle)) * x_prime
-
-            norm = self.movement_amplitude / torch.sqrt(y_prime ** 2 + x_prime ** 2)
-            mu = torch.tensor([x_prime, y_prime]) * norm
         return mu
 
-    def reset(self):
-        pass
+    @staticmethod
+    def compute_aim(target_positions, goal, fish_position, jump_size):
+
+        def compare_with(position):
+            first_diff = (x - x_fish) ** 2
+            second_diff = (position - x_fish) ** 2
+            return np.where(first_diff < second_diff, x, position)
+
+        x_fish = fish_position[0]
+        x = target_positions[goal, 0]
+        first_width = target_positions[goal, 1]
+        second_width = target_positions[goal, 2]
+        if second_width > 0:
+            x_center = compare_with(second_width)
+        else:
+            x_center = compare_with(x + first_width)
+
+        if x_center > x_fish:
+            x_mvt = jump_size
+        else:
+            x_mvt = - jump_size
+
+        aim = np.array([x_mvt, 0.])
+        return aim
+
+    def reset(self, init_position):
+        self.position = init_position
 
 
 class FishModel(Fish):
 
-    def __init__(self, environment, movement_amplitude, sigma):
+    def __init__(self, environment, jump_size, sigma):
 
         self.n_target = environment.n_target
         super().__init__(environment=environment, sigma=sigma,
-                         movement_amplitude=movement_amplitude,
+                         jump_size=jump_size,
                          goal=None)
 
     def logp_action(self, target_positions, fish_jump, fish_initial_position):
 
-        logp = torch.zeros(self.n_target)
-        for goal in range(self.n_target):
-            mu = self.mu(target_positions=target_positions, goal=goal,
-                         fish_position=fish_initial_position)
+        jump_size = self.jump_size
+        sigma = self.sigma
+        window_size = self.env.size()
+        n_target = target_positions.shape[0]
+        logp = np.zeros(n_target)
+        for goal in range(n_target):
+            mu = Fish.compute_mu(
+                target_positions=target_positions,
+                goal=goal,
+                fish_position=fish_initial_position,
+                jump_size=jump_size)
+            logp_goal = 0
             for coord in range(2):
                 a_coord = fish_jump[coord]
-                border = self.env.size(0)
-                dist = torch.distributions.Normal(mu[coord], self.sigma)
-                if a_coord == 0:
-                    logp_coord = torch.log((1 - dist.cdf(a_coord)))
-                elif a_coord == border:
-                    logp_coord = torch.log(dist.cdf(a_coord))
+                border = window_size[coord]
+                dist = stats.norm(mu[coord], sigma)
+                if 0 < a_coord < border:
+                    logp_goal += np.log(dist.pdf(a_coord))
+                elif a_coord <= 0:
+                    logp_goal += np.log(1 - dist.cdf(a_coord))
+                elif a_coord >= border:
+                    logp_goal += np.log(dist.cdf(a_coord))
                 else:
-                    logp_coord = dist.log_prob(a_coord)
-                logp[goal] += logp_coord
+                    raise ValueError
+            logp[goal] = logp_goal
         return logp

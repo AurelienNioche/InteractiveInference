@@ -38,7 +38,7 @@ def main():
     user_model = UserModel(**user_kwargs)
     user_model.reset()
 
-    assistant = Assistant(user_model=user_model, n_target=n_target,
+    assistant = Assistant(fish_model=user_model, n_target=n_target,
                           window=display.window,
                           # decision_rule="random")
                           decision_rule="active_inference")
