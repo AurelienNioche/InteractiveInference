@@ -33,9 +33,7 @@ class Assistant:
 
         self.decision_rule = decision_rule
         if decision_rule_parameters is None:
-            if decision_rule == "active_inference":
-                decision_rule_parameters = dict()
-            elif decision_rule == "random":
+            if decision_rule in ("random", "static", "active_inference"):
                 decision_rule_parameters = dict()
             else:
                 raise ValueError("Decision rule not recognized")
@@ -104,52 +102,53 @@ class Assistant:
                                        target_positions=previous_target_positions,
                                        fish_initial_position=previous_fish_position)
 
+        print(torch.softmax(self.b, dim=0))
+
         self.a = getattr(self, f'_act_{self.decision_rule}')(
             fish_position=new_fish_position,
             **self.decision_rule_parameters)
         return self.a
 
     def _act_random(self, *args, **kwargs):
-        return torch.rand(1)
+        return np.random.random()
+
+    def _act_static(self, *args, **kwargs):
+        return 0
 
     def _act_active_inference(self, fish_position):
 
-        jump_size = 0.02
+        actions = np.random.random(100)
 
-        window_size = np.ones(2)
-        sigma = 0.2
+        action = actions[np.argmax([self.loss_action(a, fish_position) for a in actions])]
 
-        b_n_epoch = 200
-        b_lr = 0.1
-
-        res = optimize.minimize(
-            fun=self.loss_action, x0=np.array([0.0]),
-            # method="",
-            args=(fish_position, sigma, window_size, jump_size, b_lr, b_n_epoch,))
-
-        action = res.x[0]
-        print("action chosen", action)
+        print("DECISION TAKEN", "*" * 100)
+        print("ACTION", action)
+        print("*" * 100)
         return action
 
-    def loss_action(self, actions, *args):
+    # @staticmethod
+    # def sigmoid(x):
+    #     return 1/(1 + np.exp(-x))
 
-        action = 1/(1 + np.exp(-actions[0]))
-        fish_position, sigma, window_size, jump_size, b_lr, b_n_epoch = args
+    def loss_action(self, action, fish_position):
+
+        # action = self.sigmoid(actions[0])
+        # fish_position, = args
 
         b = self.b
 
         # Sample the user goal --------------------------
         q = torch.softmax(b - b.max(), dim=0)
-        goal = torch.distributions.Categorical(probs=q).sample()
+        goal = torch.distributions.Categorical(probs=q).sample().item()
 
         # -----------------------------------------------
 
-        fish_position_rol = fish_position
+        fish_position_rol = fish_position.copy()
         b_rol = b.clone()
 
         # ---- Update positions based on action ---------------------------------------------
-        targets_positions_rol = self.env.update_target_positions(
-            shift=action)
+
+        targets_positions_rol = self.env.update_target_positions(shift=action)
 
         # ------------------------------------------------------------------------------
         # Evaluate epistemic value -----------------------------------------------------
@@ -165,8 +164,7 @@ class Assistant:
             b=b_rol,
             fish_initial_position=fish_position_rol,
             fish_jump=fish_jump,
-            target_positions=targets_positions_rol
-        )
+            target_positions=targets_positions_rol)
 
         epistemic_value = kl_div
 
@@ -174,13 +172,18 @@ class Assistant:
         # Compute extrinsic value
         # --------------------------------------
 
-        q_rol = torch.softmax(b_rol - b_rol.max(), dim=0)
-        entropy = - (q_rol * q_rol.log()).sum()
-        extrinsic_value = - entropy.item()
+        # q_rol = torch.softmax(b_rol - b_rol.max(), dim=0)
+        # entropy = - (q_rol * q_rol.log()).sum()
+        # extrinsic_value = - entropy.item()
+
+
+        extrinsic_value = q[goal].log().item()
 
         # --------------------------------------
         # Compute loss
         # --------------------------------------
 
-        loss = - epistemic_value - extrinsic_value
+        loss = - extrinsic_value
+
+        print("action", action, "loss", loss)
         return loss

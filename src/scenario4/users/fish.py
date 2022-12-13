@@ -43,11 +43,7 @@ class Fish:
     @staticmethod
     def compute_mu(target_positions, goal, fish_position, jump_size):
 
-        x, first_width, second_width = target_positions[goal]
-
-        fish_x = fish_position[0]
-        fish_is_in = x <= fish_x <= x + first_width or (second_width > 0. and 0. <= fish_x <= second_width)
-        if fish_is_in:
+        if Fish.fish_is_in(target_positions=target_positions, fish_position=fish_position, goal=goal):
             mu = np.zeros(2)
         else:
             mu = Fish.compute_aim(
@@ -57,6 +53,12 @@ class Fish:
                 jump_size=jump_size)
 
         return mu
+
+    @staticmethod
+    def fish_is_in(fish_position, target_positions, goal):
+        x, first_width, second_width = target_positions[goal]
+        fish_x = fish_position[0]
+        return x <= fish_x <= x + first_width or (second_width > 0. and 0. <= fish_x <= second_width)
 
     @staticmethod
     def compute_aim(target_positions, goal, fish_position, jump_size):
@@ -109,17 +111,20 @@ class FishModel(Fish):
                 goal=goal,
                 fish_position=fish_initial_position,
                 jump_size=jump_size)
+            final_position = fish_initial_position + fish_jump
+            mu_abs = fish_initial_position+mu
             logp_goal = 0
             for coord in range(2):
-                a_coord = fish_jump[coord]
+                mu_abs_coord = mu_abs[coord]
+                final_position_coord = final_position[coord]
                 border = window_size[coord]
-                dist = stats.norm(mu[coord], sigma)
-                if 0 < a_coord < border:
-                    logp_goal += np.log(dist.pdf(a_coord))
-                elif a_coord <= 0:
-                    logp_goal += np.log(1 - dist.cdf(a_coord))
-                elif a_coord >= border:
-                    logp_goal += np.log(dist.cdf(a_coord))
+                dist = stats.norm(mu_abs_coord, sigma)
+                if 0 < final_position_coord < border:
+                    logp_goal += np.log(dist.pdf(final_position_coord))
+                elif final_position_coord <= 0:
+                    logp_goal += np.log(1 - dist.cdf(final_position_coord))
+                elif final_position_coord >= border:
+                    logp_goal += np.log(dist.cdf(final_position_coord))
                 else:
                     raise ValueError
             logp[goal] = logp_goal
