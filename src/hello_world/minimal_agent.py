@@ -1,134 +1,183 @@
+import itertools
+
 import numpy as np
+import torch
 
-# agent
-"""
-- the agent has an internal brain state b
-- it receives a sensory state o in each timestep
-- it chooses an action a to minimise variational free energy
-- it updates its brain state to b' based on b, a, and s
-
-"""
 def softmax(x):
   e = np.exp(x - x.max())
   return e / e.sum()
 
-def KL(a, b):
-  """ Discrete KL divergence."""
-  return np.dot(a, (np.log(a) - np.log(b)))
+def kl(a, b):
+    """ Discrete KL-divergence """
+    return (a * (np.log(a) - np.log(b))).sum()
 
-def get_b_star(s_star=0, s_N=16):
-  b = np.zeros(s_N)
-  b[s_star] = 10
-  return b
-
-class MinimalAgent(object):
-
-  def __init__(self,
-               p_s1_given_s_a, # true environment transition probability
-               p_o_given_s, # true environment emission probability
-               b_star, # logits of desired state distribution
-               a_N=2, # number of discrete actions
-               b_N=16, # number of internal states (tabular representation of p(b))
-               ):
+class MinimalAgent:
     
-    # environment dynamics
-    self.p_s1_given_s_a = p_s1_given_s_a
-    self.p_o_given_s = p_o_given_s
-    self.a_N = a_N
+    def __init__(self, 
+                 env,
+                 target_state, 
+                 k=2, # planning horizon
+                 use_info_gain=True, # score actions by info gain
+                 use_pragmatic_value=True, # score actions by pragmatic value
+                 select_max_pi=False, # sample plan (False), select max negEFE (True).
+                 n_steps_o=20, # optimization steps after new observation
+                 n_steps_a=20, # optimization steps after new action
+                 lr_o=4., # learning rate of optimization after new observation
+                 lr_a=4.): # learning rate of optimization after new action)
+        
+        self.env = env
+        self.target_state = target_state
+        self.k = k
+        self.use_info_gain = use_info_gain
+        self.use_pragmatic_value = use_pragmatic_value
+        self.select_max_pi = select_max_pi
+        self.n_steps_o = n_steps_o
+        self.n_steps_a = n_steps_a
+        self.lr_a = lr_a
+        self.lr_o = lr_o
+        
+    def reset(self):
+        # initialize state preference
+        self.b_star = np.eye(self.env.s_N)[self.target_state] * 10
+        self.log_p_c = np.log(softmax(self.b_star))
+        # initialize state prior as uniform
+        self.b = np.zeros(self.env.s_N)
+        
+    def step(self, o, debug=False):
+        if debug:
+            return self._step_debug(o)
+        
+        self.b = self._update_belief(theta_prev=self.b, o=int(o))
+        a = select_action(theta_start=self.b)[0] # pop first action of selected plan
+        self.b = self._update_belief_a(theta_prev=self.b, a=a)
+        return a
     
-    # belief state
-    self.b_N = b_N # number of belief states
-    self.b_star = b_star # desired distribution over belief states
-    self.b_t = None # current belief state (undefined before reset)
+    def _step_debug(self, o):
+        self.b, ll_o = self._update_belief(theta_prev=self.b, 
+                                           o=int(o), debug=True)
+        a, p_a, _, _ = self._select_action(theta_start=self.b, debug=True)
+        a = a[0]
+        self.b, ll_a = self._update_belief_a(theta_prev=self.b, a=a, debug=True)
+        return a, ll_o, ll_a, p_a
+    
+    def _update_belief_a(self, theta_prev, a, debug=False):
+        # prior assumed to be expressed as parameters of the softmax (logits)
+        theta = torch.tensor(theta_prev)
+        q = torch.nn.Softmax(dim=0)(theta)
 
-  def reset(self):
-    self.b_t = np.zeros(self.b_N) # uniform belieft at start
+        # this is the prior for the distribution at time t
+        q1 = torch.matmul(q, torch.tensor(self.env.p_s1_given_s_a[:,a,:]))
 
-  def act(self, o):
-    min_fe = None
-    argmin_fe = None
+        # initialize parameters of updated belief to uniform
+        theta1 = torch.zeros_like(theta, requires_grad=True)
+        loss = torch.nn.CrossEntropyLoss() # expects logits and target distribution.
+        optimizer = torch.optim.SGD([theta1], lr=self.lr_a)
+        if debug:
+            ll = np.zeros(self.n_steps_a)
 
-    # evaluate policies by evaluating single next action
-    # - more generally, we evaluate trajectories of actions (pi: a_0, ..., a_tau)
-    # - normally, we'd pick actions by sampling from softmax(G_pi)
-    # - here, we take action with maximum g
-    for a in range(self.a_N):
-      # Free Energy is KL between p* and E_s~q [p(s')]
-      # Note: we use action indices to represent actions (not {-1, 1})
-      fe = self.free_energy(self.b_star, o, a)
-      if (min_fe is None) or (fe < min_fe):
-        min_fe = fe
-        argmin_fe = a
+        for i in range(self.n_steps_a):
+            l = loss(theta1, q1)
+            optimizer.zero_grad()
+            l.backward()
+            optimizer.step()
 
-      
-    return argmin_fe
+            if debug:
+                ll[i] = l.detach().numpy()
 
-  @staticmethod
-  def q(b):
-    """ Variational distribution of environment state s given belief state b.
-        p(s|b)
+        theta1 = theta1.detach().numpy()
+        if debug:
+            return theta1, ll
 
-      (model_encoding, variational_density)
-    """
-    return softmax(b)
+        return theta1
+    
+    def _update_belief(self, theta_prev, o, debug=False):
+        theta = torch.tensor(theta_prev)
 
-  @classmethod
-  def dq(self, b):
-    """ Derivative of the variational distribution.
-     (model_encoding_derivative)
-    """
-    q = self.q(b)
-    # Softmax derivative
-    return np.diag(q) - np.outer(q, q)
+        # make p(s) from b
+        q = torch.nn.Softmax(dim=0)
+        p = torch.tensor(self.env.p_o_given_s[:,o]) * q(theta) # p(o|s)p(s)
+        log_p = torch.log(p)
 
-  def generative_density(self, b, o, a):
-    """
-    Next state prediction from generative model.
-    Here, the generative model is equal to the true environment dynamics.
-    (generative_density)
+        # initialize updated belief with current belief
+        theta1 = torch.tensor(theta_prev, requires_grad=True)
 
-    P(s', o | b, a) = Sum_over_s(P(s' | a, s) * P(o | s) * P(s | b))
-    s' only depends on a and s, o only depends on s, and s only depends on b.
+        # estimate loss
+        def forward():
+            q1 = q(theta1)
+            # free energy: KL[ q(s) || p(s, o) ]
+            fe = torch.sum(q1 * (torch.log(q1) - log_p))
+            return fe
 
-    Agent's prediction of next state probability given belief state and action
-    (calculated separately for both sensory states).
-    """
+        optimizer = torch.optim.SGD([theta1], lr=self.lr_o)
+        ll = np.zeros(self.n_steps_o)
+        for i in range(self.n_steps_o):
+            l = forward()
+            optimizer.zero_grad()
+            l.backward()
+            optimizer.step()
 
-    # generative model of the next state p(s1, o | b, a)
-    # todo: adapt to return joint for both observations
-    p_o_s_given_b = self.q(self.b_t) * self.p_o_given_s[:,o] # joint prob p(o, s| b)
-    p_s1_o_given_b_a = np.dot(p_o_s_given_b, self.p_s1_given_s_a[:,a,:])
-    return p_s1_o_given_b_a
+            if debug:
+                ll[i] = l.detach().numpy()
 
-  def free_energy(self, b_star, o, a):
-    # estimate of expected free energy, used for action selection
-    q = self.q(b_star) # where I want to be
-    p = self.generative_density(self.b_t, o, a=a) # where I get to taking action a
-    return KL(q, p)
+        theta1 = theta1.detach().numpy()
+        if debug:
+            return theta1, ll
 
-  def update_state(self, o, a, n_steps, lr=1.0):
-    # internal belief state at time t+1 can be initialised
-    # a) uniformly (expressing minimal knowledge about the future)
-    # b) biased towards the current state (assuming small changes)
-    # c) by updating current belief according to current world model
-    #    this assumes that we know the inverse q^-1(b|s) which, in general, we don't
-    b_prime = np.copy(self.b_t) # (b), alternatively np.zeros(self.b_N) (a)
+        return theta1
 
-    # posterior joint of next state and last observation given  last action 
-    # and last belief state. This is constant across update iterations
-    p = self.generative_density(self.b_t, o, a)
-    #plt.plot(p, label="$p(s', o | b, a)$")
+    def _select_action(self, theta_start, 
+                       n_actions=2, # possible actions (assumed to be discrete and indexed 0)
+                       debug=False): # return plans, p of selecting each, and marginal p of actions
+        # sampling
+        #n_plans = 32
+        #plans = np.random.choice(n_actions, size=(n_plans, k), replace=True).tolist()
+        # genrate all plans
+        plans = [ list(x) for x in itertools.product(range(n_actions), repeat=self.k)]
+        # evaluate negative expected free energy of all plans
+        nefes = []
+        for pi in plans:
+            step_nefes = self._rollout_step(theta_start, pi)
+            nefe = np.array(step_nefes).mean() # expected value over steps
+            nefes.append(nefe)
 
-    for i in range(n_steps):
-      q = self.q(b_prime)
-      # KL(q, p)
-      #F = np.dot(q, (np.log(q) - np.log(p))
-      
-      # free energy gradient wrt belief state
-      dq = self.dq(b_prime)
-      Y = 1 + (np.log(q) - np.log(p))
-      db = np.dot(dq, Y)
+        # compute probability of following each plan
+        p_pi = softmax(np.array(nefes)).tolist()
+        if self.select_max_pi:
+            a = plans[np.argmax(nefes)]
+        else:
+            a = plans[np.random.choice(len(plans), p=p_pi)]
 
-      b_prime -= lr * db
+        if debug:
+            # compute marginal action probabilities
+            p_a = np.zeros(n_actions)
+            for p, pi in zip(p_pi, plans):
+                p_a[pi[0]] += p
 
-    self.b_t = b_prime
+            return a, p_a, plans, p_pi
+
+        return a
+
+    def _rollout_step(self, theta, pi):
+        if pi == []:
+            return []
+
+        a, pi_rest = pi[0], pi[1:]
+        # Where will I be after taking action a?
+        theta1 = self._update_belief_a(theta, a=a) 
+        q = softmax(theta1)
+        # Do I like being there?
+        pragmatic = np.dot(q, self.log_p_c)
+        # What might I observe after taking action a? (marginalize p(o, s) over s)
+        p_o = np.dot(q, self.env.p_o_given_s)
+        # Do I learn about s from by observing o?
+        # enumerate/ sample observations, update belief and estimate info gain
+        q_o = [softmax(self._update_belief(theta1, o=i)) for i in range(p_o.shape[0])]
+        d_o = [kl(q_o_i, q) for q_o_i in q_o] # info gain for each observation
+        info_gain = np.dot(p_o, d_o) # expected value of info gain
+        # negative expected free energy for this timestep
+        nefe = self.use_pragmatic_value * pragmatic + \
+               self.use_info_gain * info_gain
+        # nefe for remainder of policy rollout
+        nefe_rest = self._rollout_step(theta1, pi_rest)
+        # concatenate expected free energy across future time steps
+        return [nefe] + nefe_rest
