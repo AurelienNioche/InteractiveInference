@@ -33,16 +33,17 @@ class ContinuousActionEnv(object):
     1. state transition probability p(s'|s, a)
     2. emission/ observation probability p(o|s)
     
-    We pre-compute the full conditional emission probability table as before.
-    """
-    self.p_o_given_s = self.emission_probability() # Matrix A
-    """
     With continuous-valued actions, we can nolonger represent (1.) with a 
     single conditional probability table. However, we can generate one table of
     size |S| x |S| for each continuous action value.
     """
     self.d_s = self._signed_state_distances()
     # self.p_s1_given_s_a(a=a) returns matrix p[s, s1] for given a
+    
+    """
+    We pre-compute the full conditional emission probability table as before.
+    """
+    self.p_o_given_s = self.emission_probability() # Matrix A
     
     self.s_t = None # state at current timestep
 
@@ -89,6 +90,8 @@ class ContinuousActionEnv(object):
     # distance from food source
     d = np.minimum(np.abs(s - self.s_food), 
                    np.abs(s - self.s_N - self.s_food))
+    
+    d = np.abs(self.d_s[self.s_food])
     p = np.zeros((self.s_N, self.o_N))
     # exponentially decaying concentration ~ probability of detection
     p[:,1] = self.p_o_max * np.exp(-self.o_decay * d)
