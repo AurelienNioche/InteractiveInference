@@ -64,7 +64,9 @@ class MinimalEnv(object):
     s = np.arange(self.s_N)
     # distance from food source
     d = np.minimum(np.abs(s - self.s_food), 
-                   np.abs(s - self.s_N - self.s_food))
+                   np.minimum(
+                   np.abs(s - self.s_N - self.s_food), 
+                   np.abs(s + self.s_N - self.s_food)))
     p = np.zeros((self.s_N, self.o_N))
     # exponentially decaying concentration ~ probability of detection
     p[:,1] = self.p_o_max * np.exp(-self.o_decay * d)
