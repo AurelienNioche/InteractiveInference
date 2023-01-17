@@ -119,7 +119,7 @@ class Assistant:
 
         actions = np.random.random(10)
 
-        action = actions[np.argmax([self.loss_action(action=a,
+        action = actions[np.argmin([self.loss_action(action=a,
                                                      fish_position=fish_position,
                                                      update_target_positions=update_target_positions,
                                                      screen_size=screen_size)
@@ -180,35 +180,15 @@ class Assistant:
         # Compute extrinsic value
         # --------------------------------------
 
-        # q_rol = torch.softmax(b_rol - b_rol.max(), dim=0)
-        # print(q_rol[goal])
-        # # entropy = - (q_rol * q_rol.log()).sum()
-        # # extrinsic_value = q[goal].log().item()
-        # # print(entropy.shape)
-        # # exit(0)
-        # extrinsic_value = - q_rol[goal].item()
-
-        # fish_x = fish_position[0]
-        # x, first_width, second_width = targets_positions_rol[goal]
-        #
-        # if second_width > first_width:
-        #     center = dist -
-        #
-        #         dist_to_center = (x+first_width)/2 - fish_x
-        #     elif (second_width > 0. and 0. <= fish_x <= second_width):
-        #         dist_to_center = fish_x
-        #
-        #         or (second_width > 0. and 0. <= fish_x <= second_width)
-        #     dist_to_center =
-        # return x <= fish_x <= x + first_width or (second_width > 0. and 0. <= fish_x <= second_width)
-
-        extrinsic_value = 0  # int(fish_is_in)
+        q_rol = torch.softmax(b_rol - b_rol.max(), dim=0)
+        entropy = - (q_rol * q.log()).sum()
+        extrinsic_value = entropy.item()
 
         # --------------------------------------
         # Compute loss
         # --------------------------------------
 
-        loss = - extrinsic_value
+        loss = - extrinsic_value - epistemic_value
 
         print("action", action, "loss", loss)
         return loss
