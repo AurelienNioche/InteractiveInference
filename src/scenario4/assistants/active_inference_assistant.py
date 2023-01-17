@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from scipy import optimize, stats
 
 
 class Assistant:
@@ -22,9 +21,8 @@ class Assistant:
 
         super().__init__()
 
-        self.env = fish_model.env
-        self.n_target = self.env.n_target
         self.fish_model = fish_model
+        self.n_target = fish_model.n_target
 
         self.belief_update_max_epochs = belief_update_max_epochs
         self.belief_update_learning_rate = belief_update_learning_rate
@@ -40,7 +38,7 @@ class Assistant:
         self.decision_rule_parameters = decision_rule_parameters
 
         self.a = None  # Current action
-        self.b = None  # Beliefs over user preferences
+        self.b = torch.ones(self.n_target)  # Beliefs over user preferences
 
     @property
     def belief(self):
@@ -54,18 +52,15 @@ class Assistant:
     def action(self):
         return self.a
 
-    def reset(self):
-        self.b = torch.ones(self.n_target)
-        self.a = torch.zeros(1)
-
-    def revise_belief(self, b, fish_jump, target_positions, fish_initial_position):
+    def revise_belief(self, b, fish_jump, target_positions, fish_initial_position, screen_size):
         """
         Update the belief based on a new observation
         """
         logp_y = torch.from_numpy(self.fish_model.logp_action(
             target_positions=target_positions,
             fish_initial_position=fish_initial_position,
-            fish_jump=fish_jump))
+            fish_jump=fish_jump,
+            screen_size=screen_size))
 
         logq = torch.log_softmax(b - b.max(), dim=0)
         logp_yq = (logq + logp_y)
@@ -96,16 +91,21 @@ class Assistant:
             fish_jump,
             previous_target_positions,
             previous_fish_position,
-            new_fish_position):
+            fish_position,
+            update_target_positions,
+            screen_size):
 
         self.b, _ = self.revise_belief(fish_jump=fish_jump, b=self.b.detach(),
                                        target_positions=previous_target_positions,
-                                       fish_initial_position=previous_fish_position)
+                                       fish_initial_position=previous_fish_position,
+                                       screen_size=screen_size)
 
-        print(torch.softmax(self.b, dim=0))
+        print("Belief over preferences", torch.softmax(self.b, dim=0))
 
         self.a = getattr(self, f'_act_{self.decision_rule}')(
-            fish_position=new_fish_position,
+            fish_position=fish_position,
+            update_target_positions=update_target_positions,
+            screen_size=screen_size,
             **self.decision_rule_parameters)
         return self.a
 
@@ -115,11 +115,15 @@ class Assistant:
     def _act_static(self, *args, **kwargs):
         return 0
 
-    def _act_active_inference(self, fish_position):
+    def _act_active_inference(self, fish_position, update_target_positions, screen_size):
 
-        actions = np.random.random(100)
+        actions = np.random.random(10)
 
-        action = actions[np.argmax([self.loss_action(a, fish_position) for a in actions])]
+        action = actions[np.argmax([self.loss_action(action=a,
+                                                     fish_position=fish_position,
+                                                     update_target_positions=update_target_positions,
+                                                     screen_size=screen_size)
+                                    for a in actions])]
 
         print("DECISION TAKEN", "*" * 100)
         print("ACTION", action)
@@ -130,41 +134,45 @@ class Assistant:
     # def sigmoid(x):
     #     return 1/(1 + np.exp(-x))
 
-    def loss_action(self, action, fish_position):
+    def loss_action(self, action, fish_position, update_target_positions, screen_size):
 
         # action = self.sigmoid(actions[0])
         # fish_position, = args
 
         b = self.b
 
-        # Sample the user goal --------------------------
+        # Sample the user goal ---------------------------------------------------------
+
         q = torch.softmax(b - b.max(), dim=0)
         goal = torch.distributions.Categorical(probs=q).sample().item()
 
-        # -----------------------------------------------
+        # ------------------------------------------------------------------------------
 
         fish_position_rol = fish_position.copy()
         b_rol = b.clone()
 
-        # ---- Update positions based on action ---------------------------------------------
+        # ---- Update positions based on action ----------------------------------------
 
-        targets_positions_rol = self.env.update_target_positions(shift=action)
+        targets_positions_rol = update_target_positions(shift=action, screen_size=screen_size)
 
         # ------------------------------------------------------------------------------
         # Evaluate epistemic value -----------------------------------------------------
         # ------------------------------------------------------------------------------
 
-        # Simulate action based on goal ----------------------------------------
+        # Simulate action based on goal ------------------------------------------------
 
         fish_jump = self.fish_model.act(
-            target_positions=targets_positions_rol, goal=goal,
-            fish_position=fish_position_rol)
+            target_positions=targets_positions_rol,
+            goal=goal,
+            fish_position=fish_position_rol,
+            screen_size=screen_size)
 
         b_rol, kl_div = self.revise_belief(
             b=b_rol,
             fish_initial_position=fish_position_rol,
             fish_jump=fish_jump,
-            target_positions=targets_positions_rol)
+            target_positions=targets_positions_rol,
+            screen_size=screen_size)
 
         epistemic_value = kl_div
 
@@ -173,11 +181,28 @@ class Assistant:
         # --------------------------------------
 
         # q_rol = torch.softmax(b_rol - b_rol.max(), dim=0)
-        # entropy = - (q_rol * q_rol.log()).sum()
-        # extrinsic_value = - entropy.item()
+        # print(q_rol[goal])
+        # # entropy = - (q_rol * q_rol.log()).sum()
+        # # extrinsic_value = q[goal].log().item()
+        # # print(entropy.shape)
+        # # exit(0)
+        # extrinsic_value = - q_rol[goal].item()
 
+        # fish_x = fish_position[0]
+        # x, first_width, second_width = targets_positions_rol[goal]
+        #
+        # if second_width > first_width:
+        #     center = dist -
+        #
+        #         dist_to_center = (x+first_width)/2 - fish_x
+        #     elif (second_width > 0. and 0. <= fish_x <= second_width):
+        #         dist_to_center = fish_x
+        #
+        #         or (second_width > 0. and 0. <= fish_x <= second_width)
+        #     dist_to_center =
+        # return x <= fish_x <= x + first_width or (second_width > 0. and 0. <= fish_x <= second_width)
 
-        extrinsic_value = q[goal].log().item()
+        extrinsic_value = 0  # int(fish_is_in)
 
         # --------------------------------------
         # Compute loss

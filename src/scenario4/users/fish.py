@@ -1,4 +1,3 @@
-import torch
 from typing import Union
 import numpy as np
 from scipy import stats
@@ -6,18 +5,17 @@ from scipy import stats
 
 class Fish:
 
-    def __init__(self, environment, goal: Union[None, int] = 0,
+    def __init__(self,
+                 goal: Union[None, int] = 0,
                  sigma=1.,
                  jump_size=3):
 
-        self.env = environment
         self.goal = goal
         self.sigma = sigma
 
         self.jump_size = jump_size
-        self.position = None
 
-    def act(self, fish_position, target_positions, goal):
+    def act(self, fish_position, target_positions, goal, screen_size):
 
         fish_noise = np.random.normal(size=2) * self.sigma
         fish_mu = Fish.compute_mu(
@@ -27,17 +25,19 @@ class Fish:
             jump_size=self.jump_size)
         unbounded_fish_jump = fish_mu + fish_noise
 
-        new_pos = Fish.update_fish_position(fish_position=fish_position, fish_jump=unbounded_fish_jump,
-                                            window_size=self.env.size())
+        new_pos = Fish.update_fish_position(
+            fish_position=fish_position,
+            fish_jump=unbounded_fish_jump,
+            screen_size=screen_size)
 
         fish_jump = new_pos - fish_position
         return fish_jump
 
     @staticmethod
-    def update_fish_position(fish_position, fish_jump, window_size):
+    def update_fish_position(fish_position, fish_jump, screen_size):
         new_pos = fish_position + fish_jump
         for coord in range(2):
-            new_pos[coord] = np.clip(new_pos[coord], a_min=0., a_max=window_size[coord])
+            new_pos[coord] = np.clip(new_pos[coord], a_min=0., a_max=screen_size[coord])
         return new_pos
 
     @staticmethod
@@ -56,7 +56,7 @@ class Fish:
 
     @staticmethod
     def fish_is_in(fish_position, target_positions, goal):
-        x, first_width, second_width = target_positions[goal]
+        x, first_width, second_width, screen_height = target_positions[goal]
         fish_x = fish_position[0]
         return x <= fish_x <= x + first_width or (second_width > 0. and 0. <= fish_x <= second_width)
 
@@ -85,24 +85,20 @@ class Fish:
         aim = np.array([x_mvt, 0.])
         return aim
 
-    def reset(self, init_position):
-        self.position = init_position
-
 
 class FishModel(Fish):
 
-    def __init__(self, environment, jump_size, sigma):
+    def __init__(self, n_target, jump_size, sigma):
 
-        self.n_target = environment.n_target
-        super().__init__(environment=environment, sigma=sigma,
+        self.n_target = n_target
+        super().__init__(sigma=sigma,
                          jump_size=jump_size,
                          goal=None)
 
-    def logp_action(self, target_positions, fish_jump, fish_initial_position):
+    def logp_action(self, target_positions, fish_jump, fish_initial_position, screen_size):
 
         jump_size = self.jump_size
         sigma = self.sigma
-        window_size = self.env.size()
         n_target = target_positions.shape[0]
         logp = np.zeros(n_target)
         for goal in range(n_target):
@@ -117,7 +113,7 @@ class FishModel(Fish):
             for coord in range(2):
                 mu_abs_coord = mu_abs[coord]
                 final_position_coord = final_position[coord]
-                border = window_size[coord]
+                border = screen_size[coord]
                 dist = stats.norm(mu_abs_coord, sigma)
                 if 0 < final_position_coord < border:
                     logp_goal += np.log(dist.pdf(final_position_coord))

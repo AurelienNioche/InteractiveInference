@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from graphic.environment import Environment
+from graphic.Display import Environment
 
 from users.fish import Fish, FishModel
 from assistants.active_inference_assistant import Assistant
