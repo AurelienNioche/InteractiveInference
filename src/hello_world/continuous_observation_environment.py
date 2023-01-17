@@ -75,7 +75,7 @@ class ContinuousObservationEnv(object):
     mean = self.p_o_max * np.exp(-self.o_decay * d)
     # continuous relaxation: proportion of food detected in finite sample
     sample_size = self.o_sample_size
-    return [beta(a=m*sample_size, b=(1-m)*sample_size) for m in mean]
+    return np.array([beta(a=m*sample_size, b=(1-m)*sample_size) for m in mean])
 
   def reset(self):
     self.s_t = self.s_0
