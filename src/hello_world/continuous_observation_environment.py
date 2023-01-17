@@ -9,7 +9,7 @@ class ContinuousObservationEnv(object):
   exponentially with increasing distance.
   
   state (int): 1 of N discrete locations in 1D space.
-  observation (bool): food detected yes/ no.
+  observation (float): proportion of times food detected in finite sample.
   actions(int): {-1, 1} intention to move left or right.
   """
   def __init__(self, 
@@ -36,10 +36,11 @@ class ContinuousObservationEnv(object):
     2. emission/ observation probability p(o|s)
     although we only need to be able to sample from these distributions to 
     implement the environment, we pre-compute the full conditional probability
-    ables here so agents can access the true dynamics if required.
+    table (1.) and conditional emission random variables (2.) here so agents 
+    can access the true dynamics if required.
     """
-    self.p_o_given_s = self.emission_probability() # Matrix A
     self.p_s1_given_s_a = self.transition_dynamics() # Matrix B
+    self.p_o_given_s = self.emission_probability() # Matrix A
     self.s_t = None # state at current timestep
 
 
@@ -58,10 +59,10 @@ class ContinuousObservationEnv(object):
     return p
 
   def emission_probability(self):
-    """ computes conditional probability table p(o|s). 
+    """ initialises conditional random variables p(o|s). 
     
     Returns:
-    p[s, o] of size (s_N, o_N)
+    p[s] of size (s_N) with one scipy.stats.rv_continuous per state
     """
     s = np.arange(self.s_N)
     # distance from food source
