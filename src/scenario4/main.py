@@ -19,7 +19,7 @@ def run(queue, n_target, screen_size, n_iteration=200):
     init_shift = 0
 
     env = Environment(n_target=n_target)
-    fish = Fish(sigma=20., jump_size=100.)
+    fish = Fish(sigma=3., jump_size=100.)
     assistant = Assistant(
         fish_model=FishModel(n_target=n_target,
                              jump_size=fish.jump_size,
