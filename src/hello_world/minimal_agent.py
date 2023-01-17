@@ -125,14 +125,13 @@ class MinimalAgent:
 
         return theta1
 
-    def _select_action(self, theta_start, 
-                       n_actions=2, # possible actions (assumed to be discrete and indexed 0)
+    def _select_action(self, theta_start,
                        debug=False): # return plans, p of selecting each, and marginal p of actions
         # sampling
         #n_plans = 32
         #plans = np.random.choice(n_actions, size=(n_plans, k), replace=True).tolist()
         # genrate all plans
-        plans = [ list(x) for x in itertools.product(range(n_actions), repeat=self.k)]
+        plans = [ list(x) for x in itertools.product(range(self.env.a_N), repeat=self.k)]
         # evaluate negative expected free energy of all plans
         nefes = []
         for pi in plans:
@@ -149,7 +148,7 @@ class MinimalAgent:
 
         if debug:
             # compute marginal action probabilities
-            p_a = np.zeros(n_actions)
+            p_a = np.zeros(self.env.a_N)
             for p, pi in zip(p_pi, plans):
                 p_a[pi[0]] += p
 
