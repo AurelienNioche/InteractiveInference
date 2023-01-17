@@ -192,9 +192,9 @@ class Assistant:
             # entropy = - (q_rol * q.log()).sum()
             # extrinsic_value = entropy.item()
 
-            extrinsic_value = int(self.fish_model.fish_is_in(
+            extrinsic_value = np.log(int(self.fish_model.fish_is_in(
                 target_positions=targets_positions_rol,
-                fish_position=fish_position_rol, goal=goal))
+                fish_position=fish_position_rol, goal=goal)) + 1e-16)
 
             # fish_x = fish_position[0]
             # x, first_width, second_width, height = targets_positions_rol[goal]
