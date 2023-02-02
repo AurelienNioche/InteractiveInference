@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 
 from scipy.special import softmax
 
+import jupyter_core
+import jupyterlab
+
 
 class Assistant:
 
@@ -76,7 +79,7 @@ class Assistant:
         opt = torch.optim.Adam([b_prime, ], lr=self.belief_update_learning_rate)
 
         # Minimise free energy
-        for step in range(self.belief_update_max_epochs):
+        for epoch in range(self.belief_update_max_epochs):
 
             old_b_prime = b_prime.clone()
             opt.zero_grad()
