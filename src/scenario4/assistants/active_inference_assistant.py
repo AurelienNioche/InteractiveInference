@@ -69,10 +69,10 @@ class Assistant:
             screen_size=screen_size))
 
         logq = torch.log_softmax(b - b.max(), dim=0)
-        logp_yq = (logq + logp_y)
+        logp_yq = (logq + logp_y)  # p(x, z) = p(x | z) p(z) ~ p (x | z) q (z) ["old" q(z) is the approximation for the prior]
 
         # Start by creating a new belief `b_prime` from the previous belief `b`
-        b_prime = torch.nn.Parameter(b.clone())
+        b_prime = torch.nn.Parameter(b.clone())   # ["new" q(z)]
 
         loss = None
 
