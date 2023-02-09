@@ -1,16 +1,16 @@
 import numpy as np
-
 import matplotlib.pyplot as plt
-
 from tqdm import tqdm
+import torch
 
 from baseline_policies.threshold import Threshold
 from baseline_policies.conservative import Conservative
 from baseline_policies.leitner import Leitner
+from baseline_policies.random import Random
 
-#  from environments.continuous_teaching import ContinuousTeaching
-from environments.discontinuous_teaching import DiscontinuousTeaching
-from environments import reward_types
+from active_inference.active_inference_assistant import ActiveTeacher
+
+from environments.teaching import Teaching
 
 # from generate_learners.generate_learners import generate_learners_parameterization
 
@@ -53,20 +53,16 @@ def run(env, policy):
     obs = env.reset()
 
     with tqdm(total=env.n_iter_per_session * env.n_session) as pb:
-        while True:
+
+        done = False
+        while not done:
             action = policy.act(obs)
             obs, reward, done, _ = env.step(action)
             rewards.append(reward)
             actions.append(action)
-            if done:
-                # Simulate exam
-                obs, reward, done, _ = env.step(None)
-                rewards.append(reward)
-                break
-
             pb.update()
 
-    final_n_learned = reward * env.n_item
+    final_n_learned = rewards[-1] * env.n_item
     n_view = len(np.unique(np.asarray(actions)))
     print(f"{policy.__class__.__name__.lower()} | "
           f"final reward {int(final_n_learned)} | "
@@ -121,19 +117,29 @@ def plot(actions, rewards, env, policy):
 
 def main():
 
-    n_items = 200
-    penalty_coeff = 0
-    reward_type = reward_types.EXAM_BASED
+    # n_items = 200
+    # penalty_coeff = 0
+    # reward_type = reward_types.BASE
+    # tau = 0.9
+    # n_session = 6
+    # break_length = 24 * 60 ** 2
+    # time_per_iter = 3
+    # n_iter_session = 100
+    #
+    # forget_rates = np.ones(n_items) * 0.02
+    # repetition_rates = np.ones(n_items) * 0.20
+
+    n_items = 20
     tau = 0.9
     n_session = 6
-    break_length = 24 * 60 ** 2
+    break_length = 10
     time_per_iter = 3
-    n_iter_session = 100
+    n_iter_session = 10
 
-    forget_rates = np.ones(n_items) * 0.02
+    forget_rates = np.ones(n_items) * 0.005
     repetition_rates = np.ones(n_items) * 0.20
 
-    env = DiscontinuousTeaching(
+    env = Teaching(
         tau=tau,
         n_item=n_items,
         n_session=n_session,
@@ -141,13 +147,29 @@ def main():
         time_per_iter=time_per_iter,
         n_iter_per_session=n_iter_session,
         initial_forget_rates=forget_rates,
-        repetition_rates=repetition_rates,
-        delta_coeffs=np.array([3, 20]),
-        penalty_coeff=penalty_coeff,
-        reward_type=reward_type)
+        repetition_rates=repetition_rates)
+
+    policy = Conservative(env=env)
+    env.reset()
+    actions, rewards = run(env=env, policy=policy)
+    plot(actions=actions, rewards=rewards, env=env, policy=policy)
+
+
+    prior = torch.zeros((env.t_max, env.n_item))
+    for t in range(env.t_max):
+        prior[t] = torch.from_numpy(np.eye(env.n_item)[actions[t]])
+
+    policy = ActiveTeacher(env=env, prior=prior)
+    actions, rewards = run(env=env, policy=policy)
+    plot(actions=actions, rewards=rewards, env=env, policy=policy)
 
     policy = Leitner(env=env, delay_factor=2, delay_min=3)
+    env.reset()
+    actions, rewards = run(env=env, policy=policy)
+    plot(actions=actions, rewards=rewards, env=env, policy=policy)
 
+    policy = Random(env=env)
+    env.reset()
     actions, rewards = run(env=env, policy=policy)
     plot(actions=actions, rewards=rewards, env=env, policy=policy)
 

@@ -46,10 +46,10 @@ class Conservative:
         rep = n_pres[view] - 1.
         delta = delta[view]
 
-        init_forget = initial_forget_rates[np.nonzero(view)]
-        rep_effect = repetition_rates[np.nonzero(view)]
+        init_fr = initial_forget_rates[np.nonzero(view)]
+        rep_eff = repetition_rates[np.nonzero(view)]
 
-        forget_rate = init_forget * (1 - rep_effect) ** rep
+        forget_rate = init_fr * (1 - rep_eff) ** rep
         logp_recall = - forget_rate * delta
         return logp_recall
 
@@ -88,10 +88,10 @@ class Conservative:
         return n_pres, delta, current_iter, current_ss, done
 
     def _get_env_delta(self):
-        return self.env.state[:, 0]
+        return self.env.delta
 
     def _get_env_n_pres(self):
-        return self.env.state[:, 1]
+        return self.env.n_pres
 
     def act(self, obs):
 

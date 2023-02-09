@@ -89,18 +89,6 @@ class Leitner:
         self._last_time_reply = self._now
         self._now += time_elapsed
 
-    def _get_env_delta(self):
-        return self._env.state[:, 0]
-
-    def _get_env_n_pres(self):
-        return self._env.state[:, 1]
-
-    def _get_env_init_forget_rate(self, item):
-        return self._env.initial_forget_rates[item]
-
-    def _get_env_rep_effect(self, item):
-        return self._env.repetition_rates[item]
-
     def act(self, obs):
 
         """
@@ -113,15 +101,15 @@ class Leitner:
             last_time_reply=self._last_time_reply,
             idx_last_q=self._idx_last_q)
 
-        delta_current = self._get_env_delta()
-        n_pres_current = self._get_env_n_pres()
+        delta_current = self._env.delta
+        n_pres_current = self._env.n_pres
 
         if n_pres_current[item] == 0:
             success = False
 
         else:
-            init_forget = self._get_env_init_forget_rate(item)
-            rep_effect = self._get_env_rep_effect(item)
+            init_forget = self._env.initial_forget_rates[item]
+            rep_effect = self._env.repetition_rates[item]
 
             rep = n_pres_current[item] - 1
             delta = delta_current[item]
