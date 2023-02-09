@@ -22,7 +22,7 @@ class ActiveTeacher:
         self.env = env
 
         Param = namedtuple("Param", ["learning_rate", "max_epochs", "n_sample"],
-                           defaults=[0.1, 400, 50])
+                           defaults=[0.2, 400, 50])
         if param_kwargs is None:
             param_kwargs = {}
         self.param = Param(**param_kwargs)
@@ -45,7 +45,7 @@ class ActiveTeacher:
         if self.prior is None:
             logits = torch.ones((t_max, n_item))
         else:
-            logits = torch.logit(torch.clamp(self.prior, 1e-1, 1 - 1e-1))
+            logits = torch.logit(torch.clamp(self.prior, 1e-3, 1 - 1e-3))
 
         b = torch.nn.Parameter(logits)
 
@@ -105,13 +105,17 @@ class ActiveTeacher:
                     hist_n_learnt.append(n_learnt.item())
 
                 loss /= self.param.n_sample
+                # ---------------------- #
 
                 loss += log_ent
 
-                # exit(0)
+                # --------------------- #
 
                 loss.backward()
                 opt.step()
+
+                if epoch == 0 and n_learnt == 0:
+                    raise Exception("Something is going wrong here")
 
                 pbar.update()
                 pbar.set_postfix({f"loss": f"{loss.item():.2f}, n_learnt={np.mean(hist_n_learnt)}"})

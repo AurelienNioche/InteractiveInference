@@ -117,27 +117,25 @@ def plot(actions, rewards, env, policy):
 
 def main():
 
-    # n_items = 200
-    # penalty_coeff = 0
-    # reward_type = reward_types.BASE
-    # tau = 0.9
-    # n_session = 6
-    # break_length = 24 * 60 ** 2
-    # time_per_iter = 3
-    # n_iter_session = 100
-    #
-    # forget_rates = np.ones(n_items) * 0.02
-    # repetition_rates = np.ones(n_items) * 0.20
-
-    n_items = 20
+    n_items = 200
     tau = 0.9
     n_session = 6
-    break_length = 10
+    break_length = 24 * 60 ** 2
     time_per_iter = 3
-    n_iter_session = 10
+    n_iter_session = 100
 
-    forget_rates = np.ones(n_items) * 0.005
+    forget_rates = np.ones(n_items) * 0.02
     repetition_rates = np.ones(n_items) * 0.20
+
+    # n_items = 20
+    # tau = 0.9
+    # n_session = 6
+    # break_length = 10
+    # time_per_iter = 3
+    # n_iter_session = 10
+    #
+    # forget_rates = np.ones(n_items) * 0.005
+    # repetition_rates = np.ones(n_items) * 0.20
 
     env = Teaching(
         tau=tau,
@@ -153,7 +151,6 @@ def main():
     env.reset()
     actions, rewards = run(env=env, policy=policy)
     plot(actions=actions, rewards=rewards, env=env, policy=policy)
-
 
     prior = torch.zeros((env.t_max, env.n_item))
     for t in range(env.t_max):
