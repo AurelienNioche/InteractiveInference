@@ -87,24 +87,15 @@ class Conservative:
 
         return n_pres, delta, current_iter, current_ss, done
 
-    def _get_env_delta(self):
-        return self.env.delta
-
-    def _get_env_n_pres(self):
-        return self.env.n_pres
-
-    def act(self, obs):
-
-        initial_forget_rates = self.env.initial_forget_rates
-        repetition_rates = self.env.repetition_rates
+    def find_first_feasible_item(self, initial_forget_rates, repetition_rates):
 
         current_iter = self.env.current_iter
         current_ss = self.env.current_ss
 
         n_item = self.env.n_item
 
-        delta_current = self._get_env_delta()
-        n_pres_current = self._get_env_n_pres()
+        delta_current = self.env.delta
+        n_pres_current = self.env.n_pres
 
         # Reduce the number of item to learn
         # until every item presented is learnable
@@ -114,7 +105,7 @@ class Conservative:
             delta = delta_current[:n_item]
 
             first_item = self._threshold_select(
-                n_pres=n_pres,  delta=delta,
+                n_pres=n_pres, delta=delta,
                 initial_forget_rates=initial_forget_rates,
                 repetition_rates=repetition_rates,
                 n_item=n_item)
@@ -134,7 +125,6 @@ class Conservative:
 
             # Do rollouts...
             while not done:
-
                 item = self._threshold_select(
                     n_pres=n_pres, delta=delta,
                     initial_forget_rates=initial_forget_rates,
@@ -159,3 +149,11 @@ class Conservative:
                 return 0
 
         return first_item
+
+    def act(self, obs):
+
+        initial_forget_rates = self.env.initial_forget_rates
+        repetition_rates = self.env.repetition_rates
+
+        return self.find_first_feasible_item(initial_forget_rates=initial_forget_rates,
+                                             repetition_rates=repetition_rates)

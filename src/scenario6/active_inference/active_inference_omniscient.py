@@ -153,18 +153,20 @@ class ActiveTeacher:
     ):
         # done = False
 
+        env = self.env
+
         # update progression within session, and between session
         # - which iteration the learner is at?
         # - which session the learner is at?
         current_iter += 1
-        if current_iter >= self.env.n_iter_per_session:
+        if current_iter >= env.n_iter_per_session:
             current_iter = 0
             current_ss += 1
-            time_elapsed = self.env.break_length
+            time_elapsed = env.break_length
         else:
-            time_elapsed = self.env.time_per_iter
+            time_elapsed = env.time_per_iter
 
-        if current_ss >= self.env.n_session:
+        if current_ss >= env.n_session:
             pass
             # done = True
 
