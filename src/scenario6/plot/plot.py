@@ -29,8 +29,8 @@ def plot(traces, env, policy):
         fig, (ax1, ax2) = plt.subplots(nrows=2)
         true_fr = np.unique(env.initial_forget_rates)
         true_rep = np.unique(env.repetition_rates)
-        inf_fr = [inf_param[t][0][0] for t in range(len(inf_param))]
-        inf_rep = [inf_param[t][1][0] for t in range(len(inf_param))]
+        inf_fr = [inf_param[t][:, 0] for t in range(len(inf_param))]
+        inf_rep = [inf_param[t][:, 1] for t in range(len(inf_param))]
 
         ax1.plot(inf_fr)
         ax1.axhline(y=true_fr, ls="--", color="black", alpha=0.3)

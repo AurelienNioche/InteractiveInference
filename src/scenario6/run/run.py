@@ -16,8 +16,8 @@ def run(env, policy):
         done = False
         while not done:
             action = policy.act(obs)
-            if hasattr(policy, "inferred_parameters"):
-                inferred_parameters.append(policy.inferred_parameters.copy())
+            if hasattr(policy, "psy"):
+                inferred_parameters.append(policy.psy.est_param.copy())
             obs, reward, done, _ = env.step(action)
             rewards.append(reward)
             actions.append(action)

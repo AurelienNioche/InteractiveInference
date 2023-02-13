@@ -20,6 +20,8 @@ class PsyGrid:
                  grid_methods=('geo', 'lin'),
                  true_param=None):
 
+        self.env = env
+
         self.is_item_specific = len(np.unique(env.initial_forget_rates)) > 1
         self.n_item = env.n_item
 
@@ -40,14 +42,13 @@ class PsyGrid:
 
             if self.is_item_specific:
                 log_post = np.zeros((self.n_item, n_param_set))
-                log_post[:] = lp
-
-                est_param = np.zeros((self.n_item, n_param))
-                est_param[:] = ep
-
             else:
-                log_post = lp
-                est_param = ep
+                log_post = np.zeros(n_param_set)
+
+            log_post[:] = lp
+
+            est_param = np.zeros((self.n_item, n_param))
+            est_param[:] = ep
 
             self.log_post = log_post
             self.est_param = est_param
@@ -56,13 +57,11 @@ class PsyGrid:
 
             self.check_bounds(bounds, env)
 
-            self.inferred_parameters = None
-
     def check_bounds(self, bounds, env):
 
         for item in range(self.n_item):
-            assert bounds[0, 0] <= env.initial_forget_rates[item] < bounds[0, 1]
-            assert bounds[1, 0] <= env.repetition_rates[item] < bounds[1, 1]
+            assert bounds[0, 0] <= env.initial_forget_rates[item] <= bounds[0, 1]
+            assert bounds[1, 0] <= env.repetition_rates[item] <= bounds[1, 1]
 
     @staticmethod
     def cartesian_product(*arrays):
@@ -92,11 +91,22 @@ class PsyGrid:
 
         return grid
 
-    def update(self, item, success, delta, n_pres):
+    def update(self, item, success, delta, n_pres, log_post=None):
 
-        if self.omniscient:
-            return
-        elif n_pres[item] == 0:
+        # If it is only for rollout, then log_post should NOT be none
+        is_only_for_rollout = log_post is not None
+
+        if is_only_for_rollout:
+            lp = log_post
+        else:
+            lp = self.log_post
+
+        if self.is_item_specific:
+            lp_item = lp[item]
+        else:
+            lp_item = lp
+
+        if self.omniscient or n_pres[item] == 0:
             return
 
         log_lik = self.log_lik_grid(
@@ -106,46 +116,53 @@ class PsyGrid:
             delta=delta,
             n_pres=n_pres)
 
-        if self.is_item_specific:
-            lp = self.log_post[item]
+        lp_item += log_lik
+        lp_item -= logsumexp(lp_item)
+
+        if not is_only_for_rollout:
+            est_param_item = np.dot(np.exp(lp_item), self.grid_param)
         else:
-            lp = self.log_post
-
-        lp += log_lik
-        lp -= logsumexp(lp)
-        est_param = np.dot(np.exp(lp), self.grid_param)
+            est_param_item = None
 
         if self.is_item_specific:
-            self.log_post[item] = lp
-            self.est_param[item] = est_param
+
+            # -------------------------------------------------------------------------
+
+            lp[item] = lp_item
+
+            # --------------------------------------------------------------------------
+
+            # Update posterior for unseen items -------
+            # Prior over unseen items is expectation when considering seen items
+
+            is_rep = n_pres > 1
+            is_rep[item] = True  # n_pres for item just presented not updated yet
+            not_is_rep = np.invert(is_rep)
+            n_item_rep = np.sum(is_rep)
+
+            # All items have been presented more than once
+            none_or_all_items_repeated = n_item_rep in (self.n_item, 0)
+
+            if not none_or_all_items_repeated:
+                lp_is_rep = lp[is_rep]
+                lp_not_is_rep = logsumexp(lp_is_rep, axis=0) - np.log(n_item_rep)  # Average
+                lp[not_is_rep] = lp_not_is_rep
+
+                if not is_only_for_rollout:
+                    self.est_param[not_is_rep] = np.dot(np.exp(lp_not_is_rep), self.grid_param)
+
+            # -----------------------------------------------------------------------------------
+
+            if not is_only_for_rollout:
+                self.log_post[:] = lp
+                self.est_param[item] = est_param_item
+
         else:
-            self.log_post = lp
-            self.est_param = est_param
+            if not is_only_for_rollout:
+                self.est_param[:] = est_param_item
+                self.log_post = lp
 
-    def inferred_learner_param(self, n_pres):
-
-        if self.omniscient:
-            return self.est_param.T
-        elif not self.is_item_specific:
-            est_param = np.zeros((self.n_item, self.n_param))
-            for i in range(self.n_param):
-                est_param[:, i] = self.est_param[i]
-            return est_param.T  # Same shape as for item specific
-
-        # Prior over unseen items is expectation when considering seen items
-
-        is_rep = n_pres > 1
-        not_is_rep = np.invert(is_rep)
-
-        if np.sum(is_rep) == self.n_item or np.sum(not_is_rep) == self.n_item:
-            return self.est_param.T
-
-        lp_to_consider = self.log_post[is_rep]
-        lp = logsumexp(lp_to_consider, axis=0) - np.log(lp_to_consider.shape[0])
-
-        self.log_post[not_is_rep] = lp
-        self.est_param[not_is_rep] = np.dot(np.exp(lp), self.grid_param)
-        return self.est_param.T
+        return lp
 
     @staticmethod
     def log_lik_grid(
@@ -155,19 +172,26 @@ class PsyGrid:
             grid_param,
             success):
 
-        fr = grid_param[:, 0] \
-             * (1 - grid_param[:, 1]) ** (n_pres[item] - 1)
+        fr = grid_param[:, 0] * (1 - grid_param[:, 1]) ** (n_pres[item] - 1)
         p_success = np.exp(- fr * delta[item])
         p = p_success if success else 1-p_success
         log_lik = np.log(p + EPS)
         return log_lik
 
+    def generate_response(self, item):
+        env = self.env
+        init_forget = env.initial_forget_rates[item]
+        rep_effect = env.repetition_rates[item]
+        rep = env.n_pres[item] - 1
+        delta = env.delta[item]
+
+        forget_rate = init_forget * (1 - rep_effect) ** rep
+        p = np.exp(- forget_rate * delta)
+        success = p > np.random.random()
+        return success
+
 
 class ConservativeNotOmniscient(Conservative):
-
-    """
-    Works only with the discontinuous environment
-    """
 
     def __init__(self, env, *args, **kwargs):
         super().__init__(env=env)
@@ -176,24 +200,13 @@ class ConservativeNotOmniscient(Conservative):
     def act(self, obs):
 
         env = self.env
-        param = self.psy.inferred_learner_param(n_pres=env.n_pres)
-        item = self.find_first_feasible_item(initial_forget_rates=param[0], repetition_rates=param[1])
-
-        self.inferred_parameters = param
+        item = self.find_first_feasible_item(
+            initial_forget_rates=self.psy.est_param[:, 0],
+            repetition_rates=self.psy.est_param[:, 1])
 
         # Simulate answer and update psychologist's beliefs ---
         if env.n_pres[item]:
-            init_forget = env.initial_forget_rates[item]
-            rep_effect = env.repetition_rates[item]
-
-            rep = env.n_pres[item] - 1
-            delta = env.delta[item]
-
-            forget_rate = init_forget * \
-                (1 - rep_effect) ** rep
-            p = np.exp(- forget_rate * delta)
-            success = p > np.random.random()
-
+            success = self.psy.generate_response(item)
             self.psy.update(item=item, success=success, delta=env.delta, n_pres=env.n_pres)
 
         return item

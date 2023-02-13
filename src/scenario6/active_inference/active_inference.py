@@ -6,13 +6,6 @@ import numpy as np
 
 class ActiveTeacher:
 
-    """
-    x: target positions
-    psi: latent state; preferences of the user for each target
-    actions: moving one target closer, and moving away all the other targets
-    b_star: preferences of the assistant; preferences relate to the distance to the preferred target
-    """
-
     def __init__(self,
                  env,
                  prior=None,
@@ -59,13 +52,13 @@ class ActiveTeacher:
 
                 loss = 0
 
-                # Compute entropy
+                # Compute entropy ----------------------------------------------
                 ent = 0
                 for t in range(t_max):
                     ent += torch.distributions.Categorical(logits=b[t]).entropy().exp() / n_item
                 ent /= t_max
                 log_ent = torch.log(ent)
-                # ----------------
+                # --------------------------------------------------------------------------
 
                 hist_n_learnt = []
                 dist = torch.distributions.Categorical(logits=b)

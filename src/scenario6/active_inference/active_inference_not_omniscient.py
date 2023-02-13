@@ -2,27 +2,27 @@ import torch
 from collections import namedtuple
 from tqdm import tqdm
 import numpy as np
+import scipy
+
+from baseline_policies.conservative_not_omniscient import PsyGrid
+
+EPS = np.finfo(np.float32).eps
 
 
-class ActiveTeacher:
-
-    """
-    x: target positions
-    psi: latent state; preferences of the user for each target
-    actions: moving one target closer, and moving away all the other targets
-    b_star: preferences of the assistant; preferences relate to the distance to the preferred target
-    """
+class ActiveNotOmniscient:
 
     def __init__(self,
                  env,
                  prior=None,
-                 param_kwargs=None):
+                 param_kwargs=None,
+                 *args, **kwargs):
         super().__init__()
 
         self.env = env
+        self.psy = PsyGrid(env=env, *args, **kwargs)
 
         Param = namedtuple("Param", ["learning_rate", "max_epochs", "n_sample"],
-                           defaults=[0.2, 400, 50])
+                           defaults=[0.2, 400, 5])
         if param_kwargs is None:
             param_kwargs = {}
         self.param = Param(**param_kwargs)
@@ -32,18 +32,15 @@ class ActiveTeacher:
     def train(self):
 
         env = self.env
-        t_max, n_item = env.t_max, env.n_item
-        init_forget_rates = torch.from_numpy(env.initial_forget_rates)
-        rep_rates = torch.from_numpy(env.repetition_rates)
-        init_forget_rates.requires_grad = True
-        rep_rates.requires_grad = True
-        threshold = np.exp(self.env.log_tau)
+        t, t_max, n_item = env.t, env.t_max, env.n_item
+
+        t_remaining = t_max - t
 
         n_epochs = self.param.max_epochs
         lr = self.param.learning_rate
 
         if self.prior is None:
-            logits = torch.ones((t_max, n_item))
+            logits = torch.ones((t_remaining, n_item))
         else:
             logits = torch.logit(torch.clamp(self.prior, 1e-3, 1 - 1e-3))
 
@@ -51,80 +48,75 @@ class ActiveTeacher:
 
         opt = torch.optim.Adam([b, ], lr=lr)
 
-        with tqdm(total=n_epochs, leave=True, position=0) as pbar:
+        with tqdm(total=n_epochs, leave=False, position=1) as pbar:
             for epoch in range(n_epochs):
 
                 old_b = b.clone()
                 opt.zero_grad()
 
                 loss = 0
-
-                # Compute entropy
-                ent = 0
-                for t in range(t_max):
-                    ent += torch.distributions.Categorical(logits=b[t]).entropy().exp() / n_item
-                ent /= t_max
-                log_ent = torch.log(ent)
-
-                # ----------------
-
-                hist_n_learnt = []
+                ig = 0
                 dist = torch.distributions.Categorical(logits=b)
 
                 for _ in range(self.param.n_sample):
-                    env.reset()
 
-                    n_pres = torch.zeros(env.n_item)
-                    delta = torch.zeros(env.n_item)
+                    n_pres = env.n_pres.copy()
+                    delta = env.delta.copy()
 
-                    current_iter, current_ss = 0, 0
+                    current_iter, current_ss = env.current_iter, env.current_ss
+
+                    pre = self.psy.log_post.copy()
 
                     smp = dist.sample()
 
-                    for t in range(t_max):
+                    for idx_t_sim, t_sim in enumerate(range(t_remaining)):
 
-                        item = smp[t]
+                        item = smp[idx_t_sim]
+
+                        if self.psy.is_item_specific:
+                            pre_item = pre[item]
+                        else:
+                            pre_item = pre
+                        init_fr, rep_effect = np.dot(np.exp(pre_item), self.psy.grid_param)
+                        p_success = np.exp(-init_fr*(1-rep_effect)**(n_pres[item]-1)*delta[item])
+                        success = p_success > np.random.random()
+                        if success:
+                            p = p_success
+                        else:
+                            p = 1 - p_success
+
+                        log_lik = np.log(p + EPS)
+
+                        post_item = pre_item + log_lik
+                        post_item -= scipy.special.logsumexp(post_item)
 
                         # Compute information gain / relative entropy
-                        scipy.stats.entropy(post, pre)
+                        ig += scipy.stats.entropy(post_item, pre_item)
 
                         # Update
                         n_pres, delta, current_iter, current_ss = self.step(
                             n_pres=n_pres, delta=delta,
                             current_iter=current_iter, current_ss=current_ss, item=item)
-                        # traj.append(item.item())
-                        # logp_traj += dist.log_prob(item)
-
-                    log_p_seen = self._cp_log_p_seen(
-                        n_pres=n_pres, delta=delta,
-                        initial_forget_rates=init_forget_rates,
-                        repetition_rates=rep_rates)
-
-                    learning_reward = torch.mean(torch.sigmoid(3e2 * (log_p_seen.exp() - threshold)))
+                        if self.psy.is_item_specific:
+                            pre[item] = post_item
+                            # Implement tweak for items not seen
+                        else:
+                            pre = post_item
 
                     logp_traj = dist.log_prob(smp).sum()
 
-                    loss -= torch.log(learning_reward+1e-16) + logp_traj
+                    loss -= logp_traj
 
-                    # Just for display/debug
-                    n_learnt = torch.sum(log_p_seen > self.env.log_tau)
-                    hist_n_learnt.append(n_learnt.item())
-
-                loss /= self.param.n_sample
-                # ---------------------- #
-
-                loss += log_ent
+                ig /= (self.param.n_sample*t_remaining)
+                loss -= ig
 
                 # --------------------- #
 
                 loss.backward()
                 opt.step()
 
-                if epoch == 0 and n_learnt == 0:
-                    raise Exception("Something is going wrong here")
-
                 pbar.update()
-                pbar.set_postfix({f"loss": f"{loss.item():.2f}, n_learnt={np.mean(hist_n_learnt)}"})
+                pbar.set_postfix({f"loss": f"{loss.item():.2f}"})
 
                 # if torch.isclose(old_b, b).all():
                 #     break
@@ -187,7 +179,17 @@ class ActiveTeacher:
 
     def act(self, obs):
 
-        if self.policy is None:
-            self.train()
+        env = self.env
 
-        return self.policy.sample()[self.env.t]
+        if not np.sum(env.n_pres):
+            return 0
+
+        self.train()
+        item = self.policy.sample()[0]
+
+        # Simulate answer and update psychologist's beliefs ---
+        if env.n_pres[item]:
+            success = self.psy.generate_response(item=item)
+            self.psy.update(item=item, success=success, delta=env.delta, n_pres=env.n_pres)
+
+        return item

@@ -3,10 +3,6 @@ import numpy as np
 
 class Conservative:
 
-    """
-    Works only with the discontinuous environment
-    """
-
     def __init__(self, env):
         self.env = env
 
@@ -91,11 +87,10 @@ class Conservative:
 
         current_iter = self.env.current_iter
         current_ss = self.env.current_ss
-
-        n_item = self.env.n_item
-
         delta_current = self.env.delta
         n_pres_current = self.env.n_pres
+
+        n_item = self.env.n_item
 
         # Reduce the number of item to learn
         # until every item presented is learnable

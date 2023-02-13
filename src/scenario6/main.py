@@ -6,7 +6,7 @@ from run.run import run
 
 from baseline_policies.conservative import Conservative
 
-from active_inference.active_inference_omniscient import ActiveTeacher
+from active_inference.active_inference import ActiveTeacher
 
 from environments.teaching import Teaching
 
