@@ -5,23 +5,25 @@ from plot.plot import plot
 from run.run import run
 
 from baseline_policies.conservative import Conservative
+from baseline_policies.leitner import Leitner
+from baseline_policies.random import Random
 
-from active_inference.active_inference import ActiveTeacher
+from active_inference.active_inference_pragmatic_only import ActivePragmaticOnly
 
 from environments.teaching import Teaching
 
 
 def main():
 
-    n_item = 200
+    n_item = 10
     tau = 0.9
-    n_session = 6
-    break_length = 24 * 60 ** 2
+    n_session = 20
     time_per_iter = 3
-    n_iter_session = 100
+    break_length = time_per_iter*40 # 24 * 60 ** 2
+    n_iter_session = 1
 
-    forget_rates = np.ones(n_item) * 0.02
-    repetition_rates = np.ones(n_item) * 0.20
+    forget_rates = np.ones(n_item) * 0.04
+    repetition_rates = np.ones(n_item) * 0.80
 
     # n_items = 20
     # tau = 0.9
@@ -48,13 +50,18 @@ def main():
     traces = run(env=env, policy=policy)
     plot(traces, env=env, policy=policy)
 
-    prior = torch.zeros((env.t_max, env.n_item))
-    for t in range(env.t_max):
-        prior[t] = torch.from_numpy(np.eye(env.n_item)[traces.actions[t]])
-
-    policy = ActiveTeacher(env=env, prior=prior)
+    policy = Leitner(env=env)
     traces = run(env=env, policy=policy)
     plot(traces, env=env, policy=policy)
+
+    policy = Random(env=env)
+    traces = run(env=env, policy=policy)
+    plot(traces, env=env, policy=policy)
+
+    policy = ActivePragmaticOnly(env=env)
+    traces = run(env=env, policy=policy)
+    plot(traces, env=env, policy=policy)
+
 
 
 if __name__ == "__main__":

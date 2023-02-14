@@ -9,7 +9,7 @@ from baseline_policies.conservative_not_omniscient import PsyGrid
 EPS = np.finfo(np.float32).eps
 
 
-class ActiveNotOmniscient:
+class ActiveEpistemicOnly:
 
     def __init__(self,
                  env,
@@ -91,7 +91,8 @@ class ActiveNotOmniscient:
                         post_item -= scipy.special.logsumexp(post_item)
 
                         # Compute information gain / relative entropy
-                        ig += scipy.stats.entropy(post_item, pre_item)
+
+                        ig += scipy.stats.entropy(np.exp(post_item), np.exp(pre_item))
 
                         # Update
                         n_pres, delta, current_iter, current_ss = self.step(

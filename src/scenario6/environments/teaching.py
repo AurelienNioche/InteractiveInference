@@ -19,6 +19,7 @@ class Teaching:
         super().__init__()
 
         self.n_item = n_item
+        self.tau = tau
         self.log_tau = np.log(tau)
         self.initial_forget_rates = initial_forget_rates
         self.repetition_rates = repetition_rates
