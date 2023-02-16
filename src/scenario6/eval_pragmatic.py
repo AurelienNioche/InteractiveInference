@@ -1,31 +1,25 @@
 import numpy as np
-import torch
 
 from run.run import run
 from plot.plot import plot
 
 from baseline_policies.conservative import Conservative
-from baseline_policies.conservative_not_omniscient import ConservativeNotOmniscient
-from baseline_policies.leitner import Leitner
-from baseline_policies.random import Random
-
-from active_inference.active_inference_pragmatic_only import ActivePragmaticOnly
-from active_inference.active_inference_epistemic_only import ActiveEpistemicOnly
+from active_inference.active_inference_pragmatic_only import ActivePragmatic
 
 from environments.teaching import Teaching
 
 
 def main():
 
-    # n_item = 20
-    # tau = 0.9
-    # n_session = 3
-    # break_length = 24 * 60 ** 2
-    # time_per_iter = 3
-    # n_iter_session = 20
-    #
-    # forget_rates = np.ones(n_item) * 1e-5
-    # repetition_rates = np.ones(n_item) * 0.20
+    n_item = 20
+    tau = 0.9
+    n_session = 3
+    break_length = 24 * 60 ** 2     # 24 * 60 ** 2
+    time_per_iter = 3               # 3
+    n_iter_session = 10              # 20
+
+    forget_rates = np.ones(n_item) * 0.01
+    repetition_rates = np.ones(n_item) * 0.20
 
     env = Teaching(
         tau=tau,
@@ -37,29 +31,17 @@ def main():
         initial_forget_rates=forget_rates,
         repetition_rates=repetition_rates)
 
-    # policy = ConservativeNotOmniscient(
-    #     env=env,
-    #     bounds=np.asarray([[0.01, 0.01], [0.0, 0.5]]),
-    #     grid_methods=('lin', 'lin'),
-    #     grid_size=100)
-    # env.reset()
-    # traces = run(env=env, policy=policy)
-    # plot(traces, env=env, policy=policy)
+    print(f"N item {n_item} | T_max {env.t_max}")
 
-    policy = ActiveEpistemicOnly(
-        env=env,
-        bounds=np.asarray([[0.01, 0.01], [0.0, 0.5]]),
-        grid_methods=('lin', 'lin'),
-        param_kwargs={"learning_rate": 0.5, "max_epochs": 100, "n_sample": 5},
-        grid_size=100)
+    policy = Conservative(env=env)
     env.reset()
     traces = run(env=env, policy=policy)
     plot(traces, env=env, policy=policy)
 
-    # policy = Conservative(env=env)
-    # env.reset()
-    # traces = run(env=env, policy=policy)
-    # plot(traces, env=env, policy=policy)
+    policy = ActivePragmatic(env=env)
+    env.reset()
+    traces = run(env=env, policy=policy)
+    plot(traces, env=env, policy=policy)
 
     # policy = ActivePragmaticOnly(
     #     env=env,

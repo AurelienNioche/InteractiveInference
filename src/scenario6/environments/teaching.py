@@ -76,6 +76,41 @@ class Teaching:
         info = {}
         return None, reward, done, info
 
+    def compute_time_elapsed(self, current_iter, current_ss):
+
+        current_iter += 1
+        if current_iter >= self.n_iter_per_session:
+            current_iter = 0
+            current_ss += 1
+            time_elapsed = self.break_length
+        else:
+            time_elapsed = self.time_per_iter
+        return time_elapsed, current_iter, current_ss
+
+    def update_state(
+            self,
+            item,
+            n_pres,
+            delta,
+            current_iter,
+            current_ss,
+    ):
+        time_elapsed, current_iter, current_ss = \
+            self.compute_time_elapsed(current_iter, current_ss)
+
+        done = False
+        if current_ss >= self.n_session:
+            done = True
+
+        # increase delta
+        delta += time_elapsed
+        # ...specific for item shown
+        delta[item] = time_elapsed
+        # increment number of presentation
+        n_pres[item] += 1
+
+        return n_pres, delta, current_iter, current_ss, done
+
     @property
     def t(self):
         return (self.current_ss*self.n_iter_per_session) + self.current_iter

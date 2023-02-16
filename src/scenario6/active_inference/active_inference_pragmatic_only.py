@@ -2,219 +2,146 @@ import torch
 from collections import namedtuple
 from tqdm import tqdm
 import numpy as np
+
+from torch import distributions as dist
+from scipy.special import logsumexp, expit
+from scipy.stats import entropy
 from copy import deepcopy
 
 from baseline_policies.conservative import Conservative
 from run import run
 
 
-class ActivePragmaticOnly:
+class ActivePragmatic:
 
     def __init__(self,
                  env,
-                 prior=None,
                  param_kwargs=None):
         super().__init__()
 
         self.env = env
 
-        Param = namedtuple("Param", ["learning_rate", "max_epochs", "n_sample", "inv_temp",
+        Param = namedtuple("Param", ["learning_rate", "max_epochs",
+                                     "n_sample", "inv_temp",
                                      "optimizer", "optimizer_kwargs"],
                            defaults=[0.7, 10000, 200, 1.0, "RMSprop",
                                      dict()])
         if param_kwargs is None:
             param_kwargs = {}
         self.param = Param(**param_kwargs)
-        self.policy = None
-        self.prior = prior
 
-    def build_prior(self):
-
-        actions = []
-
-        env = deepcopy(self.env)
-
-        obs = env.reset()
-
-        policy = Conservative(env=env)
-
-        with tqdm(total=env.t_max, position=0, desc="Building prior") as pb:
-            done = False
-            while not done:
-                action = policy.act(obs)
-                obs, reward, done, _ = env.step(action)
-                actions.append(action)
-                pb.update()
-
-        p = torch.zeros((env.t_max, env.n_item))
-        for t in range(env.t_max):
-            p[t] = torch.from_numpy(np.eye(env.n_item)[actions[t]])
-
-        glitch = 0.4  # 1e-1
-        logits = torch.logit(torch.clamp(p, glitch/(env.n_item-1), 1 - glitch))
-        self.prior = logits
-
-        # logits = torch.ones((t_max, n_item))
+    # def build_prior(self):
+    #
+    #     actions = []
+    #
+    #     env = deepcopy(self.env)
+    #
+    #     obs = env.reset()
+    #
+    #     policy = Conservative(env=env)
+    #
+    #     with tqdm(total=env.t_max, position=0, desc="Building prior") as pb:
+    #         done = False
+    #         while not done:
+    #             action = policy.act(obs)
+    #             obs, reward, done, _ = env.step(action)
+    #             actions.append(action)
+    #             pb.update()
+    #
+    #     p = torch.zeros((env.t_max, env.n_item))
+    #     for t in range(env.t_max):
+    #         p[t] = torch.from_numpy(np.eye(env.n_item)[actions[t]])
+    #
+    #     glitch = 0.4  # 1e-1
+    #     logits = torch.logit(torch.clamp(p, glitch/(env.n_item-1), 1 - glitch))
+    #     self.prior = logits
 
     def train(self):
 
-        if self.prior is None:
-            self.prior = torch.ones((self.env.t_max, self.env.n_item))
-            # self.build_prior()
-
         env = self.env
-        t_max, n_item = env.t_max, env.n_item
-        init_forget_rates = torch.from_numpy(env.initial_forget_rates)
-        rep_rates = torch.from_numpy(env.repetition_rates)
-        init_forget_rates.requires_grad = True
-        rep_rates.requires_grad = True
-        threshold = np.exp(self.env.log_tau)
+        threshold = env.tau
+        t, t_max, n_item = env.t, env.t_max, env.n_item
+
+        t_remaining = t_max - t
 
         n_epochs = self.param.max_epochs
         lr = self.param.learning_rate
+        n_sample = self.param.n_sample
 
-        b = torch.nn.Parameter(self.prior)
+        logits_action = torch.nn.Parameter(torch.ones((t_remaining, n_item)))
 
-        prior_dist = torch.distributions.Categorical(logits=self.prior)
+        opt = torch.optim.Adam([logits_action, ], lr=lr)
 
-        opt = getattr(torch.optim, self.param.optimizer)([b, ], lr=lr, **self.param.optimizer_kwargs)
+        prior_action = dist.Categorical(logits=torch.ones(n_item))
 
-        with tqdm(total=n_epochs, leave=True, position=0) as pbar:
+        delays = np.tile(
+            [env.time_per_iter for _ in range(env.n_iter_per_session - 1)] + [env.break_length, ],
+            env.n_session)[t:]
+
+        n_step = t_remaining
+
+        with tqdm(total=n_epochs, position=1, leave=False) as pbar:
             for epoch in range(n_epochs):
 
-                old_b = b.clone()
                 opt.zero_grad()
+
+                q = dist.Categorical(logits_action)
+                trajectories = q.sample((n_sample, ))
 
                 loss = 0
 
-                hist_n_learnt = []
-                q_dist = torch.distributions.Categorical(logits=b - b.max())
+                for trajectory in trajectories:
+                    traj = trajectory.numpy()
+                    n_pres = env.n_pres.copy()
+                    delta = env.delta.copy()
 
-                for _ in range(self.param.n_sample):
-                    env.reset()
+                    for item in range(n_item):
+                        item_pres = traj == item
+                        n_pres_traj = np.sum(item_pres)
+                        n_pres[item] += n_pres_traj
+                        if n_pres_traj == 0:
+                            delta[item] += np.sum(delays)
+                        else:
+                            idx_last_pres = np.arange(n_step)[item_pres][-1]
+                            delta[item] = np.sum(delays[idx_last_pres:])
 
-                    n_pres = torch.zeros(env.n_item)
-                    delta = torch.zeros(env.n_item)
+                    p = np.zeros(env.n_item)
 
-                    current_iter, current_ss = 0, 0
+                    view = n_pres > 0
+                    rep = n_pres[view] - 1.
+                    delta = delta[view]
 
-                    smp = q_dist.sample()
+                    init_fr = env.initial_forget_rates[view]
+                    rep_eff = env.repetition_rates[view]
 
-                    for t in range(t_max):
+                    forget_rate = init_fr * (1 - rep_eff) ** rep
+                    logp_recall = - forget_rate * delta
 
-                        item = smp[t]
-                        n_pres, delta, current_iter, current_ss = self.step(
-                            n_pres=n_pres, delta=delta,
-                            current_iter=current_iter, current_ss=current_ss, item=item)
-
-                    log_p_seen = self._cp_log_p_seen(
-                        n_pres=n_pres, delta=delta,
-                        initial_forget_rates=init_forget_rates,
-                        repetition_rates=rep_rates)
-
-                    p = torch.zeros(env.n_item)
-                    p[n_pres > 0] = log_p_seen.exp().float()
+                    p[n_pres > 0] = np.exp(logp_recall)
 
                     # print("n learnt", torch.sum(p > env.tau), "n_item", len(p))
-                    learning_reward = torch.mean(torch.sigmoid(self.param.inv_temp*(p - threshold)))
-                        # torch.log()
+                    learning_reward = expit(self.param.inv_temp * (p - threshold)).mean()
 
-                    logp_traj = q_dist.log_prob(smp).sum()
-                    pragmatic_value = torch.log(learning_reward) + logp_traj
-                    loss -= pragmatic_value
+                    loss -= q.log_prob(trajectory).sum().exp() * learning_reward
 
-                    # Just for display/debug
-                    n_learnt = torch.sum(log_p_seen > self.env.log_tau)
-                    hist_n_learnt.append(n_learnt.item())
-
-                loss /= self.param.n_sample
-
-                # Compute entropy ----------------------------------------------
-                # ent = 0
-                # for t in range(t_max):
-                #     ent += torch.distributions.Categorical(logits=b[t]).entropy().exp() / n_item
-                # ent /= t_max
-                # loss += torch.log(ent)
-
-                # --------------------------------------------------------------------------
-
-                # ---------------------- #
-
-                # loss += torch.distributions.kl_divergence(q_dist, prior_dist).mean()
-
-                # --------------------- #
+                    for t in range(n_step):
+                        q = dist.Categorical(logits_action[t])
+                        loss += torch.distributions.kl_divergence(q, prior_action)
 
                 loss.backward()
                 opt.step()
 
-                # if epoch == 0 and n_learnt == 0:
-                #     raise Exception("Something is going wrong here")
-
+                pbar.set_postfix({"loss": loss.item()})
                 pbar.update()
-                pbar.set_postfix({f"loss": f"{loss.item():.2f}, n_learnt={np.mean(hist_n_learnt)}"})
 
-                # if torch.isclose(old_b, b).all():
-                #     break
-
-        self.policy = torch.distributions.Categorical(logits=b)
-
-    @staticmethod
-    def _cp_log_p_seen(
-            n_pres,
-            delta,
-            initial_forget_rates,
-            repetition_rates):
-
-        view = n_pres > 0
-        rep = n_pres[view] - 1.
-        delta = delta[view]
-
-        init_fr = initial_forget_rates[view]
-        rep_eff = repetition_rates[view]
-
-        forget_rate = init_fr * (1 - rep_eff) ** rep
-        logp_recall = - forget_rate * delta
-        return logp_recall
-
-    def step(
-            self,
-            item,
-            n_pres,
-            delta,
-            current_iter,
-            current_ss,
-    ):
-        # done = False
-
-        env = self.env
-
-        # update progression within session, and between session
-        # - which iteration the learner is at?
-        # - which session the learner is at?
-        current_iter += 1
-        if current_iter >= env.n_iter_per_session:
-            current_iter = 0
-            current_ss += 1
-            time_elapsed = env.break_length
-        else:
-            time_elapsed = env.time_per_iter
-
-        if current_ss >= env.n_session:
-            pass
-            # done = True
-
-        # increase delta
-        delta += time_elapsed
-        # ...specific for item shown
-        delta[item] = time_elapsed
-        # increment number of presentation
-        n_pres[item] += 1
-
-        return n_pres, delta, current_iter, current_ss  # , done
+        return np.argmax(logits_action.detach().numpy()[0])
 
     def act(self, obs):
 
-        if self.policy is None:
-            self.train()
+        env = self.env
 
-        return self.policy.sample()[self.env.t]
+        if not np.sum(env.n_pres):
+            return 0
+
+        item = self.train()
+        return item

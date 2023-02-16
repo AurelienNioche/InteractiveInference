@@ -29,11 +29,15 @@ class PsyGrid:
         if self.omniscient:
             self.est_param = true_param
         else:
-            self.bounds = np.asarray(bounds)
-            self.methods = np.asarray([self.METHODS[k] for k in grid_methods])
-            self.grid_param = self.cp_grid_param(grid_size=grid_size)
+            bounds = np.asarray(bounds)
+            self.check_bounds(bounds, env)
+            methods = np.asarray([self.METHODS[k] for k in grid_methods])
+            self.grid_param = self.cp_grid_param(
+                grid_size=grid_size,
+                bounds=bounds,
+                methods=methods)
 
-            n_param_set, n_param = self.grid_param.shape
+            n_param_set, self.n_param = self.grid_param.shape
 
             lp = np.ones(n_param_set)
             lp -= logsumexp(lp)
@@ -47,15 +51,11 @@ class PsyGrid:
 
             log_post[:] = lp
 
-            est_param = np.zeros((self.n_item, n_param))
+            est_param = np.zeros((self.n_item, self.n_param))
             est_param[:] = ep
 
             self.log_post = log_post
             self.est_param = est_param
-
-            self.n_param = n_param
-
-            self.check_bounds(bounds, env)
 
     def check_bounds(self, bounds, env):
 
@@ -64,30 +64,33 @@ class PsyGrid:
             assert bounds[1, 0] <= env.repetition_rates[item] <= bounds[1, 1]
 
     @staticmethod
-    def cartesian_product(*arrays):
+    def cp_grid_param(grid_size, bounds, methods):
 
-        la = len(arrays)
-        dtype = np.result_type(*arrays)
-        arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
-        for i, a in enumerate(np.ix_(*arrays)):
-            arr[..., i] = a
-        return arr.reshape(-1, la)
+        def cartesian_product(*arrays):
 
-    def cp_grid_param(self, grid_size):
+            la = len(arrays)
+            dtype = np.result_type(*arrays)
+            arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+            for i, a in enumerate(np.ix_(*arrays)):
+                arr[..., i] = a
+            return arr.reshape(-1, la)
 
-        diff = self.bounds[:, 1] - self.bounds[:, 0] > 0
+        bds = bounds
+        mths = methods
+
+        diff = bds[:, 1] - bds[:, 0] > 0
         not_diff = np.invert(diff)
 
         values = np.atleast_2d(
             [m(*b, num=grid_size) for (b, m) in
-             zip(self.bounds[diff], self.methods[diff])])
+             zip(bds[diff], mths[diff])])
 
-        var = self.cartesian_product(*values)
-        grid = np.zeros((max(1, len(var)), len(self.bounds)))
+        var = cartesian_product(*values)
+        grid = np.zeros((max(1, len(var)), len(bds)))
         if np.sum(diff):
             grid[:, diff] = var
         if np.sum(not_diff):
-            grid[:, not_diff] = self.bounds[not_diff, 0]
+            grid[:, not_diff] = bds[not_diff, 0]
 
         return grid
 

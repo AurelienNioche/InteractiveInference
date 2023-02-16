@@ -2,18 +2,21 @@ import torch
 from collections import namedtuple
 from tqdm import tqdm
 import numpy as np
-import scipy
+
+from scipy.special import logsumexp
+from scipy.stats import entropy
+from torch import distributions as dist
+
 
 from baseline_policies.conservative_not_omniscient import PsyGrid
 
 EPS = np.finfo(np.float32).eps
 
 
-class ActiveEpistemicOnly:
+class ActiveEpistemic:
 
     def __init__(self,
                  env,
-                 prior=None,
                  param_kwargs=None,
                  *args, **kwargs):
         super().__init__()
@@ -22,12 +25,10 @@ class ActiveEpistemicOnly:
         self.psy = PsyGrid(env=env, *args, **kwargs)
 
         Param = namedtuple("Param", ["learning_rate", "max_epochs", "n_sample"],
-                           defaults=[0.2, 400, 5])
+                           defaults=[0.1, 100, 10])
         if param_kwargs is None:
             param_kwargs = {}
         self.param = Param(**param_kwargs)
-        self.policy = None
-        self.prior = prior
 
     def train(self):
 
@@ -38,145 +39,74 @@ class ActiveEpistemicOnly:
 
         n_epochs = self.param.max_epochs
         lr = self.param.learning_rate
+        n_sample = self.param.n_sample
 
-        if self.prior is None:
-            logits = torch.ones((t_remaining, n_item))
-        else:
-            logits = torch.logit(torch.clamp(self.prior, 1e-3, 1 - 1e-3))
+        logits_action = torch.nn.Parameter(torch.ones((t_remaining, n_item)))
 
-        b = torch.nn.Parameter(logits)
+        opt = torch.optim.Adam([logits_action, ], lr=lr)
 
-        opt = torch.optim.Adam([b, ], lr=lr)
+        prior_action = dist.Categorical(logits=torch.ones(n_item))
 
-        with tqdm(total=n_epochs, leave=False, position=1) as pbar:
+        prior = self.psy.log_post.copy()
+        grid = self.psy.grid_param
+
+        with tqdm(total=n_epochs, position=1, leave=False) as pbar:
             for epoch in range(n_epochs):
 
-                old_b = b.clone()
                 opt.zero_grad()
 
-                loss = 0
-                ig = 0
-                dist = torch.distributions.Categorical(logits=b)
-
-                for _ in range(self.param.n_sample):
+                for smp in range(n_sample):
 
                     n_pres = env.n_pres.copy()
                     delta = env.delta.copy()
 
-                    current_iter, current_ss = env.current_iter, env.current_ss
+                    current_iter = env.current_iter
+                    current_ss = env.current_ss
 
-                    pre = self.psy.log_post.copy()
+                    sum_terms = 0
+                    sum_kl_div_prior = 0
 
-                    smp = dist.sample()
+                    for t in range(t_remaining):
 
-                    for idx_t_sim, t_sim in enumerate(range(t_remaining)):
+                        q = dist.Categorical(logits=logits_action[t])
+                        item = q.sample()
 
-                        item = smp[idx_t_sim]
+                        if n_pres[item] == 0:
+                            expected_ig = 0.0
 
-                        if self.psy.is_item_specific:
-                            pre_item = pre[item]
                         else:
-                            pre_item = pre
-                        init_fr, rep_effect = np.dot(np.exp(pre_item), self.psy.grid_param)
-                        p_success = np.exp(-init_fr*(1-rep_effect)**(n_pres[item]-1)*delta[item])
-                        success = p_success > np.random.random()
-                        if success:
-                            p = p_success
-                        else:
-                            p = 1 - p_success
+                            init_fr, rep_effect = grid.T
+                            logp_success = -init_fr * (1 - rep_effect) ** (n_pres[item] - 1) * delta[item]
 
-                        log_lik = np.log(p + EPS)
+                            post_success = prior + logp_success
+                            post_success -= logsumexp(post_success)
+                            ig_success = entropy(np.exp(post_success), np.exp(prior))
 
-                        post_item = pre_item + log_lik
-                        post_item -= scipy.special.logsumexp(post_item)
+                            post_failure = prior + np.log(1 - np.exp(logp_success))
+                            post_failure -= logsumexp(post_failure)
+                            ig_failure = entropy(np.exp(post_failure), np.exp(prior))
 
-                        # Compute information gain / relative entropy
+                            marg_p_success = np.sum(np.exp(prior + logp_success))
 
-                        ig += scipy.stats.entropy(np.exp(post_item), np.exp(pre_item))
+                            expected_ig = marg_p_success * ig_success + (1 - marg_p_success) * ig_failure
 
-                        # Update
-                        n_pres, delta, current_iter, current_ss = self.step(
+                        sum_terms += q.log_prob(item).exp() * expected_ig
+
+                        n_pres, delta, current_iter, current_ss, _ = self.env.update_state(
                             n_pres=n_pres, delta=delta,
                             current_iter=current_iter, current_ss=current_ss, item=item)
-                        if self.psy.is_item_specific:
-                            pre[item] = post_item
-                            # Implement tweak for items not seen
-                        else:
-                            pre = post_item
 
-                    logp_traj = dist.log_prob(smp).sum()
+                        sum_kl_div_prior += torch.distributions.kl_divergence(q, prior_action)
 
-                    loss -= logp_traj
-
-                ig /= (self.param.n_sample*t_remaining)
-                loss -= ig
-
-                # --------------------- #
+                    loss = - torch.log(sum_terms+1e-16)
 
                 loss.backward()
                 opt.step()
 
+                pbar.set_postfix({"loss": loss.item()})
                 pbar.update()
-                pbar.set_postfix({f"loss": f"{loss.item():.2f}"})
 
-                # if torch.isclose(old_b, b).all():
-                #     break
-
-        self.policy = torch.distributions.Categorical(logits=b)
-
-    @staticmethod
-    def _cp_log_p_seen(
-            n_pres,
-            delta,
-            initial_forget_rates,
-            repetition_rates):
-
-        view = n_pres > 0
-        rep = n_pres[view] - 1.
-        delta = delta[view]
-
-        init_fr = initial_forget_rates[view]
-        rep_eff = repetition_rates[view]
-
-        forget_rate = init_fr * (1 - rep_eff) ** rep
-        logp_recall = - forget_rate * delta
-        return logp_recall
-
-    def step(
-            self,
-            item,
-            n_pres,
-            delta,
-            current_iter,
-            current_ss,
-    ):
-        # done = False
-
-        env = self.env
-
-        # update progression within session, and between session
-        # - which iteration the learner is at?
-        # - which session the learner is at?
-        current_iter += 1
-        if current_iter >= env.n_iter_per_session:
-            current_iter = 0
-            current_ss += 1
-            time_elapsed = env.break_length
-        else:
-            time_elapsed = env.time_per_iter
-
-        if current_ss >= env.n_session:
-            pass
-            # done = True
-
-        # increase delta
-        delta += time_elapsed
-        # ...specific for item shown
-        delta[item] = time_elapsed
-        # increment number of presentation
-        n_pres[item] += 1
-
-        return n_pres, delta, current_iter, current_ss  # , done
+        return np.argmax(logits_action.detach().numpy()[0])
 
     def act(self, obs):
 
@@ -185,8 +115,7 @@ class ActiveEpistemicOnly:
         if not np.sum(env.n_pres):
             return 0
 
-        self.train()
-        item = self.policy.sample()[0]
+        item = self.train()
 
         # Simulate answer and update psychologist's beliefs ---
         if env.n_pres[item]:
