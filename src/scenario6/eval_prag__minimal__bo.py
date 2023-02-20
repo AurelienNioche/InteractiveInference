@@ -79,8 +79,9 @@ def find_best_full_explo(
 
     print("N possible trajectories:", n_item ** t_remaining)
 
-    all_traj = cartesian_product(*[np.arange(n_item)
-                                   for _ in range(t_remaining)])
+    all_traj = cartesian_product(
+        *[np.arange(n_item)
+          for _ in range(t_remaining)])
 
     results = []
 
