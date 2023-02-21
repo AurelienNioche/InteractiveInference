@@ -121,7 +121,8 @@ def main():
 
     n_epochs = 100
     lr = 0.2
-    n_sample = 500
+    n_sample = 100
+    kl_div_factor = 0.001
 
     t_max = n_session * n_iter_per_session
 
@@ -147,7 +148,7 @@ def main():
             q = dist.Categorical(logits=logits_action)
             trajectories = q.sample((n_sample,))
 
-            loss = 0
+            loss, p_sum = 0, 0
 
             for trajectory in trajectories:
 
@@ -161,9 +162,14 @@ def main():
                     initial_forget_rates=initial_forget_rates,
                     repetition_rates=repetition_rates)
 
-                loss -= q.log_prob(trajectory).sum().exp() * learning_reward
+                p_traj = q.log_prob(trajectory).sum().exp()
+                loss -= p_traj * learning_reward
+                p_sum += p_traj
 
-            loss += torch.distributions.kl_divergence(q, p).sum()
+            loss /= p_sum
+
+            kl_div = dist.kl_divergence(q, p).sum()
+            loss += kl_div_factor * kl_div
 
             loss.backward()
             opt.step()
@@ -173,35 +179,15 @@ def main():
 
     traj = np.argmax(logits_action.detach().numpy(), axis=1)
 
-    n_pres = deepcopy(current_n_pres)
-    delta = deepcopy(current_delta)
-
-    for item in range(n_item):
-
-        item_pres = traj == item
-        n_pres_traj = np.sum(item_pres)
-        n_pres[item] += n_pres_traj
-        if n_pres_traj == 0:
-            delta[item] += np.sum(delays)
-        else:
-            idx_last_pres = np.arange(t_remaining)[item_pres][-1]
-            delta[item] = np.sum(delays[idx_last_pres:])
-
-    p = np.zeros(n_item)
-
-    view = n_pres > 0
-    rep = n_pres[view] - 1.
-    delta = delta[view]
-
-    init_fr = initial_forget_rates[view]
-    rep_eff = repetition_rates[view]
-
-    forget_rate = init_fr * (1 - rep_eff) ** rep
-    logp_recall = - forget_rate * delta
-
-    p[n_pres > 0] = np.exp(logp_recall)
-
-    learning_reward = np.mean(expit(inv_temp * (p - threshold)))
+    learning_reward = eval_trajectory(
+        trajectory=traj,
+        current_n_pres=current_n_pres,
+        current_delta=current_delta,
+        delays=delays,
+        inv_temp=inv_temp,
+        threshold=threshold,
+        initial_forget_rates=initial_forget_rates,
+        repetition_rates=repetition_rates)
 
     print(traj)
     print(learning_reward)
