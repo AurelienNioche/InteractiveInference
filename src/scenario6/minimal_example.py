@@ -1,3 +1,4 @@
+
 import numpy as np
 from scipy.special import expit
 import torch
@@ -17,6 +18,9 @@ def cartesian_product(*arrays):
 
 
 def eval_trajectory(trajectory, env):
+
+    rng = np.random.default_rng(seed=0)
+    rng.random.choice()
 
     t_remaining = len(trajectory)
 
