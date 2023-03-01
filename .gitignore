@@ -136,3 +136,6 @@ dmypy.json
 /src/scenario3/fig/
 /src/scenario2/fig/
 
+/src/scenario6/data
+/src/scenario6/results
+/src/scenario6/backup/
