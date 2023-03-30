@@ -217,7 +217,8 @@ class MountainCarDiscrete():
         #normalise
         for a_i in range(cls.aa.shape[0]):
             p_forward[a_i] /= p_forward[a_i].sum(axis=1, keepdims=True)
-            
+        
+        p_forward = p_forward.swapaxes(0,1)
         return p_forward
     
     def __init__(self, load_transition_dynamics=True):
@@ -237,10 +238,8 @@ class MountainCarDiscrete():
         return self.s_i
         
     def step(self, a):
-        self.s_i = np.random.choice(self.s_N, p=self.p_s1_given_s_a[a, self.s_i])
+        self.s_i = np.random.choice(self.s_N, p=self.p_s1_given_s_a[self.s_i, a])
         return self.s_i
-    
-    
         
     def _height(self, state):
         x, N = self.xx, self.n_x
@@ -250,10 +249,14 @@ class MountainCarDiscrete():
         #print(pos, r, i_x, h[i_x])
         return self.hh[i_x]
         
-    def plot_trajectory(self, states, ax=None, color=None, alpha=1, label=None, legend=True):
+    def plot_trajectory(self, states, **kwargs):
+        states = np.array([self.s_from_index_s(s) for s in states])
+        return self.plot_trajectory_continuous(states, **kwargs)
+        
+    def plot_trajectory_continuous(self, states, ax=None, color=None, alpha=1, label=None, legend=True):
         if ax is None:
             fig, ax = plt.subplots(1, 2, figsize=(2*10, 5))
-
+        
         xx = [s[0] for s in states]
         vv = [s[1] for s in states]
         hh = np.array([self._height(s) for s in states])
