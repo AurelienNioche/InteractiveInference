@@ -20,7 +20,11 @@ def jax_safelog(x):
 def jax_step_naive_fun(o, q, πs, p_o, p_t, log_p_c):
     """ Deterministic policy selection with pragmatic value and state information gain.
     
-    This implementation is left here for illustrative purposes only. Optimised functions for production are below."""
+    This implementation is left here for illustrative purposes only. Optimised functions for production are below.
+    It won't run directly within agents, because several changes have been made to the input formt
+        - policies are not batches of policies with actions one-hot encoded
+        - first input argument in num_actions
+    """
     # update belief from new observation
     joint = q * p_o[:,o]
     q = joint / joint.sum()
@@ -45,28 +49,21 @@ def jax_step_naive_fun(o, q, πs, p_o, p_t, log_p_c):
 
 jit_step_naive_fun = jax.jit(jax_step_naive_fun)
 
-def jax_step_batched_fun(num_actions, o, q, πs, p_o, p_t, log_p_c):
+def jax_step_batched_fun(o, q, πs, p_o, p_t, log_p_c):
     """ Deterministic policy selection with pragmatic value and state information gain."""
     # update belief from new observation
     joint = q * p_o[:,o]
     q = joint / joint.sum()
     
     # policy rollout: 
-    # coalesced access to transition dynamics speeds up vectorised rollouts across policies
+    # one-hot action encoding ensures coalesced access to transition dynamics, 
+    # speeding up vectorised rollouts across policies
     def step(q, a):
-        # iterate over values of a
-        def step_a(i, q):
-            is_a = (a==i)
-            # weighted average between q and q' with binary weight
-            q = (1-is_a) * q + is_a * (q @ p_t[:,i,:]) # replace with q + is_a (q @ p_t[:,i,:] - q)
-            return q
-        
-        q = jax.lax.fori_loop(0, num_actions, step_a, q)
+        q = a @ (q @ p_t)
         return q, q
     
     qs_π = lambda q, π: jax.lax.scan(step, init=q, xs=π)[1]
     qs_πs = jax.vmap(qs_π, in_axes=(None, 0), out_axes=(0)) # carry, output
-    
     # batching policies helps avoid GPU out of memory errors
     def batch_nefe(q, πs):
         q_ss = qs_πs(q, πs)
@@ -82,12 +79,13 @@ def jax_step_batched_fun(num_actions, o, q, πs, p_o, p_t, log_p_c):
     
     nefe = jax.lax.scan(batch_nefe, init=q, xs=πs)[1] # scan over batches
     # action selection
-    π = πs.reshape(-1, πs.shape[-1])[jnp.argmax(nefe)]
+    π = πs.reshape( (-1,) + πs.shape[2:] )[jnp.argmax(nefe)] # perform policy selection by squeezing batch and policy dimensions
+    π = jnp.argmax(π, axis=-1)
     # propagate belief through time
-    q = q @ p_t[:,π[0],:]
+    q = q @ p_t[π[0],:,:]
     return q, π
 
-jit_step_batched_fun = jax.jit(jax_step_batched_fun, static_argnums=(0,))
+jit_step_batched_fun = jax.jit(jax_step_batched_fun)
 
 class MinimalAgentJax:
     """ Minimal agent performing exact inference in fully discrete POMDPs"""
@@ -101,11 +99,13 @@ class MinimalAgentJax:
         self.k = k
         self.num_batches = num_batches
         
-        self.p_t = jnp.asarray(env.p_s1_given_s_a)
+        self.p_t = jnp.asarray(env.p_s1_given_s_a.swapaxes(0,1))
         self.p_o = jnp.asarray(env.p_o_given_s)
         print(f'Enumerating {self.env.a_N**k:,} candidate policies of length {k}')
-        self.πs = np.stack(np.meshgrid(*[np.arange(self.env.a_N) for _ in range(k)])).T.reshape(-1, k)
-        self.πs = jax.device_put(self.πs)
+        #batched policies with one-hot actions
+        πs = np.stack(np.meshgrid(*[np.arange(self.env.a_N) for _ in range(k)])).T.reshape(self.num_batches, -1, k)
+        self.πs = jax.nn.one_hot(jax.device_put(πs), self.env.a_N, dtype=int)
+        
         # slow naive implementation
         #self.πs = jnp.asarray([x for x in itertools.product( range(self.env.a_N), repeat=self.k )])
         
@@ -118,48 +118,48 @@ class MinimalAgentJax:
         # initialize state prior as uniform
         self.q = jnp.asarray(np.ones(self.env.s_N) / self.env.s_N )
     
-    def step(self, o):
+    def step(self, o, use_jit=True):
         params = {
-            'num_actions': self.env.a_N,
             'o': o,
             'q': self.q,
             'p_o': self.p_o,
             'p_t': self.p_t,
             'log_p_c': self.log_p_c,
-            'πs': self.πs.reshape(self.num_batches, -1, self.k),
+            'πs': self.πs,
         }
-        self.q, π = jit_step_batched_fun(**params)
+        self.q, π = jit_step_batched_fun(**params) if use_jit else jax_step_batched_fun(**params)
         return π[0]
     
     
-def jax_fully_observed_batched_fun(num_actions, q, πs, p_t, log_p_c):
+def jax_fully_observed_batched_fun(q, πs, p_t, log_p_c):
     """ Deterministic policy selection with pragmatic value in fully-observed environment.
     Args:
         num_actions (int): number of unique actions. Jit assumes this is static across calls.
         q (jnp.ndarray): one-hot encoding of the observed state
-        πs (jnp.ndarray): 3D tensor of actions [batch, policy, action_at_time_t].
-        p_t (jnp.ndarray): 3D tensor of transition dynamics [s0, a, s1].
+        πs (jnp.ndarray): 4D tensor of one-hot actions [batch, policy, timestep, one_hot_action].
+        p_t (jnp.ndarray): 3D tensor of transition dynamics [a, s0, s1].
         log_p_c (jnp.ndarray): 1D tensor of normalized state preferences. One element per environment state.
     """
-    # policy rollout: coalesced access to transition dynamics speeds up vectorised rollouts across policies
+    # policy rollout: 
+    # one-hot action encoding ensures coalesced access to transition dynamics, 
+    # speeding up vectorised rollouts across policies
     def step(q, a):
-        # iterate over values of a
-        def step_a(i, q):
-            is_a = (a==i)
-            # weighted average between q and q' with binary weight
-            q = (1-is_a) * q + is_a * (q @ p_t[:,i,:]) # replace with q + is_a (q @ p_t[:,i,:] - q)
-            return q
-        
-        q = jax.lax.fori_loop(0, num_actions, step_a, q)
+        q = a @ (q @ p_t)
         return q, q
     
-    qs_π = lambda q, π: jax.lax.scan(step, init=q, xs=π)[1]
-    qs_batch = jax.vmap(qs_π, in_axes=(None, 0), out_axes=(0)) # carry, output
-    pragmatic = jax.lax.scan(lambda q, πs: (q, (qs_batch(q, πs) @ log_p_c).sum(axis=-1)), init=q, xs=πs)[1] # scan over batches
-    π = πs.reshape(-1, πs.shape[-1])[jnp.argmax(pragmatic)]
+    qs_π = lambda q, π: jax.lax.scan(step, init=q, xs=π)[1] # carry, output
+    qs_batch = jax.vmap(qs_π, in_axes=(None, 0), out_axes=(0)) # parallel rollout of policy batch
+    # batch computation of negative free energy (here, only pragmatic value)
+    def nefe_batch(q, πs):
+        pragmatic = (qs_batch(q, πs) @ log_p_c).sum(axis=-1)
+        return q, pragmatic
+    
+    nefe = jax.lax.scan(nefe_batch, init=q, xs=πs)[1] # scan over batches
+    π = πs.reshape( (-1,) + πs.shape[2:] )[jnp.argmax(nefe)] # perform policy selection by squeezing first two dimensions
+    π = jnp.argmax(π, axis=-1)
     return π
 
-jit_fully_observed_batched_fun = jax.jit(jax_fully_observed_batched_fun, static_argnums=(0,))
+jit_fully_observed_batched_fun = jax.jit(jax_fully_observed_batched_fun)
 
 class FullyObservedAgentJax:
     """ Minimal agent performing exact inference in fully discrete POMDPs"""
@@ -173,10 +173,12 @@ class FullyObservedAgentJax:
         self.k = k
         self.num_batches = num_batches
         
-        self.p_t = jnp.asarray(env.p_s1_given_s_a)
+        self.p_t = jnp.asarray(env.p_s1_given_s_a.swapaxes(0,1))
         print(f'Enumerating {self.env.a_N**k:,} candidate policies of length {k}')
-        self.πs = np.stack(np.meshgrid(*[np.arange(self.env.a_N) for _ in range(k)])).T.reshape(-1, k)
-        self.πs = jax.device_put(self.πs)
+        #batched policies
+        πs = np.stack(np.meshgrid(*[np.arange(self.env.a_N) for _ in range(k)])).T.reshape(self.num_batches, -1, k)
+        # one-hot encoded actions
+        self.πs = jax.nn.one_hot(jax.device_put(πs), self.env.a_N, dtype=int)
         
     def reset(self):
         # initialize state preference
@@ -191,8 +193,6 @@ class FullyObservedAgentJax:
             'q': jax.nn.one_hot(o, self.env.s_N),
             'p_t': self.p_t,
             'log_p_c': self.log_p_c,
-            # batch policies
-            'πs': self.πs.reshape(self.num_batches, -1, self.k), 
-            'num_actions': self.env.a_N
+            'πs': self.πs, 
         }
         return jit_fully_observed_batched_fun(**params)
